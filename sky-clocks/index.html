@@ -1,0 +1,719 @@
+<title>三重天文钟</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,500;1,6..72,400&display=swap">
+<style>
+/* Layout: parameter strip on top, then three instrument cards in a wrapping grid; each card = dial + readout. Look: cyanotype star chart (blueprint paper, indigo ink, one copper/gold sun). */
+:root{
+  --bg:#e8eef3; --panel:#f5f8fa; --ink:#13283b; --ink2:#506478; --line:#b4c3cf; --faint:#d5dfe7;
+  --sun:#c26a14; --lit:#fbf6e2; --dark:#3a556f; --sign:#0d7773; --earth:#2f6f9a; --autumn:#a4452c; --saturn:#6a4c9c;
+  --tint-a:rgba(19,40,59,.10); --tint-b:rgba(19,40,59,.035); --day:rgba(194,106,20,.30);
+  --display:'Newsreader',Georgia,'Songti SC','Noto Serif SC',serif;
+  --sans:'IBM Plex Sans','PingFang SC','Noto Sans SC','Microsoft YaHei',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#09131d; --panel:#0e1c2a; --ink:#dce8f1; --ink2:#8ea6b9; --line:#2a4054; --faint:#182a3b;
+    --sun:#f2b650; --lit:#eef3f7; --dark:#1b2f43; --sign:#52d3c7; --earth:#5aa6d8; --autumn:#e08a63; --saturn:#b8a0f2;
+    --tint-a:rgba(220,232,241,.09); --tint-b:rgba(220,232,241,.03); --day:rgba(242,182,80,.24);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#09131d; --panel:#0e1c2a; --ink:#dce8f1; --ink2:#8ea6b9; --line:#2a4054; --faint:#182a3b;
+  --sun:#f2b650; --lit:#eef3f7; --dark:#1b2f43; --sign:#52d3c7; --earth:#5aa6d8; --autumn:#e08a63; --saturn:#b8a0f2;
+  --tint-a:rgba(220,232,241,.09); --tint-b:rgba(220,232,241,.03); --day:rgba(242,182,80,.24);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background:var(--bg); color:var(--ink); font:14px/1.55 var(--sans);
+  padding-block:28px 56px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+.wrap{max-width:1360px;margin:0 auto;display:grid;gap:22px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px 24px;padding-top:26px}
+.eyebrow{margin:0 0 4px;font:500 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink2)}
+h1{margin:0;font:italic 400 clamp(32px,5.5vw,52px)/1.02 var(--display);letter-spacing:-.01em;text-wrap:balance}
+.now{text-align:right;min-width:0}
+.now .big{font:500 clamp(22px,3.2vw,32px)/1.1 var(--mono);font-variant-numeric:tabular-nums}
+.now .sub{font:400 12px var(--mono);color:var(--ink2);font-variant-numeric:tabular-nums}
+.side{min-width:0}
+.lang{
+  position:fixed;z-index:50;
+  top:calc(env(safe-area-inset-top,0px) + 10px);
+  right:max(16px,env(safe-area-inset-right,0px));
+  display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;
+  background:color-mix(in srgb,var(--panel) 55%,transparent);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  opacity:.72;transition:opacity .15s;
+}
+.lang:hover,.lang:focus-within{opacity:1}
+.lang button{border:0;border-radius:0;background:transparent;padding:6px 14px;font:500 12px var(--mono);letter-spacing:.06em;color:var(--ink)}
+.lang button[aria-pressed=true]{background:color-mix(in srgb,var(--ink) 82%,transparent);color:var(--bg)}
+.controls{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:14px 16px;
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;
+}
+label{display:grid;gap:5px;min-width:0;font-size:12px;color:var(--ink2);letter-spacing:.03em}
+input,select,button{
+  font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);
+  border-radius:6px;padding:7px 9px;min-width:0;width:100%;
+}
+input[type=number],input[type=date],input[type=time]{font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums}
+input[type=range]{padding:0;accent-color:var(--sun);border:0;background:transparent}
+button{cursor:pointer;width:auto;font-size:13px}
+button:hover{border-color:var(--ink2)}
+:is(input,select,button):focus-visible{outline:2px solid var(--sign);outline-offset:1px}
+.btns{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px}
+.clocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:20px;align-items:start}
+.clock{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:12px;min-width:0}
+.clock .head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+h2{margin:0;font:500 22px/1.2 var(--display)}
+.en{font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink2)}
+.cap{margin:0;color:var(--ink2);font-size:13px;text-wrap:pretty}
+svg{width:100%;height:auto;display:block;max-width:100%}
+.slider{grid-template-columns:auto 1fr auto;align-items:center;gap:10px}
+.slider output{font:500 12px var(--mono);color:var(--ink)}
+dl.rd{display:grid;grid-template-columns:auto 1fr;gap:3px 16px;margin:0;font-size:13px}
+dl.rd dt{color:var(--ink2)}
+dl.rd dd{margin:0;text-align:right;font:500 13px var(--mono);font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:anywhere}
+.moonrow{display:flex;align-items:center;gap:14px}
+.moonrow svg{width:64px;flex:none}
+footer{color:var(--ink2);font-size:12px;display:grid;gap:4px;max-width:90ch}
+footer p{margin:0}
+/* dial styling */
+.rg{fill:none;stroke:var(--line);stroke-width:1}
+.tk{stroke:var(--ink2);stroke-width:1;fill:none}
+.tk2{stroke:var(--ink);stroke-width:1.6;fill:none}
+.num{font:500 11px var(--mono);fill:var(--ink2);text-anchor:middle;dominant-baseline:central}
+.num.hi{fill:var(--ink);font-weight:500}
+.glyph{font:400 17px var(--sans);font-family:'Segoe UI Symbol','Apple Symbols','Noto Sans Symbols 2','Noto Sans Symbols',var(--sans);fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+.zn{font:500 9px var(--sans);fill:var(--ink2);text-anchor:middle;dominant-baseline:central}
+.lab{font:500 9px var(--mono);fill:var(--ink2);text-anchor:middle;letter-spacing:.08em}
+.sname{font:500 16px var(--display);fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+.sdate{font:400 9px var(--mono);fill:var(--ink2);text-anchor:middle;dominant-baseline:central}
+</style>
+
+<div class="lang" role="group" aria-label="语言 / Language">
+  <button type="button" data-lang="zh" aria-pressed="true" aria-keyshortcuts="L">中文</button>
+  <button type="button" data-lang="en" aria-pressed="false" aria-keyshortcuts="L">EN</button>
+</div>
+
+<div class="wrap">
+  <header>
+    <div>
+      <p class="eyebrow" data-i18n="eyebrow"></p>
+      <h1 data-i18n="h1"></h1>
+    </div>
+    <div class="side">
+      <div class="now" aria-live="off">
+        <div class="big" id="nowLocal">--</div>
+        <div class="sub" id="nowUtc">--</div>
+      </div>
+    </div>
+  </header>
+
+  <section class="controls" data-i18n-aria="paramAria">
+    <label for="city"><span data-i18n="city"></span><select id="city"></select></label>
+    <label for="lat"><span data-i18n="lat"></span><input id="lat" type="number" step="0.0001" min="-90" max="90"></label>
+    <label for="lon"><span data-i18n="lon"></span><input id="lon" type="number" step="0.0001" min="-180" max="180"></label>
+    <label for="date"><span data-i18n="date"></span><input id="date" type="date"></label>
+    <label for="time"><span data-i18n="time"></span><input id="time" type="time" step="1"></label>
+    <label for="off"><span data-i18n="off"></span><input id="off" type="number" step="0.5" min="-12" max="14"></label>
+    <label for="speed"><span data-i18n="speed"></span>
+      <select id="speed">
+        <option value="1" selected data-i18n="sp1"></option>
+        <option value="0" data-i18n="sp0"></option>
+        <option value="60" data-i18n="sp60"></option>
+        <option value="3600" data-i18n="sp3600"></option>
+        <option value="86400" data-i18n="sp86400"></option>
+        <option value="2629800" data-i18n="sp2629800"></option>
+      </select>
+    </label>
+    <div class="btns">
+      <button id="bNow" type="button" data-i18n="bNow"></button>
+      <button id="bH-" type="button" data-i18n="bHm"></button>
+      <button id="bH+" type="button" data-i18n="bHp"></button>
+      <button id="bD-" type="button" data-i18n="bDm"></button>
+      <button id="bD+" type="button" data-i18n="bDp"></button>
+      <button id="bM-" type="button" data-i18n="bMm"></button>
+      <button id="bM+" type="button" data-i18n="bMp"></button>
+    </div>
+  </section>
+
+  <main class="clocks">
+    <article class="clock">
+      <div class="head"><h2 data-i18n="h2_1"></h2></div>
+      <p class="cap" data-i18n="cap1"></p>
+      <svg viewBox="-262 -262 524 524" role="img" data-i18n-aria="aria1">
+        <g id="ecStatic"></g>
+        <g id="ecHand"><line x1="0" y1="0" x2="0" y2="-236" stroke="var(--sun)" stroke-width="2"/><path d="M0,-242L-5,-231L5,-231Z" fill="var(--sun)"/></g>
+        <circle id="ecSun" r="8" fill="var(--sun)" stroke="var(--panel)" stroke-width="2"/>
+        <circle r="5" fill="var(--earth)" stroke="var(--panel)" stroke-width="1.5"/>
+        <text class="lab" x="12" y="-8">E</text>
+        <text class="lab" id="ecCLab">C</text>
+      </svg>
+      <label class="slider" for="exag"><span data-i18n="exag"></span><input id="exag" type="range" min="1" max="4" step="0.5" value="3"><output id="exagv" for="exag">×3</output></label>
+      <dl class="rd" id="rd1"></dl>
+    </article>
+
+    <article class="clock">
+      <div class="head"><h2 data-i18n="h2_2"></h2></div>
+      <p class="cap" data-i18n="cap2"></p>
+      <svg viewBox="-262 -262 524 524" role="img" data-i18n-aria="aria2">
+        <g id="mnStatic"></g>
+        <g id="mnHand"><line x1="0" y1="-14" x2="0" y2="-188" stroke="var(--ink)" stroke-width="2.4"/><circle cy="-190" r="3.5" fill="var(--ink)"/></g>
+        <g id="mnBead">
+          <circle r="11" fill="var(--dark)" stroke="var(--ink2)" stroke-width="1"/>
+          <path d="M-11,0A11,11 0 0 1 11,0Z" fill="var(--lit)"/>
+          <circle r="11" fill="none" stroke="var(--ink2)" stroke-width="1"/>
+        </g>
+      </svg>
+      <div class="moonrow">
+        <svg viewBox="-30 -30 60 60" aria-hidden="true"><circle r="26" fill="var(--dark)" stroke="var(--ink2)"/><path id="mnBig" fill="var(--lit)"/><circle r="26" fill="none" stroke="var(--ink2)"/></svg>
+        <dl class="rd" id="rd2" style="flex:1"></dl>
+      </div>
+    </article>
+
+    <article class="clock">
+      <div class="head"><h2 data-i18n="h2_3"></h2></div>
+      <p class="cap" data-i18n="cap3"></p>
+      <svg viewBox="-262 -262 524 524" role="img" data-i18n-aria="aria3">
+        <path id="skDay" fill="var(--day)"/>
+        <g id="skStatic"></g>
+        <g id="skZ"></g>
+        <g id="skGl"></g>
+        <path d="M0,-242L-5,-252L5,-252Z" fill="var(--ink)"/>
+        <text class="lab" x="0" y="-256">MC</text>
+        <g id="hSat"><line x1="0" y1="-26" x2="0" y2="-243" stroke="var(--saturn)" stroke-width="1.2" stroke-dasharray="2 3" stroke-opacity=".75"/></g>
+        <g id="satIcon">
+          <circle r="3.8" fill="var(--saturn)"/>
+          <ellipse rx="8.4" ry="2.6" transform="rotate(-18)" fill="none" stroke="var(--saturn)" stroke-width="1.4"/>
+        </g>
+        <g id="hAsc"><line x1="0" y1="0" x2="0" y2="-146" stroke="var(--sign)" stroke-width="5" stroke-linecap="round"/><path d="M0,-191L-6,-201L6,-201Z" fill="var(--sign)"/></g>
+        <g id="hMoon"><line x1="0" y1="0" x2="0" y2="-196" stroke="var(--ink)" stroke-width="2.6"/><circle cy="-205" r="7.5" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/></g>
+        <g id="hSun"><line x1="0" y1="0" x2="0" y2="-226" stroke="var(--sun)" stroke-width="1.6"/><circle cy="-226" r="8.5" fill="var(--sun)" stroke="var(--panel)" stroke-width="2"/></g>
+        <circle r="7" fill="var(--ink)" stroke="var(--panel)" stroke-width="2"/>
+      </svg>
+      <dl class="rd" id="rd3"></dl>
+    </article>
+  </main>
+
+  <footer>
+    <p data-i18n="foot1"></p>
+    <p data-i18n="foot2"></p>
+  </footer>
+</div>
+
+<script>
+/*MATH-START*/
+const D2R=Math.PI/180,R2D=180/Math.PI;
+const norm=a=>((a%360)+360)%360;
+const sin=a=>Math.sin(a*D2R),cos=a=>Math.cos(a*D2R);
+const jdOf=ms=>ms/86400000+2440587.5;
+const SYN=29.530589;
+function sunLon(JD){
+  const n=JD-2451545,L=280.460+0.9856474*n,g=norm(357.528+0.9856003*n);
+  return{lon:norm(L+1.915*sin(g)+0.020*sin(2*g)),L:norm(L),g,dist:1.00014-0.01671*cos(g)-0.00014*cos(2*g)};
+}
+function moonPos(JD){
+  const T=(JD-2451545)/36525;
+  const lon=norm(218.32+481267.881*T+6.29*sin(135.0+477198.87*T)-1.27*sin(259.3-413335.36*T)+0.66*sin(235.7+890534.22*T)+0.21*sin(269.9+954397.74*T)-0.19*sin(357.5+35999.05*T)-0.11*sin(186.5+966404.03*T));
+  const lat=5.13*sin(93.3+483202.02*T)+0.28*sin(228.2+960400.89*T)-0.28*sin(318.3+6003.15*T)-0.17*sin(217.6-407332.21*T);
+  return{lon,lat};
+}
+function eclToEq(lon,lat,eps){
+  const x=cos(lat)*cos(lon),y=cos(lat)*sin(lon)*cos(eps)-sin(lat)*sin(eps),z=cos(lat)*sin(lon)*sin(eps)+sin(lat)*cos(eps);
+  return{ra:norm(Math.atan2(y,x)*R2D),dec:Math.asin(z)*R2D};
+}
+function angles(LST,lat,eps){
+  const t=Math.tan(lat*D2R);
+  return{
+    asc:norm(Math.atan2(cos(LST),-(sin(LST)*cos(eps)+t*sin(eps)))*R2D),
+    mc:norm(Math.atan2(sin(LST),cos(LST)*cos(eps))*R2D)
+  };
+}
+function altOf(dec,H,lat){return Math.asin(sin(dec)*sin(lat)+cos(dec)*cos(lat)*cos(H))*R2D;}
+function elong(JD){return norm(moonPos(JD).lon-sunLon(JD).lon);}
+function nextPhase(JD,target){
+  const f=t=>((elong(t)-target+540)%360)-180;
+  let a=JD,fa=f(a);
+  for(let i=0;i<140;i++){
+    const b=a+0.25,fb=f(b);
+    if(fa<0&&fb>=0&&fb-fa<90){let lo=a,hi=b;for(let j=0;j<30;j++){const m=(lo+hi)/2;if(f(m)<0)lo=m;else hi=m;}return(lo+hi)/2;}
+    a=b;fa=fb;
+  }
+  return null;
+}
+function findSunLon(JD0,target){
+  let JD=JD0+norm(target-sunLon(JD0).lon)/0.9856;
+  for(let i=0;i<8;i++){const d=((target-sunLon(JD).lon+540)%360)-180;JD+=d/0.9856;}
+  return JD;
+}
+/* Saturn: JPL "Keplerian elements for approximate positions of the major planets", valid 1800-2050 (Saturn within ~0.2 deg) */
+const EL_EMB={a:[1.00000261,0.00000562],e:[0.01671123,-0.00004392],I:[-0.00001531,-0.01294668],L:[100.46457166,35999.37244981],w:[102.93768193,0.32327364],O:[0,0]};
+const EL_SAT={a:[9.53667594,-0.00125060],e:[0.05386179,-0.00050991],I:[2.48599187,0.00193609],L:[49.95424423,1222.49362201],w:[92.59887831,-0.41897216],O:[113.66242448,-0.28867794]};
+function helioXYZ(el,T){
+  const v=k=>el[k][0]+el[k][1]*T;
+  const a=v('a'),e=v('e'),I=v('I'),L=v('L'),wb=v('w'),Om=v('O');
+  const w=wb-Om,M=(((L-wb)%360+540)%360-180)*D2R;
+  let E=M+e*Math.sin(M);
+  for(let i=0;i<12;i++){const dE=(M-(E-e*Math.sin(E)))/(1-e*Math.cos(E));E+=dE;if(Math.abs(dE)<1e-12)break;}
+  const xp=a*(Math.cos(E)-e),yp=a*Math.sqrt(1-e*e)*Math.sin(E);
+  const cw=cos(w),sw=sin(w),cO=cos(Om),sO=sin(Om),cI=cos(I),sI=sin(I);
+  return[
+    (cw*cO-sw*sO*cI)*xp+(-sw*cO-cw*sO*cI)*yp,
+    (cw*sO+sw*cO*cI)*xp+(-sw*sO+cw*cO*cI)*yp,
+    (sw*sI)*xp+(cw*sI)*yp
+  ];
+}
+function saturnPos(JD){
+  const T=(JD-2451545)/36525,s=helioXYZ(EL_SAT,T),e=helioXYZ(EL_EMB,T);
+  const x=s[0]-e[0],y=s[1]-e[1],z=s[2]-e[2];
+  const lon=norm(Math.atan2(y,x)*R2D+1.396971*T+0.0003086*T*T);
+  return{lon,lat:Math.atan2(z,Math.hypot(x,y))*R2D,dist:Math.sqrt(x*x+y*y+z*z)};
+}
+/*MATH-END*/
+
+/* ---------- localization ---------- */
+let lang='zh';
+try{const s=localStorage.getItem('skyclocks-lang');if(s==='zh'||s==='en')lang=s;}catch(e){}
+const MON_EN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const I18N={
+  zh:{
+    title:'三重天文钟',eyebrow:'天文钟',h1:'三重天文钟',paramAria:'时间与地点参数',
+    city:'城市',lat:'纬度（°N）',lon:'经度（°E）',date:'日期',time:'时间',off:'UTC 偏移（小时）',speed:'走时速度',
+    sp1:'实时 ×1',sp0:'暂停',sp60:'1 分钟/秒',sp3600:'1 小时/秒',sp86400:'1 天/秒',sp2629800:'1 个月/秒',
+    bNow:'回到现在',bHm:'−1 小时',bHp:'+1 小时',bDm:'−1 天',bDp:'+1 天',bMm:'−1 个月',bMp:'+1 个月',
+    h2_1:'偏心钟',
+    cap1:'地球在 E（针的轴心），日历圈的圆心 C 偏向远日点一侧。针从 E 穿过圈上的太阳，指向外环的十二宫；日历圈刻有 12 个月与每一天。中间四个扇区是四季，以春分、夏至、秋分、冬至为界，长度并不相等。',
+    aria1:'偏心钟：针指向外环十二宫，内圈为 12 个月 365 天刻度',
+    exag:'偏心放大',
+    rd1_date:'公历日期',rd1_doy:'年内天数',rd1_lon:'太阳黄经 λ',rd1_sign:'所在宫位',rd1_dist:'日地距离',rd1_dev:'放大造成的指针偏差',
+    rd1_season:'当前季节',rd1_next:'下一个节点',
+    seasons:['春','夏','秋','冬'],terms:['春分','夏至','秋分','冬至'],
+    daysFmt:x=>`${x} 天`,
+    seasonFmt:(s,n)=>`${s} · ${n?'北半球':'南半球'}`,
+    nextFmt:(term,n)=>`${term}，还有 ${n} 天`,
+    doyFmt:(d,n)=>`第 ${d} 天 / ${n}`,
+    monLabel:m=>`${m+1}月`,
+    signFmt:(name,d,m)=>`${name}宫 ${d}°${m}′`,
+    h2_2:'月相轨道钟',
+    cap2:'从北极上方俯视：地球在中心，太阳在正上方。针指向月亮，外环是八个月相。一圈是一个朔望月，29.53 天。',
+    aria2:'月相轨道钟：针指向外环月相，一圈 29.53 天',
+    rd2_age:'月龄',rd2_illum:'受照比例',rd2_phase:'月相',rd2_elong:'月日黄经差',
+    rd2_nNew:'下次新月',rd2_nFirst:'下次上弦',rd2_nFull:'下次满月',rd2_nLast:'下次下弦',
+    ageFmt:(a,p)=>`${a} / ${p} 天`,
+    h2_3:'24 小时天空钟',
+    cap3:'12 点在上，0 点在下。长针（金）指太阳，中针（空心）指月亮，短针（青）指上升点所在的宫。外环的十二宫随恒星时转动。最外缘带环的紫色标记是土星，虚线连到圆心。',
+    aria3:'24 小时天空钟：长针指太阳，中针指月亮，短针指上升星座，外缘标记为土星',
+    rd3_solar:'真太阳时（长针）',rd3_lunar:'月亮时（中针）',rd3_asc:'上升点（短针）',rd3_mc:'天顶 MC',rd3_lst:'地方恒星时',
+    rd3_sat:'土星时（紫色标记）',rd3_satpos:'土星所在宫位',rd3_satalt:'土星高度',rd3_satd:'土星距地球',satFmt:(s,r)=>r?`${s}（逆行）`:s,
+    rd3_salt:'太阳高度',rd3_malt:'月亮高度',rd3_rs:'日出 / 日落（真太阳时）',
+    polarNight:'极夜',polarDay:'极昼',
+    foot1:'算法：太阳取低精度黄经公式（约 0.01°），月亮取 Almanac 低精度级数（约 0.3°，未做视差修正），土星取 JPL 的开普勒近似根数（约 0.2°）。时角、高度、上升点由地方恒星时和经纬度算出。',
+    foot2:'十二宫指回归黄道的十二个 30° 分区，与天空中的星座边界不同。月相周期取朔望月 29.53 天，恒星月为 27.32 天。'
+  },
+  en:{
+    title:'Three Sky Clocks',eyebrow:'Astronomical clocks',h1:'Three Sky Clocks',paramAria:'Time and place parameters',
+    city:'City',lat:'Latitude (°N)',lon:'Longitude (°E)',date:'Date',time:'Time',off:'UTC offset (h)',speed:'Speed',
+    sp1:'Real time ×1',sp0:'Paused',sp60:'1 min per sec',sp3600:'1 hour per sec',sp86400:'1 day per sec',sp2629800:'1 month per sec',
+    bNow:'Now',bHm:'−1 hour',bHp:'+1 hour',bDm:'−1 day',bDp:'+1 day',bMm:'−1 month',bMp:'+1 month',
+    h2_1:'Eccentric Clock',
+    cap1:"Earth sits at E, the pivot of the hand. The calendar ring is centred on C, shifted toward the Sun's apogee. The hand runs from E through the Sun on the ring and points to the twelve signs on the outer ring. The calendar ring carries 12 months and every day. The four inner sectors are the seasons, bounded by the equinoxes and solstices; they are not equal in length.",
+    aria1:'Eccentric clock: the hand points to the twelve signs on the outer ring; the inner ring is marked with 12 months and 365 days',
+    exag:'Eccentricity exaggeration',
+    rd1_date:'Date',rd1_doy:'Day of year',rd1_lon:'Solar longitude λ',rd1_sign:'Sign',rd1_dist:'Sun–Earth distance',rd1_dev:'Hand error from exaggeration',
+    rd1_season:'Season',rd1_next:'Next turning point',
+    seasons:['Spring','Summer','Autumn','Winter'],terms:['March equinox','June solstice','September equinox','December solstice'],
+    daysFmt:x=>`${x} days`,
+    seasonFmt:(s,n)=>`${s} · ${n?'Northern':'Southern'} Hemisphere`,
+    nextFmt:(term,n)=>`${term} in ${n} days`,
+    doyFmt:(d,n)=>`Day ${d} of ${n}`,
+    monLabel:m=>MON_EN[m],
+    signFmt:(name,d,m)=>`${name} ${d}°${m}′`,
+    h2_2:'Lunar Orbit Clock',
+    cap2:'Seen from above the north pole: Earth at the centre, the Sun straight up. The hand points to the Moon and the outer ring shows eight phases. One turn is one synodic month, 29.53 days.',
+    aria2:'Lunar orbit clock: the hand points to a phase on the outer ring; one turn is 29.53 days',
+    rd2_age:'Moon age',rd2_illum:'Illuminated',rd2_phase:'Phase',rd2_elong:'Moon–Sun elongation',
+    rd2_nNew:'Next new moon',rd2_nFirst:'Next first quarter',rd2_nFull:'Next full moon',rd2_nLast:'Next last quarter',
+    ageFmt:(a,p)=>`${a} / ${p} days`,
+    h2_3:'24-Hour Sky Clock',
+    cap3:'Noon is at the top and midnight at the bottom. The long gold hand is the Sun, the hollow-tipped middle hand is the Moon, and the short teal hand points to the sign now rising. The outer zodiac ring turns with sidereal time. The violet ringed marker on the outer rim is Saturn, joined to the centre by a dashed line.',
+    aria3:'24-hour sky clock: the long hand is the Sun, the middle hand the Moon, the short hand the rising sign, and the rim marker is Saturn',
+    rd3_solar:'Solar time (long hand)',rd3_lunar:'Lunar time (middle hand)',rd3_asc:'Ascendant (short hand)',rd3_mc:'Midheaven (MC)',rd3_lst:'Local sidereal time',
+    rd3_sat:'Saturn time (violet marker)',rd3_satpos:'Saturn sign',rd3_satalt:'Saturn altitude',rd3_satd:'Saturn distance',satFmt:(s,r)=>r?`${s} (retrograde)`:s,
+    rd3_salt:'Sun altitude',rd3_malt:'Moon altitude',rd3_rs:'Sunrise / sunset (solar time)',
+    polarNight:'Polar night',polarDay:'Midnight sun',
+    foot1:'Algorithms: the Sun uses a low-precision longitude formula (about 0.01°); the Moon uses the Astronomical Almanac low-precision series (about 0.3°, no parallax correction); Saturn uses the JPL approximate Keplerian elements (about 0.2°). Hour angles, altitudes and the Ascendant come from local sidereal time and your latitude and longitude.',
+    foot2:'The twelve signs are the twelve 30° divisions of the tropical zodiac, not the constellation boundaries seen in the sky. The lunar period is the synodic month, 29.53 days; the sidereal month is 27.32 days.'
+  }
+};
+const t=(k,...a)=>{const v=I18N[lang][k];return typeof v==='function'?v(...a):v;};
+const SN_EN=['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+const PH_EN=['New Moon','Waxing Crescent','First Quarter','Waxing Gibbous','Full Moon','Waning Gibbous','Last Quarter','Waning Crescent'];
+
+/* ---------- constants ---------- */
+const SN=['白羊','金牛','双子','巨蟹','狮子','处女','天秤','天蝎','射手','摩羯','水瓶','双鱼'];
+const GLY=['♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'].map(g=>g+'︎');
+const PH=['新月','蛾眉月','上弦月','盈凸月','满月','亏凸月','下弦月','残月'];
+const sName=i=>lang==='en'?SN_EN[i]:SN[i];
+const phName=i=>lang==='en'?PH_EN[i]:PH[i];
+const CITIES=[
+  ['北京',39.9042,116.4074,'Asia/Shanghai'],
+  ['上海',31.2304,121.4737,'Asia/Shanghai'],
+  ['广州',23.1291,113.2644,'Asia/Shanghai'],
+  ['成都',30.5728,104.0668,'Asia/Shanghai'],
+  ['乌鲁木齐',43.8256,87.6168,'Asia/Urumqi'],
+  ['香港',22.3193,114.1694,'Asia/Hong_Kong'],
+  ['台北',25.033,121.5654,'Asia/Taipei'],
+  ['东京',35.6762,139.6503,'Asia/Tokyo'],
+  ['首尔',37.5665,126.978,'Asia/Seoul'],
+  ['新加坡',1.3521,103.8198,'Asia/Singapore'],
+  ['新德里',28.6139,77.209,'Asia/Kolkata'],
+  ['迪拜',25.2048,55.2708,'Asia/Dubai'],
+  ['伦敦',51.5074,-0.1278,'Europe/London'],
+  ['巴黎',48.8566,2.3522,'Europe/Paris'],
+  ['雷克雅未克',64.1466,-21.9426,'Atlantic/Reykjavik'],
+  ['纽约',40.7128,-74.006,'America/New_York'],
+  ['洛杉矶',34.0522,-118.2437,'America/Los_Angeles'],
+  ['圣保罗',-23.5505,-46.6333,'America/Sao_Paulo'],
+  ['开普敦',-33.9249,18.4241,'Africa/Johannesburg'],
+  ['悉尼',-33.8688,151.2093,'Australia/Sydney'],
+  ['自定义',null,null,null]
+];
+const CITY_EN=['Beijing', 'Shanghai', 'Guangzhou', 'Chengdu', 'Ürümqi', 'Hong Kong', 'Taipei', 'Tokyo', 'Seoul', 'Singapore', 'New Delhi', 'Dubai', 'London', 'Paris', 'Reykjavik', 'New York', 'Los Angeles', 'São Paulo', 'Cape Town', 'Sydney', 'Custom'];
+const CUSTOM=CITIES.length-1;
+const st={utc:Date.now(),lat:CITIES[0][1],lon:CITIES[0][2],tz:CITIES[0][3],custOff:8,speed:1,exag:3,city:0};
+
+/* ---------- time zone helpers ---------- */
+function tzOff(ms,tz){
+  const f=new Intl.DateTimeFormat('en-US',{timeZone:tz,hourCycle:'h23',year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric',second:'numeric'});
+  const p={};f.formatToParts(new Date(ms)).forEach(x=>{p[x.type]=x.value});
+  return Math.round((Date.UTC(+p.year,+p.month-1,+p.day,+p.hour,+p.minute,+p.second)-Math.floor(ms/1000)*1000)/60000);
+}
+function offMin(utc){
+  if(st.tz){try{return tzOff(utc==null?st.utc:utc,st.tz);}catch(e){}}
+  return Math.round(st.custOff*60);
+}
+function wallToUtc(W){
+  if(!st.tz)return W-Math.round(st.custOff*60)*60000;
+  try{let u=W-tzOff(W,st.tz)*60000;u=W-tzOff(u,st.tz)*60000;return u;}catch(e){return W-Math.round(st.custOff*60)*60000;}
+}
+const pad=(n,w)=>String(Math.floor(n)).padStart(w||2,'0');
+function wallStr(utc,withSec){
+  const d=new Date(utc+offMin(utc)*60000);
+  return`${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}${withSec?':'+pad(d.getUTCSeconds()):''}`;
+}
+function jdToUtc(JD){return(JD-2440587.5)*86400000;}
+function hms(h){h=((h%24)+24)%24;const s=Math.round(h*3600)%86400;return`${pad(s/3600)}:${pad((s%3600)/60)}:${pad(s%60)}`;}
+function hm(h){h=((h%24)+24)%24;const s=Math.round(h*60)%1440;return`${pad(s/60)}:${pad(s%60)}`;}
+function signStr(lon){
+  lon=norm(lon);const i=Math.floor(lon/30),d=lon-30*i;
+  const dd=Math.floor(d),mm=Math.floor((d-dd)*60);
+  return t('signFmt',sName(i),dd,pad(mm));
+}
+
+/* ---------- svg helpers ---------- */
+const f2=n=>(Math.round(n*100)/100).toString();
+const pt=(r,a)=>[r*Math.sin(a*D2R),-r*Math.cos(a*D2R)];
+function ring(r1,r2,a1,a2){
+  const[x1,y1]=pt(r2,a1),[x2,y2]=pt(r2,a2),[x3,y3]=pt(r1,a2),[x4,y4]=pt(r1,a1);
+  const lg=(a2-a1)>180?1:0;
+  return`M${f2(x1)},${f2(y1)}A${r2},${r2} 0 ${lg} 1 ${f2(x2)},${f2(y2)}L${f2(x3)},${f2(y3)}A${r1},${r1} 0 ${lg} 0 ${f2(x4)},${f2(y4)}Z`;
+}
+function line(r1,r2,a,cls){const[x1,y1]=pt(r1,a),[x2,y2]=pt(r2,a);return`<line class="${cls}" x1="${f2(x1)}" y1="${f2(y1)}" x2="${f2(x2)}" y2="${f2(y2)}"/>`;}
+function moonPath(r,ph){
+  const a=ph*2*Math.PI,c=Math.cos(a),rx=Math.abs(c)*r,w=ph<0.5;
+  const sT=w?(c>0?0:1):(c>0?1:0);
+  return`M0,${-r}A${r},${r} 0 0 ${w?1:0} 0,${r}A${f2(rx)},${r} 0 0 ${sT} 0,${-r}Z`;
+}
+const $=id=>document.getElementById(id);
+function setT(el,v){if(el._v!==v){el._v=v;el.textContent=v;}}
+function setA(el,k,v){if(el['_'+k]!==v){el['_'+k]=v;el.setAttribute(k,v);}}
+function mkRd(id,keys){
+  const el=$(id),refs={};
+  el.innerHTML=keys.map(k=>`<dt data-i18n="${id}_${k}"></dt><dd id="${id}-${k}"></dd>`).join('');
+  keys.forEach(k=>{refs[k]=$(`${id}-${k}`);});
+  return refs;
+}
+
+/* ---------- clock 1: eccentric ---------- */
+let ec=null,ecKey='';
+const eccKey=year=>year+':'+st.exag+':'+(st.lat<0?'S':'N')+':'+(st.tz||st.custOff);
+const termName=m=>{const T=I18N[lang].terms;return(lang==='zh'&&ec&&ec.south)?T[(m+2)%4]:T[m];};
+function buildEcc(year){
+  const k=st.exag,Rc=150,d=0.03342*k*Rc,pa=102.93-270; /* eccentric circle needs offset 2e to match Kepler's equation of center */
+  const C=[d*Math.sin(pa*D2R),-d*Math.cos(pa*D2R)];
+  const south=st.lat<0;
+  const JDa=jdOf(Date.UTC(year,0,1)),JDb=jdOf(Date.UTC(year+1,0,1));
+  const terms=[findSunLon(JDa,0),findSunLon(JDa,90),findSunLon(JDa,180),findSunLon(JDa,270),findSunLon(JDb,0)];
+  ec={C,Rc,terms,south};
+  let s='';
+  const SEAS=I18N[lang].seasons,COL=['--sign','--sun','--autumn','--earth'];
+  const md=jd=>{const ms=jdToUtc(jd),d=new Date(ms+offMin(ms)*60000);return pad(d.getUTCMonth()+1)+'/'+pad(d.getUTCDate());};
+  for(let w=0;w<4;w++){
+    const a1=90*w-270,am=a1+45,si=(w+(south?2:0))%4,nm=pt(88,am);
+    s+=`<path id="ssw${w}" d="${ring(34,122,a1,a1+90)}" fill="var(${COL[si]})" fill-opacity=".14" stroke="var(--line)" stroke-width="1"/>`;
+    s+=`<text class="sname" x="${f2(nm[0])}" y="${f2(nm[1])}">${SEAS[si]}</text>`;
+    s+=`<text class="sdate" x="${f2(nm[0])}" y="${f2(nm[1]+15)}">${md(terms[w])}–${md(terms[w+1])}</text>`;
+    s+=`<text class="sdate" x="${f2(nm[0])}" y="${f2(nm[1]+27)}">${t('daysFmt',(terms[w+1]-terms[w]).toFixed(1))}</text>`;
+  }
+  for(let i=0;i<12;i++){
+    const a1=30*i-270,a2=a1+30,am=a1+15,g=pt(229,am),n=pt(212,am);
+    s+=`<path d="${ring(205,240,a1,a2)}" fill="${i%2?'var(--tint-b)':'var(--tint-a)'}" stroke="var(--line)" stroke-width="1"/>`;
+    s+=`<text class="glyph" x="${f2(g[0])}" y="${f2(g[1])}">${GLY[i]}</text><text class="zn" x="${f2(n[0])}" y="${f2(n[1])}">${sName(i)}</text>`;
+  }
+  for(let j=0;j<36;j++)s+=line(199,205,j*10-270,'tk');
+  s+=`<g transform="translate(${f2(C[0])},${f2(C[1])})"><circle r="${Rc}" class="rg" style="stroke:var(--ink2)"/>`;
+  const t0=Date.UTC(year,0,1),nd=Math.round((Date.UTC(year+1,0,1)-t0)/86400000),starts=[];
+  for(let i=0;i<nd;i++){
+    const ms=t0+i*86400000,dom=new Date(ms).getUTCDate();
+    const phi=280.460+0.9856474*(jdOf(ms)-2451545)-270;
+    if(dom===1){starts.push(i);s+=line(Rc,Rc+16,phi,'tk2');}
+    else if(dom%5===0)s+=line(Rc,Rc+9,phi,'tk');
+    else s+=line(Rc,Rc+5,phi,'tk');
+  }
+  starts.push(nd);
+  for(let m=0;m<12;m++){
+    const mid=(starts[m]+starts[m+1])/2,ms=t0+mid*86400000;
+    const phi=280.460+0.9856474*(jdOf(ms)-2451545)-270,p=pt(Rc+28,phi);
+    s+=`<text class="num hi" x="${f2(p[0])}" y="${f2(p[1])}">${t('monLabel',m)}</text>`;
+  }
+  s+=`<path d="M-5,0H5M0,-5V5" class="tk"/></g>`;
+  $('ecStatic').innerHTML=s;
+  $('ecCLab').setAttribute('x',f2(C[0]+10));$('ecCLab').setAttribute('y',f2(C[1]-6));
+  ecKey=eccKey(year);
+}
+const rd1=mkRd('rd1',['date','doy','season','next','lon','sign','dist','dev']);
+
+/* ---------- clock 2: lunar ---------- */
+function buildMoon(){
+  let s=`<circle r="240" fill="var(--tint-b)" stroke="var(--line)"/><circle r="192" fill="var(--panel)" stroke="var(--line)"/>`;
+  s+=`<circle r="95" class="rg" stroke-dasharray="2 5" style="stroke:var(--ink2)"/>`;
+  s+=`<line x1="0" y1="-16" x2="0" y2="-190" stroke="var(--sun)" stroke-width="1.2" stroke-dasharray="3 4" opacity=".7"/>`;
+  s+=`<text class="glyph" x="0" y="-124" style="fill:var(--sun)">☉︎</text>`;
+  s+=`<circle r="160" class="rg"/>`;
+  for(let d=0;d<30;d++){
+    const a=d/SYN*360;
+    s+=line(160,d%5===0?172:167,a,d%5===0?'tk2':'tk');
+  }
+  for(let d=0;d<30;d+=5){const p=pt(184,d/SYN*360);s+=`<text class="num" x="${f2(p[0])}" y="${f2(p[1])}">${d}</text>`;}
+  for(let i=0;i<8;i++){
+    const p=pt(216,45*i);
+    s+=`<g transform="translate(${f2(p[0])},${f2(p[1])})"><circle r="17" fill="var(--dark)" stroke="var(--ink2)"/><path d="${moonPath(17,i/8)}" fill="var(--lit)"/><circle r="17" fill="none" stroke="var(--ink2)"/><circle id="mph${i}" r="22" fill="none" stroke="var(--sun)" stroke-width="2.5" opacity="0"/></g>`;
+  }
+  s+=`<circle r="13" fill="var(--earth)" stroke="var(--ink2)"/><path d="M-13,0H13M0,-13V13" stroke="var(--panel)" stroke-width=".8" opacity=".6"/>`;
+  $('mnStatic').innerHTML=s;
+}
+const rd2=mkRd('rd2',['age','illum','phase','elong','nNew','nFirst','nFull','nLast']);
+let nextCache={t:-1e9,res:null};
+
+/* ---------- clock 3: sky ---------- */
+const EPS0=23.4393,alpha=[];
+for(let k=0;k<=12;k++){
+  let a=norm(Math.atan2(sin(30*k)*cos(EPS0),cos(30*k))*R2D);
+  if(k>0)while(a<=alpha[k-1])a+=360;
+  alpha.push(a);
+}
+let glyphEls=[],nameEls=[];
+function buildSky(){
+  let s='';
+  for(let t=0;t<144;t++){
+    const a=(t/6-12)*15;
+    if(t%6===0)s+=line(172,188,a,'tk2');else if(t%3===0)s+=line(176,188,a,'tk');else s+=line(181,188,a,'tk');
+  }
+  s+=`<circle r="172" class="rg"/><circle r="188" class="rg"/>`;
+  for(let h=0;h<24;h++){const p=pt(156,(h-12)*15);s+=`<text class="num${h%6===0?' hi':''}" x="${f2(p[0])}" y="${f2(p[1])}">${h}</text>`;}
+  $('skStatic').innerHTML=s;
+  let z='',g='';
+  for(let i=0;i<12;i++){
+    z+=`<path d="${ring(192,240,-alpha[i+1],-alpha[i])}" fill="${i%2?'var(--tint-b)':'var(--tint-a)'}" stroke="var(--line)" stroke-width="1"/>`;
+    g+=`<text class="glyph" id="skg${i}">${GLY[i]}</text><text class="zn" id="skn${i}">${sName(i)}</text>`;
+  }
+  $('skZ').innerHTML=z;$('skGl').innerHTML=g;
+  glyphEls=[];nameEls=[];
+  for(let i=0;i<12;i++){glyphEls.push($('skg'+i));nameEls.push($('skn'+i));}
+}
+const rd3=mkRd('rd3',['solar','lunar','asc','mc','lst','salt','malt','rs','sat','satpos','satalt','satd']);
+
+/* ---------- render ---------- */
+function render(now){
+  const u=st.utc,JD=jdOf(u),n=JD-2451545,T=n/36525,eps=23.439291-0.0130042*T;
+  const sun=sunLon(JD),mo=moonPos(JD);
+  const sEq=eclToEq(sun.lon,0,eps),mEq=eclToEq(mo.lon,mo.lat,eps);
+  const LST=norm(280.46061837+360.98564736629*n+st.lon);
+  const A=angles(LST,st.lat,eps),aEq=eclToEq(A.asc,0,eps);
+  const Hs=norm(LST-sEq.ra),Hm=norm(LST-mEq.ra),Ha=norm(LST-aEq.ra);
+  const off=offMin(u);
+
+  setT($('nowLocal'),wallStr(u,true));
+  setT($('nowUtc'),`UTC${off>=0?'+':'−'}${(Math.abs(off)/60).toString()}　·　UTC ${new Date(u).toISOString().slice(0,19).replace('T',' ')}`);
+
+  /* clock 1 */
+  const wd=new Date(u+off*60000),year=wd.getUTCFullYear();
+  if(ecKey!==eccKey(year))buildEcc(year);
+  const phm=sun.L-270,S=[ec.C[0]+ec.Rc*sin(phm),ec.C[1]-ec.Rc*cos(phm)];
+  const ph=Math.atan2(S[0],-S[1])*R2D,modelLon=norm(ph+270);
+  setA($('ecHand'),'transform',`rotate(${f2(ph)})`);
+  setA($('ecSun'),'cx',f2(S[0]));setA($('ecSun'),'cy',f2(S[1]));
+  const doy=Math.floor((Date.UTC(year,wd.getUTCMonth(),wd.getUTCDate())-Date.UTC(year,0,1))/86400000)+1;
+  const ndy=Math.round((Date.UTC(year+1,0,1)-Date.UTC(year,0,1))/86400000);
+  setT(rd1.date,`${year}-${pad(wd.getUTCMonth()+1)}-${pad(wd.getUTCDate())}`);
+  setT(rd1.doy,t('doyFmt',doy,ndy));
+  const sw=Math.floor(sun.lon/90)%4;
+  for(let k=0;k<4;k++){const e=$('ssw'+k);if(e)setA(e,'fill-opacity',k===sw?'.38':'.14');}
+  const si=(sw+(ec.south?2:0))%4;
+  setT(rd1.season,t('seasonFmt',I18N[lang].seasons[si],!ec.south));
+  const nextJD=findSunLon(JD,((sw+1)*90)%360);
+  setT(rd1.next,t('nextFmt',termName((sw+1)%4),Math.round(nextJD-JD)));
+  setT(rd1.lon,sun.lon.toFixed(3)+'°');
+  setT(rd1.sign,signStr(sun.lon));
+  setT(rd1.dist,sun.dist.toFixed(4)+' AU');
+  const dev=((modelLon-sun.lon+540)%360)-180;
+  setT(rd1.dev,(dev>=0?'+':'−')+Math.abs(dev).toFixed(2)+'°');
+
+  /* clock 2 */
+  const D=norm(mo.lon-sun.lon),phs=D/360;
+  setA($('mnHand'),'transform',`rotate(${f2(D)})`);
+  const bp=pt(95,D);setA($('mnBead'),'transform',`translate(${f2(bp[0])},${f2(bp[1])})`);
+  const idx=Math.floor(((D+22.5)%360)/45);
+  for(let i=0;i<8;i++)setA($('mph'+i),'opacity',i===idx?'1':'0');
+  setA($('mnBig'),'d',moonPath(26,phs));
+  const illum=(1-cos(mo.lat)*cos(D))/2;
+  setT(rd2.age,t('ageFmt',(phs*SYN).toFixed(1),SYN.toFixed(2)));
+  setT(rd2.illum,(illum*100).toFixed(0)+'%');
+  setT(rd2.phase,phName(idx));
+  setT(rd2.elong,D.toFixed(1)+'°');
+  if(now-nextCache.t>400){
+    nextCache={t:now,res:[0,90,180,270].map(t=>nextPhase(JD,t))};
+  }
+  const nx=nextCache.res,keys=['nNew','nFirst','nFull','nLast'];
+  keys.forEach((k,i)=>setT(rd2[k],nx[i]==null?'—':wallStr(jdToUtc(nx[i]),false)));
+
+  /* clock 3 */
+  setA($('hSun'),'transform',`rotate(${f2(Hs)})`);
+  setA($('hMoon'),'transform',`rotate(${f2(Hm)})`);
+  setA($('hAsc'),'transform',`rotate(${f2(Ha)})`);
+  setA($('skZ'),'transform',`rotate(${f2(LST)})`);
+  for(let i=0;i<12;i++){
+    const a=LST-(alpha[i]+alpha[i+1])/2,g=pt(229,a),nn=pt(212,a);
+    setA(glyphEls[i],'x',f2(g[0]));setA(glyphEls[i],'y',f2(g[1]));
+    setA(nameEls[i],'x',f2(nn[0]));setA(nameEls[i],'y',f2(nn[1]));
+  }
+  const cH0=-Math.tan(st.lat*D2R)*Math.tan(sEq.dec*D2R);
+  let H0=0,rs;
+  if(cH0>=1){H0=0;rs=t('polarNight');}else if(cH0<=-1){H0=179.9;rs=t('polarDay');}
+  else{H0=Math.acos(cH0)*R2D;rs=`${hm(12-H0/15)} / ${hm(12+H0/15)}`;}
+  setA($('skDay'),'d',H0<0.05?'':ring(172,188,-H0,H0));
+  setT(rd3.solar,hms(Hs/15+12));
+  setT(rd3.lunar,hms(Hm/15+12));
+  setT(rd3.asc,signStr(A.asc));
+  setT(rd3.mc,signStr(A.mc));
+  setT(rd3.lst,hms(LST/15));
+  setT(rd3.salt,altOf(sEq.dec,Hs,st.lat).toFixed(1)+'°');
+  setT(rd3.malt,altOf(mEq.dec,Hm,st.lat).toFixed(1)+'°');
+  setT(rd3.rs,rs);
+  const sat=saturnPos(JD),satEq=eclToEq(sat.lon,sat.lat,eps),Hsat=norm(LST-satEq.ra);
+  const dSat=((saturnPos(JD+0.5).lon-saturnPos(JD-0.5).lon+540)%360)-180;
+  setA($('hSat'),'transform',`rotate(${f2(Hsat)})`);
+  const sp=pt(250,Hsat);setA($('satIcon'),'transform',`translate(${f2(sp[0])},${f2(sp[1])})`);
+  setT(rd3.sat,hms(Hsat/15+12));
+  setT(rd3.satpos,t('satFmt',signStr(sat.lon),dSat<0));
+  setT(rd3.satalt,altOf(satEq.dec,Hsat,st.lat).toFixed(1)+'°');
+  setT(rd3.satd,sat.dist.toFixed(2)+' AU');
+
+  syncInputs(off);
+}
+
+/* ---------- controls ---------- */
+const el={city:$('city'),lat:$('lat'),lon:$('lon'),date:$('date'),time:$('time'),off:$('off'),speed:$('speed')};
+function fillCities(){el.city.innerHTML=CITIES.map((c,i)=>`<option value="${i}">${lang==='en'?CITY_EN[i]:c[0]}</option>`).join('');el.city.value=st.city;}
+function applyLang(){
+  const D=I18N[lang];
+  document.documentElement.lang=lang==='en'?'en':'zh-CN';
+  document.title=D.title;
+  document.querySelectorAll('[data-i18n]').forEach(n=>{const v=D[n.dataset.i18n];if(typeof v==='string')n.textContent=v;});
+  document.querySelectorAll('[data-i18n-aria]').forEach(n=>{const v=D[n.dataset.i18nAria];if(typeof v==='string')n.setAttribute('aria-label',v);});
+  fillCities();
+  for(let i=0;i<12;i++){if(nameEls[i])nameEls[i].textContent=sName(i);}
+  ecKey='';
+  document.querySelectorAll('.lang button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===lang)));
+}
+function setLang(l){
+  lang=l;
+  try{localStorage.setItem('skyclocks-lang',lang);}catch(e){}
+  applyLang();
+}
+document.querySelectorAll('.lang button').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.lang)));
+document.addEventListener('keydown',e=>{
+  if((e.key!=='l'&&e.key!=='L')||e.ctrlKey||e.metaKey||e.altKey)return;
+  const tg=e.target&&e.target.tagName;
+  if(tg==='INPUT'||tg==='SELECT'||tg==='TEXTAREA')return;
+  setLang(lang==='zh'?'en':'zh');
+});
+function putLatLon(){el.lat.value=st.lat;el.lon.value=st.lon;el.city.value=st.city;}
+function syncInputs(off){
+  const d=new Date(st.utc+off*60000);
+  const ds=`${d.getUTCFullYear()}-${pad(d.getUTCMonth()+1)}-${pad(d.getUTCDate())}`;
+  const ts=`${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
+  if(document.activeElement!==el.date&&el.date.value!==ds)el.date.value=ds;
+  if(document.activeElement!==el.time&&el.time.value!==ts)el.time.value=ts;
+  const ov=String(off/60);
+  if(document.activeElement!==el.off&&el.off.value!==ov)el.off.value=ov;
+}
+el.city.addEventListener('change',()=>{
+  const i=+el.city.value;st.city=i;
+  if(i===CUSTOM){st.custOff=offMin()/60;st.tz=null;}
+  else{st.lat=CITIES[i][1];st.lon=CITIES[i][2];st.tz=CITIES[i][3];}
+  putLatLon();
+});
+function latLonInput(){
+  const la=parseFloat(el.lat.value),lo=parseFloat(el.lon.value);
+  if(isFinite(la))st.lat=Math.max(-89.9,Math.min(89.9,la));
+  if(isFinite(lo))st.lon=Math.max(-180,Math.min(180,lo));
+  st.city=CUSTOM;el.city.value=CUSTOM;
+}
+el.lat.addEventListener('input',latLonInput);
+el.lon.addEventListener('input',latLonInput);
+function dtInput(){
+  const d=el.date.value.split('-').map(Number),t=el.time.value.split(':').map(Number);
+  if(d.length<3||!isFinite(d[0])||t.length<2||!isFinite(t[0]))return;
+  st.utc=wallToUtc(Date.UTC(d[0],d[1]-1,d[2],t[0],t[1],t[2]||0));
+}
+el.date.addEventListener('input',dtInput);
+el.time.addEventListener('input',dtInput);
+el.off.addEventListener('input',()=>{
+  const v=parseFloat(el.off.value);
+  if(!isFinite(v))return;
+  st.tz=null;st.custOff=v; /* the instant stays; only the wall clock changes */
+});
+el.speed.addEventListener('change',()=>{st.speed=+el.speed.value;});
+function bump(ms){st.utc+=ms;}
+function bumpMonth(dir){
+  const off=offMin(),d=new Date(st.utc+off*60000);
+  const W=Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+dir,d.getUTCDate(),d.getUTCHours(),d.getUTCMinutes(),d.getUTCSeconds());
+  st.utc=wallToUtc(W);
+}
+$('bNow').addEventListener('click',()=>{st.utc=Date.now();});
+$('bH-').addEventListener('click',()=>bump(-3600000));
+$('bH+').addEventListener('click',()=>bump(3600000));
+$('bD-').addEventListener('click',()=>bump(-86400000));
+$('bD+').addEventListener('click',()=>bump(86400000));
+$('bM-').addEventListener('click',()=>bumpMonth(-1));
+$('bM+').addEventListener('click',()=>bumpMonth(1));
+$('exag').addEventListener('input',()=>{st.exag=+$('exag').value;$('exagv').textContent='×'+st.exag;});
+
+/* ---------- start ---------- */
+buildMoon();buildSky();putLatLon();applyLang();
+let last=performance.now();
+function frame(now){
+  const dt=now-last;last=now;
+  if(st.speed)st.utc+=dt*st.speed;
+  render(now);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>

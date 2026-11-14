@@ -11,4 +11,10 @@ One folder per artifact, named `<slug>-v<version>`. Each folder holds the page a
 | `sky-clocks-v5/` | 三重天文钟: eccentric, lunar and 24-hour sky clocks | 5 |
 | `maze-lab-v1794460546-92df/` | Maze Lab: 10 generators, 9 solvers, structure metrics | version id `1794460546-92df` |
 
+## Rights
+
+未经许可不得使用、复制或分发；不授予任何许可。
+
+No use, copying, or distribution without permission. No license is granted.
+
 

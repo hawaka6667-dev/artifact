@@ -13,8 +13,6 @@ One folder per artifact, named `<slug>-v<version>`. Each folder holds the page a
 
 ## Rights
 
-未经许可不得使用、复制或分发；不授予任何许可。
-
 No use, copying, or distribution without permission. No license is granted.
 
 

@@ -11,13 +11,14 @@
     .intro, footer { opacity: .75; }
     ul { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: 1rem; }
     li { border: 1px solid; border-radius: .75rem; overflow: hidden; }
-    li a { display: block; text-decoration: none; }
+    li a { display: flex; align-items: center; gap: 1rem; padding: 1rem; text-decoration: none; }
     li a:focus-visible { outline: 3px solid currentColor; outline-offset: -3px; }
-    li img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; }
-    .card-text { padding: 1rem 1.25rem; }
+    li img { display: block; width: 112px; height: auto; aspect-ratio: 4 / 3; object-fit: cover; border-radius: .35rem; flex-shrink: 0; }
+    .card-text { min-width: 0; }
     li p { margin: .25rem 0 0; }
     a { color: inherit; }
     footer { margin-top: 3rem; font-size: .875rem; }
+    @media (max-width: 360px) { li img { width: 80px; } }
   </style>
 </head>
 <body>

@@ -9,8 +9,12 @@
     body { max-width: 48rem; margin: 0 auto; padding: 3rem 1.5rem; line-height: 1.6; }
     h1 { margin-bottom: .25rem; }
     .intro, footer { opacity: .75; }
-    ul { list-style: none; padding: 0; display: grid; gap: 1rem; }
-    li { border: 1px solid; border-radius: .75rem; padding: 1rem 1.25rem; }
+    ul { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: 1rem; }
+    li { border: 1px solid; border-radius: .75rem; overflow: hidden; }
+    li a { display: block; text-decoration: none; }
+    li a:focus-visible { outline: 3px solid currentColor; outline-offset: -3px; }
+    li img { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; }
+    .card-text { padding: 1rem 1.25rem; }
     li p { margin: .25rem 0 0; }
     a { color: inherit; }
     footer { margin-top: 3rem; font-size: .875rem; }
@@ -24,12 +28,22 @@
   <main>
     <ul>
       <li>
-        <a href="./sky-clocks-v5/"><strong>三重天文钟</strong></a>
-        <p>偏心钟、月相轨道钟与 24 小时天空钟。</p>
+        <a href="./sky-clocks-v5/">
+          <img src="./sky-clocks-v5/preview.png" alt="" width="1280" height="960">
+          <div class="card-text">
+            <strong>三重天文钟</strong>
+            <p>偏心钟、月相轨道钟与 24 小时天空钟。</p>
+          </div>
+        </a>
       </li>
       <li>
-        <a href="./maze-lab-v1794460546-92df/"><strong>Maze Lab</strong></a>
-        <p>生成、求解并分析迷宫。</p>
+        <a href="./maze-lab-v1794460546-92df/">
+          <img src="./maze-lab-v1794460546-92df/preview.png" alt="" width="1280" height="960">
+          <div class="card-text">
+            <strong>Maze Lab</strong>
+            <p>生成、求解并分析迷宫。</p>
+          </div>
+        </a>
       </li>
     </ul>
   </main>

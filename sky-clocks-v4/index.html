@@ -166,9 +166,9 @@ footer p{margin:0}
         <g id="mnStatic"></g>
         <g id="mnHand"><line x1="0" y1="-14" x2="0" y2="-188" stroke="var(--ink)" stroke-width="2.4"/><circle cy="-190" r="3.5" fill="var(--ink)"/></g>
         <g id="mnBead">
-          <circle r="11" fill="var(--dark)" stroke="var(--ink2)" stroke-width="1"/>
-          <path d="M-11,0A11,11 0 0 1 11,0Z" fill="var(--lit)"/>
-          <circle r="11" fill="none" stroke="var(--ink2)" stroke-width="1"/>
+          <circle r="13" fill="var(--dark)" stroke="var(--ink2)" stroke-width="1"/>
+          <path id="mnBeadLit" fill="var(--lit)"/>
+          <circle r="13" fill="none" stroke="var(--ink2)" stroke-width="1"/>
         </g>
       </svg>
       <div class="moonrow">
@@ -301,7 +301,7 @@ const I18N={
     monLabel:m=>`${m+1}月`,
     signFmt:(name,d,m)=>`${name}宫 ${d}°${m}′`,
     h2_2:'月相轨道钟',
-    cap2:'从北极上方俯视：地球在中心，太阳在正上方。针指向月亮，外环是八个月相。一圈是一个朔望月，29.53 天。',
+    cap2:'从北极上方俯视：地球在中心，太阳在正上方。针指向月亮，小月亮画的是从圆心的地球看到的样子，外环是八个月相。一圈是一个朔望月，29.53 天。',
     aria2:'月相轨道钟：针指向外环月相，一圈 29.53 天',
     rd2_age:'月龄',rd2_illum:'受照比例',rd2_phase:'月相',rd2_elong:'月日黄经差',
     rd2_nNew:'下次新月',rd2_nFirst:'下次上弦',rd2_nFull:'下次满月',rd2_nLast:'下次下弦',
@@ -335,7 +335,7 @@ const I18N={
     monLabel:m=>MON_EN[m],
     signFmt:(name,d,m)=>`${name} ${d}°${m}′`,
     h2_2:'Lunar Orbit Clock',
-    cap2:'Seen from above the north pole: Earth at the centre, the Sun straight up. The hand points to the Moon and the outer ring shows eight phases. One turn is one synodic month, 29.53 days.',
+    cap2:'Seen from above the north pole: Earth at the centre, the Sun straight up. The hand points to the Moon, drawn as it looks from Earth at the centre, and the outer ring shows eight phases. One turn is one synodic month, 29.53 days.',
     aria2:'Lunar orbit clock: the hand points to a phase on the outer ring; one turn is 29.53 days',
     rd2_age:'Moon age',rd2_illum:'Illuminated',rd2_phase:'Phase',rd2_elong:'Moon–Sun elongation',
     rd2_nNew:'Next new moon',rd2_nFirst:'Next first quarter',rd2_nFull:'Next full moon',rd2_nLast:'Next last quarter',
@@ -578,7 +578,7 @@ function render(now){
   /* clock 2 */
   const D=norm(mo.lon-sun.lon),phs=D/360;
   setA($('mnHand'),'transform',`rotate(${f2(D)})`);
-  const bp=pt(95,D);setA($('mnBead'),'transform',`translate(${f2(bp[0])},${f2(bp[1])})`);
+  const bp=pt(95,D);setA($('mnBead'),'transform',`translate(${f2(bp[0])},${f2(bp[1])})`);setA($('mnBeadLit'),'d',moonPath(13,phs));
   const idx=Math.floor(((D+22.5)%360)/45);
   for(let i=0;i<8;i++)setA($('mph'+i),'opacity',i===idx?'1':'0');
   setA($('mnBig'),'d',moonPath(26,phs));

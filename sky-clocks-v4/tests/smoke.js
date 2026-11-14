@@ -51,3 +51,10 @@ for(const L of ['zh','en']){
   ctx.__st.lat=39.9;ctx.__st.utc=Date.UTC(2026,10,11,12,0,0);ctx.__render(40000);
   console.log(L,'saturn:',['rd3-sat','rd3-satpos','rd3-satalt','rd3-satd'].map(k=>cache[k].textContent).join(' | '),'| icon:',cache['satIcon']._attrs.transform);
 }
+// the Moon bead must use the same phase shape as the ring icons
+{
+  langBtns.find(b=>b.dataset.lang==='en').click();
+  ctx.__st.utc=Date.UTC(2026,10,14,6,0,0);ctx.__render(90000);
+  const d=cache['mnBeadLit']._attrs.d;
+  console.log('bead path set:',/^M0,-13A13,13/.test(d)?'ok':'FAIL',d);
+}

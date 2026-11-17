@@ -1,0 +1,8 @@
+{
+  "title": "上色地球仪",
+  "slug": "globe-painter",
+  "url": "https://claude.ai/artifact/A41zc1izsy6Xiw9LhVHdNb",
+  "version": 3,
+  "versionId": "1794918535-fa31",
+  "note": "Authoring source (no doctype skeleton). Republish this file to the url above. Country geometry is embedded (world-atlas 50m); d3 and topojson load from cdnjs."
+}

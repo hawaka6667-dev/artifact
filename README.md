@@ -11,6 +11,7 @@ One folder per artifact, named `<slug>-v<version>`. Each folder holds the page a
 | `sky-clocks-v5/` | 三重天文钟: eccentric, lunar and 24-hour sky clocks | 5 |
 | `maze-lab-v1794460546-92df/` | Maze Lab: 10 generators, 9 solvers, structure metrics | version id `1794460546-92df` |
 | `star-globe-v1.8.0/` | 星图球 Star Globe: 3D celestial globe with ecliptic and lunar orbit, bilingual star lookup | 1.8.0 |
+| `globe-painter-v3/` | 上色地球仪 Globe Painter: rotatable, see-through world globe; paint any country with adjustable opacity | 3 |
 
 ## Rights
 

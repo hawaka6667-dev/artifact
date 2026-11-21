@@ -5,39 +5,53 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Solar System · 3D Orbits</title>
 <style>
-:root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-html,body{height:100%;margin:0;background:#000;color:#dff;font-family:"Segoe UI","Segoe UI Symbol",-apple-system,"PingFang SC","Microsoft YaHei",Roboto,sans-serif;overflow:hidden}
+:root{color-scheme:dark;--pn:rgba(8,20,15,.88);--bd:#2f5444;--ac:#7dfc7d;--tx:#dff;--mu:#7a9;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;margin:0;background:#000;color:var(--tx);font-family:"Segoe UI","Segoe UI Symbol",-apple-system,"PingFang SC","Microsoft YaHei",Roboto,sans-serif;overflow:hidden}
 canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}
 #cap{position:fixed;top:calc(26px + env(safe-area-inset-top,0px));left:0;right:0;text-align:center;font-size:clamp(20px,3vw,32px);font-weight:300;letter-spacing:.12em;color:#f4f4f4;pointer-events:none;text-shadow:0 0 6px #000}
-.bar{position:fixed;left:0;right:0;bottom:0;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,rgba(0,0,0,.8));font-size:14px}
-button,select{background:rgba(10,24,18,.85);color:#dff;border:1px solid #3a5a4a;border-radius:8px;padding:6px 12px;font:inherit;cursor:pointer}
-button:hover{border-color:#7dfc7d}
+button,select{background:var(--pn);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:6px 12px;font:inherit;cursor:pointer;white-space:nowrap}
+button:hover,select:hover{border-color:var(--ac)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
 button:disabled{opacity:.45;cursor:not-allowed}
-input[type=range]{accent-color:#7dfc7d;vertical-align:middle}
-#q,.ph input{background:rgba(10,24,18,.85);color:#dff;border:1px solid #3a5a4a;border-radius:8px;padding:6px 10px;font:inherit}
-#q{width:120px}
+input[type=range]{accent-color:var(--ac);vertical-align:middle}
+#q,.ph input{background:var(--pn);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:6px 10px;font:inherit}
+#q{width:130px}
+.bar{position:fixed;left:0;right:0;bottom:0;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,rgba(0,0,0,.82));font-size:14px;z-index:2}
+.bar .seg{display:flex;gap:0}
+.bar .seg button{border-radius:0;margin-left:-1px}
+.bar .seg button:first-child{border-radius:8px 0 0 8px;margin-left:0}
+.bar .seg button:last-child{border-radius:0 8px 8px 0}
+.bar .seg button:hover{position:relative;z-index:1}
 #top{position:fixed;right:10px;top:calc(10px + env(safe-area-inset-top,0px));display:flex;gap:8px;align-items:center;z-index:7}
-#top button,#top select{padding:4px 10px;font-size:13px}
-#card{position:fixed;left:10px;bottom:calc(76px + env(safe-area-inset-bottom,0px));display:none;background:rgba(8,20,15,.9);border:1px solid #3a5a4a;border-radius:10px;padding:10px 14px;font-size:13px;line-height:1.8;min-width:190px;max-width:270px;z-index:3}
+#top button,#top select{padding:4px 10px;font-size:13px;backdrop-filter:blur(6px)}
+#card{position:fixed;left:10px;bottom:calc(76px + env(safe-area-inset-bottom,0px));display:none;background:var(--pn);backdrop-filter:blur(8px);border:1px solid var(--bd);border-radius:12px;padding:10px 14px;font-size:13px;line-height:1.8;min-width:190px;max-width:270px;z-index:3}
 #card span{opacity:.6;margin-left:4px}
-.bd{display:inline-block;padding:0 8px;border-radius:10px;border:1px solid #3a5a4a;font-size:12px;margin:0 6px 4px 0}
+.bd{display:inline-block;padding:0 8px;border-radius:10px;border:1px solid var(--bd);font-size:12px;margin:0 6px 4px 0}
 .mu{opacity:.55}
 .hk{display:inline-block;padding:0 6px;border-radius:6px;background:#5a3a10;color:#ffd48a;font-size:11px;margin-left:4px}
 #pt,#lc{position:static;inset:auto;width:160px;height:100px;cursor:default;touch-action:auto;display:block;margin-bottom:6px;border-radius:6px}
 #lc{width:240px;height:150px}
-#flt{position:fixed;left:10px;top:calc(10px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:5px;z-index:4}
-#flt button{padding:3px 10px;font-size:13px;text-align:left}
+#fltw{position:fixed;left:10px;top:calc(10px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:6px;z-index:4;align-items:flex-start}
+#fltb{padding:4px 10px;font-size:13px;backdrop-filter:blur(6px)}
+#flt{display:flex;flex-direction:column;gap:5px}
+#flt button{padding:3px 10px;font-size:13px;text-align:left;backdrop-filter:blur(6px)}
 #flt hr{width:100%;border:0;border-top:1px solid #234;margin:3px 0}
-#ev{position:fixed;right:10px;top:calc(48px + env(safe-area-inset-top,0px));width:min(430px,calc(100vw - 20px));max-height:calc(100vh - 130px);overflow:auto;display:none;background:rgba(8,20,15,.96);border:1px solid #3a5a4a;border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.6;z-index:6;box-sizing:border-box}
-#ev h4{margin:10px 0 4px;color:#7dfc7d;font-size:13px}
+#ev{position:fixed;right:10px;top:calc(48px + env(safe-area-inset-top,0px));width:min(430px,calc(100vw - 20px));max-height:calc(100vh - 130px);overflow:auto;display:none;background:rgba(8,20,15,.96);border:1px solid var(--bd);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.6;z-index:6;box-sizing:border-box}
+#ev h4{margin:10px 0 4px;color:var(--ac);font-size:13px}
 #ev p{margin:3px 0}
-#ev textarea{width:100%;box-sizing:border-box;height:70px;background:#050f0a;color:#dff;border:1px solid #3a5a4a;border-radius:6px;font:inherit}
+#ev textarea{width:100%;box-sizing:border-box;height:70px;background:#050f0a;color:var(--tx);border:1px solid var(--bd);border-radius:6px;font:inherit}
 #pg{position:fixed;inset:0;display:none;background:#04100b;z-index:10;overflow:auto;padding:calc(12px + env(safe-area-inset-top,0px)) 14px calc(20px + env(safe-area-inset-bottom,0px));box-sizing:border-box;font-size:14px;line-height:1.7}
 .ph{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
-.tab.on{border-color:#7dfc7d;background:#123222}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.tab.on{border-color:var(--ac);background:#123222}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;align-items:center}
 .chips button{padding:3px 10px;font-size:13px}
 .lay{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.gal{flex:1 1 520px;min-width:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px;align-content:start}
+.gal h5{grid-column:1/-1;margin:10px 0 0;color:var(--ac);font-size:13px;font-weight:600}
+.cell{background:var(--pn);border:1px solid var(--bd);border-radius:12px;padding:8px;cursor:pointer;line-height:1.45}
+.cell:hover{border-color:var(--ac)}.cell.on{border-color:var(--ac);background:#123222}
+.cell canvas{position:static;inset:auto;width:100%;height:auto;aspect-ratio:8/5;cursor:pointer;touch-action:auto;border-radius:8px;display:block;margin-bottom:6px;background:#02060a}
+.cell .cn{font-weight:600;font-size:14px}.cell .cs{font-size:12px;color:var(--mu)}.cell .cm{margin:4px 0 2px}.cell .cd{font-size:12px;color:#9fd}
 .tw{flex:1 1 560px;min-width:0;overflow:auto;max-height:calc(100vh - 150px)}
 .tb{border-collapse:collapse;width:100%;font-size:13px}
 .tb th{position:sticky;top:0;background:#0a1c14;cursor:pointer;text-align:left;padding:6px 8px;border-bottom:1px solid #2d4a3c;white-space:nowrap;z-index:1}
@@ -48,22 +62,29 @@ input[type=range]{accent-color:#7dfc7d;vertical-align:middle}
 #pgd h3{margin:4px 0}
 .sec{margin:9px 0}.sec b{color:#9fe}
 #cmp,#ldc{position:static;inset:auto;width:100%;max-width:900px;height:auto;cursor:default;touch-action:auto;background:#02060a;border-radius:8px}
+@media (max-width:760px){
+ .bar{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;scrollbar-width:none}.bar::-webkit-scrollbar{display:none}.bar>*{flex:0 0 auto}
+ #card{left:8px;right:8px;max-width:none;bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+ #pgd.sheet{position:fixed;inset:0;z-index:12;background:#04100b;max-height:none;max-width:none;flex:none;padding:calc(12px + env(safe-area-inset-top,0px)) 14px 20px;overflow:auto}
+ .gal{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+}
+@media (pointer:coarse){button,select{min-height:36px}}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 <div id="cap"></div>
-<div id="top"><button id="lockb" style="display:none"></button><button id="symb" data-i="sym"></button><button id="evb" data-i="eval"></button><select id="locsel"><option value="zh">中文</option><option value="en">English</option></select></div>
-<div id="card"></div><div id="flt"></div><div id="ev"></div><div id="pg"></div>
+<div id="top"><button id="lockb" style="display:none"></button><button id="evb" data-i="eval"></button><select id="locsel"><option value="zh">中文</option><option value="en">English</option></select></div>
+<div id="card"></div><div id="fltw"><button id="fltb"></button><div id="flt"></div></div><div id="ev"></div><div id="pg"></div>
 <div class="bar">
-  <button data-p="all" data-i="p_all"></button><button data-p="inner" data-i="p_inner"></button><button data-p="earth" data-i="p_earth"></button><button data-p="tno" data-i="p_tno"></button><button data-p="prox" data-i="p_prox"></button>
+  <div class="seg"><button data-p="all" data-i="p_all"></button><button data-p="inner" data-i="p_inner"></button><button data-p="earth" data-i="p_earth"></button><button data-p="tno" data-i="p_tno"></button><button data-p="prox" data-i="p_prox"></button></div>
   <input id="q" list="dl" data-ip="search" autocomplete="off"><datalist id="dl"></datalist>
   <label><span data-i="width"></span> <input id="wsl" type="range" min=".3" max="3" step=".1" value="1" style="width:80px"></label>
-  <button id="zo">−</button><button id="zi">+</button>
+  <div class="seg"><button id="zo">−</button><button id="zi">+</button></div>
   <button id="ab" data-i="lib"></button><button id="szb" disabled data-i="size" data-it="sizeTip"></button>
 </div>
 <script>
-const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.4.0";
+const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.5.0";
 // ---------- orbital data (J2000, heliocentric) ----------
 const L=[
 ["Mercury","水星",0.3871,0.2056,7.005,48.331,29.124,217,"p"],["Venus","金星",0.7233,0.0068,3.395,76.680,54.884,245,"p"],["Earth","地球",1.0,0.0167,0,0,102.937,345,"p"],["Mars","火星",1.5237,0.0934,1.850,49.558,286.502,249,"p"],
@@ -200,33 +221,33 @@ const MASS={Sun:332946,Mercury:.0553,Venus:.815,Earth:1,Moon:.0123,Mars:.1075,Ju
 const SYM={Sun:"☉",Mercury:"☿",Venus:"♀",Earth:"⊕",Moon:"☽",Mars:"♂",Jupiter:"♃",Saturn:"♄",Uranus:"⛢",Neptune:"♆",Pluto:"♇",Ceres:"⚳",Pallas:"⚴",Vesta:"⚶"};
 // ---------- i18n ----------
 const I18N={zh:{
- p_all:"全景",p_inner:"内太阳系",p_earth:"地球 · 月球",p_tno:"外海王星天体",p_prox:"比邻星系统",search:"搜索天体…",width:"线宽",lib:"信息库",size:"尺寸 · HACK",sizeTip:"天体真实尺寸渲染：HACK 占位，待做",eval:"评估",sym:"符号",lockOn:n=>`🔒 ${n} · 点击解除`,
+ p_all:"全景",p_inner:"内太阳系",p_earth:"地球 · 月球",p_tno:"外海王星天体",p_prox:"比邻星系统",search:"搜索天体…",width:"线宽",lib:"信息库",size:"尺寸 · HACK",sizeTip:"天体真实尺寸渲染：HACK 占位，待做",eval:"评估",lockOn:n=>`🔒 ${n} · 点击解除`,
  ty_p:"行星",ty_d:"矮行星",ty_a:"小行星",ty_c:"周期彗星",ty_n:"非周期彗星",ty_m:"卫星",ty_s:"恒星",ty_e:"系外行星",szH:"尺寸",sz0:"大",sz1:"中",sz2:"小",sz3:"微",
  sh0:"球体",sh1:"近似球体",sh2:"椭球体",sh3:"不规则形状体",shNone:"形状未录入",
  dSun:"距太阳",dEarth:"距地球",orbA:"轨道半长轴",per:"周期",yr:"年",day:"天",nonper:"非周期",fly:"飞到这里",detail:"详细资料",radius:"半径",
  ls:"光秒",lm:"光分",lh:"光时",lday:"光日",lyr:"光年",focusAt:"@焦点",
  libTitle:"天体信息库",back:"← 返回 3D",tabTbl:"天体表格",tabLd:"卫星系统 LD 对比",tabCmp:"大小对比",hack:"HACK · 待做",
- cImg:"图",cName:"名称",cType:"类型",cShape:"形状",cR:"半径 km",cA:"a (AU)",cLD:"a (LD)",cP:"周期",
+ cImg:"图",cName:"名称",cType:"类型",cShape:"形状",cD:"直径 km",cA:"a (AU)",cLD:"a (LD)",cP:"周期",
  secShape:"形状与尺寸",secOrbit:"轨道",secEty:"词源",secHist:"发现与历史",secCraft:"相关探测器 / 人造卫星",secPpl:"相关历史人物",secNav:"快捷导航",secExtra:"补充信息",
  none:"无（已确认）",unrec:"未录入",to3d:"在 3D 中查看",estTag:"（推定）",zhOnly:"正文暂只有中文",
  rule:"形状分类规则：扁率 <0.5% 为球体；0.5%–5% 且赤道面拉长 <5% 为近似球体；其余流体静力平衡体为椭球体；非流体静力平衡的小天体为不规则形状体；带 * 的为推定。",
  ldNote:"以地月平均距离 1 LD = 384,400 km 为统一单位，对比各卫星系统的轨道尺度（对数坐标）。黄线为 1 LD；竖条为母天体半径。",
  cmpNote:n=>`按半径等比例绘制（地球只露出一角）。这是临时实现（HACK），以后会重做；${n}`,
- count:(a,b)=>`已收录 ${a} / ${b} 个天体`,massE:"质量",evTitle:"评估与改进",evMine:"我的评价（哪里不好 / 想要的功能）",evGen:"生成可复制报告",evPh:"例如：某条数据不对、标签太挤、想看真实日期……"},
+ count:(a,b)=>`已收录 ${a} / ${b} 个天体`,massE:"质量",tabGrid:"图鉴",filter:"筛选",lgsType:"按类型",lgsD:"按直径",lgsN:"按名称",diam:"直径",semiAxes:"半轴",xEarth:n=>`地球的 ${n} 倍`,evTitle:"评估与改进",evMine:"我的评价（哪里不好 / 想要的功能）",evGen:"生成可复制报告",evPh:"例如：某条数据不对、标签太挤、想看真实日期……"},
 en:{
- p_all:"Overview",p_inner:"Inner system",p_earth:"Earth · Moon",p_tno:"Trans-Neptunian",p_prox:"Proxima system",search:"Search bodies…",width:"Line width",lib:"Library",size:"Size · HACK",sizeTip:"True-size rendering: HACK placeholder, TODO",eval:"Review",sym:"Symbols",lockOn:n=>`🔒 ${n} · click to unlock`,
+ p_all:"Overview",p_inner:"Inner system",p_earth:"Earth · Moon",p_tno:"Trans-Neptunian",p_prox:"Proxima system",search:"Search bodies…",width:"Line width",lib:"Library",size:"Size · HACK",sizeTip:"True-size rendering: HACK placeholder, TODO",eval:"Review",lockOn:n=>`🔒 ${n} · click to unlock`,
  ty_p:"Planets",ty_d:"Dwarf planets",ty_a:"Asteroids",ty_c:"Periodic comets",ty_n:"Non-periodic",ty_m:"Moons",ty_s:"Stars",ty_e:"Exoplanets",szH:"Size",sz0:"Large",sz1:"Medium",sz2:"Small",sz3:"Tiny",
  sh0:"Sphere",sh1:"Near-sphere",sh2:"Ellipsoid",sh3:"Irregular",shNone:"Shape not recorded",
  dSun:"Sun",dEarth:"Earth",orbA:"Orbit a",per:"P",yr:"yr",day:"d",nonper:"non-periodic",fly:"Fly to",detail:"Details",radius:"Radius",
  ls:"light-s",lm:"light-min",lh:"light-h",lday:"light-days",lyr:"light-yr",focusAt:"@focus",
  libTitle:"Body library",back:"← Back to 3D",tabTbl:"Table",tabLd:"Moon systems in LD",tabCmp:"Size comparison",hack:"HACK · TODO",
- cImg:"Image",cName:"Name",cType:"Type",cShape:"Shape",cR:"Radius km",cA:"a (AU)",cLD:"a (LD)",cP:"Period",
+ cImg:"Image",cName:"Name",cType:"Type",cShape:"Shape",cD:"Diameter km",cA:"a (AU)",cLD:"a (LD)",cP:"Period",
  secShape:"Shape & size",secOrbit:"Orbit",secEty:"Etymology",secHist:"Discovery & history",secCraft:"Spacecraft / artificial satellites",secPpl:"Related historical figures",secNav:"Quick navigation",secExtra:"Extra",
  none:"None (confirmed)",unrec:"Not recorded",to3d:"View in 3D",estTag:" (estimated)",zhOnly:"Body text is Chinese only for now",
  rule:"Shape classes: flattening <0.5% sphere; 0.5%–5% with equatorial elongation <5% near-sphere; other hydrostatic bodies ellipsoid; small non-hydrostatic bodies irregular; * = estimated.",
  ldNote:"Orbit scales of moon systems in one unit: 1 LD = 384,400 km (mean Earth–Moon distance), log axis. Yellow line = 1 LD; bars = parent radius.",
  cmpNote:n=>`Drawn to scale by radius (Earth is cropped). Temporary implementation (HACK), to be redone; ${n}`,
- count:(a,b)=>`${a} / ${b} bodies recorded`,massE:"Mass",evTitle:"Review & improvements",evMine:"My feedback (what is wrong / features I want)",evGen:"Generate copyable report",evPh:"e.g. a wrong value, crowded labels, real dates…"}};
+ count:(a,b)=>`${a} / ${b} bodies recorded`,massE:"Mass",tabGrid:"Gallery",filter:"Filter",lgsType:"By type",lgsD:"By diameter",lgsN:"By name",diam:"Diameter",semiAxes:"Semi-axes",xEarth:n=>`${n}× Earth`,evTitle:"Review & improvements",evMine:"My feedback (what is wrong / features I want)",evGen:"Generate copyable report",evPh:"e.g. a wrong value, crowded labels, real dates…"}};
 let loc="zh";try{loc=localStorage.getItem('sol-loc')||((navigator.language||'').startsWith('zh')?'zh':'en')}catch(e){loc=(navigator.language||'').startsWith('zh')?'zh':'en'}
 const t=(k,...a)=>{let s=I18N[loc][k];if(s==null)s=I18N.zh[k];if(s==null)return k;return typeof s=='function'?s(...a):s};
 const nm=b=>loc=='zh'?b.z:b.n,nm2=b=>loc=='zh'?b.n:b.z;
@@ -235,7 +256,7 @@ const TYPES=["p","d","a","c","n","m","s","e"];
 const CO={p:["#7dfc7d","#59f259"],d:["#55f0f0","#3fe0b0"],a:["#c9a86a","#d9b87a"],c:["#ff9a55","#ffae6e"],n:["#ff7ad9","#ff9be6"],m:["#f5e83a","#f0e040"],s:["#ffe9a8","#fff2c6"],e:["#8ab4ff","#a9c8ff"]};
 const LW={p:.9,d:.8,a:.7,c:.7,n:.7,s:.7,m:.7,e:.8};
 const cv=document.getElementById('c'),ctx=cv.getContext('2d'),cap=document.getElementById('cap'),bg=document.createElement('canvas');
-let W,H,dpr,F,hits=[],t0=performance.now(),vaz=0,vth=0,gw=1,selO=null,ovw=true,lock=null,symOn=true,show={p:1,d:1,a:1,c:1,n:1,m:1,s:1,e:1},showS=[1,1,1,1],dms=0,npts=0,placed=[],fl=null,fph=0,libSel=null;
+let W,H,dpr,F,hits=[],t0=performance.now(),vaz=0,vth=0,gw=1,selO=null,ovw=true,lock=null,show={p:1,d:1,a:1,c:1,n:1,m:1,s:1,e:1},showS=[1,1,1,1],dms=0,npts=0,placed=[],fl=null,fph=0,libSel=null;
 let T=[20,0,0],D=175,az=0,th=.14,tT=T.slice(),tD=D,taz=0,tth=.14,dirty=true;
 const FOV=35*R,DMIN=4e-5,DMAX=8e5,CULL=60;
 function size(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;F=Math.min(W,H)/2/Math.tan(FOV/2);
@@ -271,16 +292,24 @@ function draw(){
  const s=P([0,0,0]);if(s[2]>D*.05&&dist2([0,0,0])<lim){const gr=ctx.createRadialGradient(s[0],s[1],0,s[0],s[1],150);gr.addColorStop(0,"rgba(255,245,210,.35)");gr.addColorStop(1,"rgba(255,230,170,0)");ctx.fillStyle=gr;ctx.fillRect(s[0]-150,s[1]-150,300,300);ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(s[0],s[1],2.5,0,7);ctx.fill()}
  ctx.font='600 13px "Segoe UI","Segoe UI Symbol",-apple-system,"PingFang SC","Microsoft YaHei",sans-serif';
  const lab=(b,dx,dy)=>{if(dist2(b.p)>lim)return;const q=P(b.p);if(q[2]<D*.05)return;const sel=b===selO,st=IM.style(b);ctx.globalAlpha=sel?1:Math.max(.6,st.al);ctx.fillStyle=sel?"#fff":CO[b.t][1];ctx.beginPath();ctx.arc(q[0],q[1],b.t=="s"?3.5:2,0,7);ctx.fill();
-  const sy=symOn?IM.sym(b):"",tx=(sy?sy+" ":"")+nm(b),tw=ctx.measureText(tx).width,rx=q[0]+dx,ry=q[1]+dy-11;let ov=false;if(b.t!="p"&&!sel)for(const o of placed)if(rx<o[0]+o[2]&&o[0]<rx+tw&&ry<o[1]+o[3]&&o[1]<ry+13){ov=true;break}if(!ov){ctx.fillText(tx,rx,q[1]+dy);placed.push([rx,ry,tw,13])}ctx.globalAlpha=1;hits.push([q[0],q[1],b])};
+  const tx=nm(b),tw=ctx.measureText(tx).width,rx=q[0]+dx,ry=q[1]+dy-11;let ov=false;if(b.t!="p"&&!sel)for(const o of placed)if(rx<o[0]+o[2]&&o[0]<rx+tw&&ry<o[1]+o[3]&&o[1]<ry+13){ov=true;break}if(!ov){ctx.fillText(tx,rx,q[1]+dy);placed.push([rx,ry,tw,13])}ctx.globalAlpha=1;hits.push([q[0],q[1],b])};
  L.forEach(b=>{if(!IM.visible(b))return;if(b.t=="c"&&dist2(b.p)<lim)tail(b);lab(b,7,-6)});
  moons.forEach(m=>{if(m.vis&&(m.a*F/D>10||m===selO))lab(m,6,m.dy)});
  ruler();dms=performance.now()-t1}
 function nice(x){const e=Math.floor(Math.log10(x)),m=x/Math.pow(10,e);return(m>=5?5:m>=2?2:1)*Math.pow(10,e)}
-function ltxt(lm){return lm<1?(lm*60).toFixed(lm*60<10?1:0)+" "+t('ls'):lm<120?lm.toFixed(lm<10?1:0)+" "+t('lm'):lm<2880?(lm/60).toFixed(1)+" "+t('lh'):lm<525960?(lm/1440).toFixed(0)+" "+t('lday'):(lm/525960).toFixed(1)+" "+t('lyr')}
-function ruler(){const pf=ctx.font,u=D/F,n=nice(130*u),px=n/u,bh=document.querySelector('.bar').offsetHeight,x=W-24-px,y=H-bh-16;
- ctx.strokeStyle="#cfe";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x,y-6);ctx.lineTo(x,y);ctx.lineTo(x+px,y);ctx.lineTo(x+px,y-6);ctx.stroke();
- const ldv=n*AU/384400,au=n>=5000?`${(+n.toPrecision(2)).toLocaleString()} AU = ${+(n/LY).toPrecision(2)} ly`:`${+n.toPrecision(2)} AU`+(n<.1?` (${Math.round(n*AU).toLocaleString()} km`+(ldv>=.02&&ldv<5e3?` = ${+ldv.toPrecision(2)} LD`:"")+")":"");
- ctx.fillStyle="#cfe";ctx.textAlign="right";ctx.font='12px "Segoe UI",sans-serif';ctx.fillText(au+" · "+ltxt(n*8.317)+" "+t('focusAt'),x+px,y-10);ctx.textAlign="left";ctx.font=pf}
+function ltxt(lm){return lm<1?(lm*60<10?(+(lm*60).toPrecision(2)):Math.round(lm*60))+" "+t('ls'):lm<120?lm.toFixed(lm<10?1:0)+" "+t('lm'):lm<2880?(lm/60).toFixed(1)+" "+t('lh'):lm<525960?(lm/1440).toFixed(0)+" "+t('lday'):(lm/525960).toFixed(1)+" "+t('lyr')}
+const sup=n=>String(n).replace(/\d/g,d=>"⁰¹²³⁴⁵⁶⁷⁸⁹"[d]).replace("-","⁻");
+const fkm=km=>(km<1e6?Math.round(km).toLocaleString():(km/Math.pow(10,Math.floor(Math.log10(km)))).toFixed(1)+"×10"+sup(Math.floor(Math.log10(km))))+" km";
+const fn2=x=>x>=1000?Math.round(x).toLocaleString():String(+x.toPrecision(2));
+// scale bar: primary unit chosen by scale (km -> LD -> AU -> ly), other units shown as equivalents
+function ruler(){const pf=ctx.font,u=D/F,s=130*u,unit=s<.0013?"km":s<.15?"LD":s<5000?"AU":"ly",uA=unit=="km"?1/AU:unit=="LD"?384400/AU:unit=="AU"?1:LY;
+ const n=nice(s/uA),au=n*uA,px=au/u,bh=document.querySelector('.bar').offsetHeight,y=H-bh-34,xr=W-20,xl=xr-px;
+ const eq=[];if(unit!="km")eq.push(fkm(au*AU));if(unit!="LD"&&au*AU>=3000&&au*AU/384400<1e5)eq.push(fn2(au*AU/384400)+" LD");if(unit!="AU"&&au>=.001)eq.push(fn2(au)+" AU");if(unit!="ly"&&au>=500)eq.push(fn2(au/LY)+" ly");eq.push(ltxt(au*8.317));
+ const main=(unit=="km"?Math.round(n).toLocaleString():fn2(n))+" "+unit,sub="≈ "+eq.join(" · ")+" "+t('focusAt');
+ ctx.font='600 13px "Segoe UI",sans-serif';const w1=ctx.measureText(main).width;ctx.font='11px "Segoe UI",sans-serif';const w2=ctx.measureText(sub).width,bw=Math.max(px,w1,w2)+16;
+ ctx.fillStyle="rgba(0,0,0,.45)";ctx.fillRect(xr+8-bw,y-30,bw,64);
+ ctx.strokeStyle="#cfe";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(xl,y);ctx.lineTo(xr,y);for(let k=0;k<=4;k++){const x=xl+px*k/4,h=k%4==0?8:k==2?6:4;ctx.moveTo(x,y);ctx.lineTo(x,y-h)}ctx.stroke();
+ ctx.textAlign="right";ctx.fillStyle="#e8fff0";ctx.font='600 13px "Segoe UI",sans-serif';ctx.fillText(main,xr,y-13);ctx.fillStyle="#8fb";ctx.font='11px "Segoe UI",sans-serif';ctx.fillText(sub,xr,y+17);ctx.textAlign="left";ctx.font=pf}
 function frame(){
  const nw=performance.now(),k=1-Math.exp(-Math.min(.05,(nw-t0)/1000)*9),ld=Math.log(D),lt=Math.log(tD);t0=nw;let ch=0;
  if(fl){if(fph==1&&D>=tD*.85){tT=fl.t;fph=2}else if(fph==2&&Math.hypot(T[0]-fl.t[0],T[1]-fl.t[1],T[2]-fl.t[2])<D*.1){tD=fl.d;fl=null}}
@@ -307,7 +336,7 @@ function lockUI(){const e=document.getElementById('lockb');e.style.display=lock?
 // ---------- portraits (shape follows the shape class) ----------
 const PV={Mercury:["#a8a8a8","#6e6e6e","rock"],Venus:["#e8cf8a","#c99b4a","cloud"],Earth:["#2f6fd6","#3f9e55","earth"],Mars:["#c9603e","#8a3a22","rock"],Ceres:["#8d8d86","#5f5f5a","rock"],Jupiter:["#dcb892","#b0683a","bands"],Saturn:["#ecd7a2","#c9a86a","bands"],Uranus:["#a6e6e8","#7fcfd6","ice"],Neptune:["#3e66da","#2a46a8","ice"],Pluto:["#d3bca0","#8e6b55","rock"],Haumea:["#e8e8e8","#b0b0b0","rock"],Makemake:["#bb6c4c","#8a4a30","rock"],Quaoar:["#a85c3c","#7a3a22","rock"],Eris:["#ececec","#bdbdbd","rock"],Sedna:["#a33a2a","#6a2218","rock"],Gonggong:["#9a4a3a","#6a2e22","rock"],Orcus:["#8a7a78","#5a4c4a","rock"],Moon:["#b9b9b9","#7c7c7c","rock"],Io:["#e8d35a","#c9722e","rock"],Europa:["#e6dccb","#a56a4a","ice"],Ganymede:["#a39a8c","#6d655a","rock"],Callisto:["#6f6558","#4a4238","rock"],Titan:["#d9a24a","#b57a2a","cloud"],Triton:["#e6d6cc","#b08a8a","ice"],Charon:["#a39a96","#7a5a5a","rock"],Enceladus:["#f4f8ff","#cfd8e6","ice"],Phobos:["#8a7f74","#5f554c","rock"]};
 const DEFV={p:["#8fd68f","#4f9f4f","rock"],d:["#9adcd8","#5fa7a3","rock"],a:["#a89a86","#6f6456","rock"],c:["#7a6a5a","#3a2e26","rock"],n:["#7a6a5a","#3a2e26","rock"],m:["#b8b2a8","#7a746c","rock"],e:["#6f8fd0","#3a4f86","rock"],s:["#fff","#fff","rock"]};
-function portrait(b,cv){const w=cv.width=160,h=cv.height=100,g=cv.getContext('2d'),sh=shapeOf(b),cx=80,cy=50;g.fillStyle="#02060a";g.fillRect(0,0,w,h);
+function portrait(b,cv,pk=1){const w=160,h=100;cv.width=160*pk;cv.height=100*pk;const g=cv.getContext('2d');g.scale(pk,pk);const sh=shapeOf(b),cx=80,cy=50;g.fillStyle="#02060a";g.fillRect(0,0,w,h);
  if(b.t=="s"){const c=b.n=="Proxima Centauri"?"255,110,60":"255,235,170",gr=g.createRadialGradient(cx,cy,2,cx,cy,44);gr.addColorStop(0,`rgba(${c},1)`);gr.addColorStop(.3,`rgba(${c},.6)`);gr.addColorStop(1,`rgba(${c},0)`);g.fillStyle=gr;g.fillRect(0,0,w,h);return}
  const v=PV[b.n]||DEFV[b.t],st=v[2],k=sh?sh.k:null,sm=k==3||((b.t=="a"||b.t=="c"||b.t=="n")&&k==null),r=sm?18:b.t=="m"?26:34;let ry=r;
  const I=INFO[b.n];if(k>0&&k<3&&I&&I.ax){const[a,bb,c]=I.ax;ry=r*((a-bb)/a>.05?bb/a:c/a)}
@@ -330,13 +359,15 @@ const perTxt=b=>b.pyr?b.pyr+" "+t('yr'):b.k=='m'?b.per+" "+t('day'):b.hyp?t('non
 const aTxt=b=>b.k=='m'?`${b.a<.1?b.a.toPrecision(3):b.a.toFixed(3)} AU (${Math.round(b.km).toLocaleString()} km)`:b.hyp?`q ${b.q} AU`:(b.t=='s'&&!b.a)?"—":`${b.a.toFixed(3)} AU`;
 const ldTxt=b=>{if(b.t=='s'&&!b.a)return"—";const x=b.hyp?b.q*AU/384400:IM.ld(b);return(x>=10?Math.round(x).toLocaleString():String(+x.toPrecision(3)))+" LD"};
 const rTxt=b=>{const r=IM.radius(b);return r?fn(r.km)+(r.est?"*":""):"—"};
+// diameter text: equatorial diameter for round / oblate bodies, three full lengths for triaxial bodies
+const dimTxt=b=>{const I=INFO[b.n];if(I&&I.ax){const[x,y,z]=I.ax,es=I.ct!="m"?"*":"";if((x-y)/x>.01)return[2*x,2*y,2*z].map(v=>fn(v,4)).join(" × ")+es;return fn(2*x,5)+es}const r=IM.radius(b);return r?fn(2*r.km)+(r.est?"*":""):"—"};
 const shapeTxt=b=>{const s=shapeOf(b);return s?t('sh'+s.k)+(s.est?"*":""):`<span class="mu">${t('shNone')}</span>`};
 // ---------- card ----------
 function card(){const c=document.getElementById('card'),b=selO;dirty=true;if(!b){c.style.display='none';return}
  const r=IM.radius(b),sy=IM.sym(b),dS=Math.hypot(b.p[0],b.p[1],b.p[2]),dE=Math.hypot(b.p[0]-earth.p[0],b.p[1]-earth.p[1],b.p[2]-earth.p[2]);
  c.style.display='block';
- c.innerHTML=`<canvas id="pt"></canvas><b>${sy?sy+" ":""}${nm(b)}</b><span>${nm2(b)}</span><br><span class="bd" style="margin-left:0">${t('ty_'+b.t)}</span><span class="bd">${t('sz'+IM.size(b))}</span><span class="bd">${shapeTxt(b)}</span><br>${t('dSun')} ${fd(dS)} · ${t('dEarth')} ${fd(dE)}<br>${t('radius')} ${r?fn(r.km)+" km"+(r.est?"*":"")+` · ${(r.km/6371).toFixed(r.km>=6371?2:4)} R⊕`:"—"}<br>${b.k=='m'?t('orbA'):"a"} ${aTxt(b)} · ${ldTxt(b)}<br>${b.t=="s"&&!b.a?"":`e ${b.e} · `}i ${b.i.toFixed(1)}° · ${t('per')} ${perTxt(b)}<br><input id="ow" type="range" min=".3" max="4" step=".1" value="${b.wm}" style="width:90px"> <button id="fl">${t('fly')}</button> <button id="lb">${t('detail')}</button> <button id="cl">✕</button>`;
- portrait(b,document.getElementById('pt'));
+ c.innerHTML=`<canvas id="pt"></canvas><b>${sy?sy+" ":""}${nm(b)}</b><span>${nm2(b)}</span><br><span class="bd" style="margin-left:0">${t('ty_'+b.t)}</span><span class="bd">${t('sz'+IM.size(b))}</span><span class="bd">${shapeTxt(b)}</span><br>${t('dSun')} ${fd(dS)} · ${t('dEarth')} ${fd(dE)}<br>${t('diam')} ${dimTxt(b)} km${r?` · ${t('xEarth',(r.km/6371).toPrecision(2))}`:""}<br>${b.k=='m'?t('orbA'):"a"} ${aTxt(b)} · ${ldTxt(b)}<br>${b.t=="s"&&!b.a?"":`e ${b.e} · `}i ${b.i.toFixed(1)}° · ${t('per')} ${perTxt(b)}<br><input id="ow" type="range" min=".3" max="4" step=".1" value="${b.wm}" style="width:90px"> <button id="fl">${t('fly')}</button> <button id="lb">${t('detail')}</button> <button id="cl">✕</button>`;
+ portrait(b,document.getElementById('pt'),2);
  document.getElementById('ow').oninput=e=>{b.wm=+e.target.value;dirty=true};
  document.getElementById('fl').onclick=()=>focus(b);document.getElementById('lb').onclick=()=>{libSel=b;location.hash='library';route()};
  document.getElementById('cl').onclick=()=>{selO=null;card()}}
@@ -350,6 +381,9 @@ const dl=document.getElementById('dl'),qi=document.getElementById('q');
 dl.innerHTML=ALL.map(b=>`<option value="${b.n}">${b.z}</option><option value="${b.z}">${b.n}</option>`).join('');
 function findBody(v){v=v.trim().toLowerCase();return ALL.find(b=>b.n.toLowerCase()==v||b.z==v)||ALL.find(b=>b.n.toLowerCase().startsWith(v)||b.z.startsWith(v))||ALL.find(b=>b.n.toLowerCase().includes(v)||b.z.includes(v))}
 qi.onchange=()=>{const b=qi.value&&findBody(qi.value);if(!b)return;pick(b);qi.blur()};
+const fltb=document.getElementById('fltb');let fltOpen=innerWidth>=900;
+function fltUI(){flt.style.display=fltOpen?'flex':'none';fltb.textContent=t('filter')+(fltOpen?' ▾':' ▸')}
+fltb.onclick=()=>{fltOpen=!fltOpen;fltUI()};
 // ---------- camera interaction: turntable, lock/snap to a body, cursor zoom ----------
 const ptr=new Map(),clampTh=v=>Math.min(Math.PI,Math.max(0,v)),cth=a=>{const q=Math.cos(a);return(q<0?-1:1)*Math.max(.25,Math.abs(q))};
 function hitLabel(x,y,r){let best=null,d=r;for(const h of hits){const dd=Math.hypot(h[0]-x,h[1]-y);if(dd<d){d=dd;best=h[2]}}return best}
@@ -361,7 +395,6 @@ function panBy(dx,dy){fl=null;if(lock){lock=null;lockUI()}const c=Math.cos(taz),
 document.getElementById('zi').onclick=()=>zoomBy(1/1.4);document.getElementById('zo').onclick=()=>zoomBy(1.4);
 document.getElementById('wsl').oninput=e=>{gw=+e.target.value;dirty=true};
 document.getElementById('lockb').onclick=()=>{lock=null;lockUI()};
-document.getElementById('symb').onclick=()=>{symOn=!symOn;document.getElementById('symb').style.opacity=symOn?1:.5;dirty=true};
 document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>preset(b.dataset.p));
 function segd(x,y,a,b){const dx=b[0]-a[0],dy=b[1]-a[1],l=dx*dx+dy*dy;let q=l?((x-a[0])*dx+(y-a[1])*dy)/l:0;q=Math.max(0,Math.min(1,q));return Math.hypot(x-a[0]-q*dx,y-a[1]-q*dy)}
 function nearOrbit(x,y){let best=null,bd=9;const lim=CULL*D;for(const b of ALL){if(!IM.visible(b)||(b.k=='m'&&!b.vis)||!b.orb.length)continue;let prev=null;for(let i=0;i<b.orb.length;i+=3*Math.max(1,lod(b)>>1)){const p=[b.orb[i],b.orb[i+1],b.orb[i+2]],q=P(p),ok=q[2]>D*.05&&Math.abs(q[0])<2e5&&Math.abs(q[1])<2e5&&dist2(p)<lim;if(ok&&prev){const d=segd(x,y,prev,q);if(d<bd){bd=d;best=b}}prev=ok?q:null}}return best}
@@ -380,36 +413,47 @@ cvEl.addEventListener('dblclick',e=>{const b=hitLabel(e.clientX,e.clientY,26);b?
 cvEl.addEventListener('wheel',e=>{e.preventDefault();zoomBy(Math.exp(e.deltaY*(e.deltaMode==1?33:1)*(e.ctrlKey?.008:.0015)),e.clientX-W/2,e.clientY-H/2)},{passive:false});
 addEventListener('keydown',e=>{const n=e.target.tagName;if(n=="INPUT"||n=="TEXTAREA"||n=="SELECT")return;if(e.key=="Escape"){lock=null;lockUI();if(location.hash=='#library')location.hash=''}else if(e.key=="+"||e.key=="=")zoomBy(1/1.3);else if(e.key=="-")zoomBy(1.3);else if(e.key=="0")preset('all')});
 // ---------- information library page (#library): table, LD comparison, size comparison (HACK) ----------
-const pg=document.getElementById('pg');let libTab='tbl',lq="",lsort=["a",1],lf=new Set(TYPES);
-const COLS=[["img","cImg"],["n","cName"],["t","cType"],["sh","cShape"],["r","cR"],["a","cA"],["ld","cLD"],["p","cP"]];
+const pg=document.getElementById('pg');let libTab='grid',lq="",lsort=["a",1],lf=new Set(TYPES);
+const COLS=[["img","cImg"],["n","cName"],["t","cType"],["sh","cShape"],["r","cD"],["a","cA"],["ld","cLD"],["p","cP"]];
 const perYr=b=>b.pyr?b.pyr:b.k=='m'?b.per/365.25:b.hyp||b.t=='s'?-1:Math.pow(b.a,1.5);
 const SORT={n:b=>nm(b).toLowerCase(),t:b=>TYPES.indexOf(b.t),sh:b=>{const s=shapeOf(b);return s?s.k:9},r:b=>{const r=IM.radius(b);return r?r.km:-1},a:b=>b.k=='m'?b.a:b.hyp?b.q:b.a||-1,ld:b=>b.t=='s'&&!b.a?-1:b.hyp?b.q*AU/384400:IM.ld(b),p:perYr};
 function libBuild(tab){libTab=tab||libTab;
- pg.innerHTML=`<div class="ph"><button id="pgb">${t('back')}</button><b>${t('libTitle')}</b><button class="tab ${libTab=='tbl'?'on':''}" data-t="tbl">${t('tabTbl')}</button><button class="tab ${libTab=='ld'?'on':''}" data-t="ld">${t('tabLd')}</button><button class="tab ${libTab=='cmp'?'on':''}" data-t="cmp">${t('tabCmp')} <span class="hk">${t('hack')}</span></button><input id="pgq" placeholder="${t('search')}" value="${lq}"><span class="mu" id="pgs">${t('count',ALL.filter(b=>INFO[b.n]).length,ALL.length)}</span></div><div id="pgv"></div>`;
+ pg.innerHTML=`<div class="ph"><button id="pgb">${t('back')}</button><b>${t('libTitle')}</b><button class="tab ${libTab=='grid'?'on':''}" data-t="grid">${t('tabGrid')}</button><button class="tab ${libTab=='tbl'?'on':''}" data-t="tbl">${t('tabTbl')}</button><button class="tab ${libTab=='ld'?'on':''}" data-t="ld">${t('tabLd')}</button><button class="tab ${libTab=='cmp'?'on':''}" data-t="cmp">${t('tabCmp')} <span class="hk">${t('hack')}</span></button><input id="pgq" placeholder="${t('search')}" value="${lq}"><span class="mu" id="pgs">${t('count',ALL.filter(b=>INFO[b.n]).length,ALL.length)}</span></div><div id="pgv"></div>`;
  document.getElementById('pgb').onclick=()=>{location.hash=''};
  pg.querySelectorAll('.tab').forEach(b=>b.onclick=()=>libBuild(b.dataset.t));
- document.getElementById('pgq').oninput=e=>{lq=e.target.value;if(libTab=='tbl')libRows()};
- libTab=='tbl'?libTbl():libTab=='ld'?libLd():libCmp()}
+ document.getElementById('pgq').oninput=e=>{lq=e.target.value;if(libTab=='tbl')libRows();else if(libTab=='grid')libCells()};
+ libTab=='grid'?libGrid():libTab=='tbl'?libTbl():libTab=='ld'?libLd():libCmp()}
+let lgs='type';
+const cellHtml=b=>`<div class="cell" data-n="${b.n}"><canvas></canvas><div class="cn">${IM.sym(b)?IM.sym(b)+" ":""}${nm(b)}</div><div class="cs">${nm2(b)}</div><div class="cm"><span class="bd">${t('ty_'+b.t)}</span><span class="bd">${shapeTxt(b)}</span></div><div class="cd">${t('diam')} ${dimTxt(b)} km</div></div>`;
+function libGrid(){const v=document.getElementById('pgv');
+ v.innerHTML=`<div class="chips">${TYPES.map(k=>`<button data-f="${k}" style="opacity:${lf.has(k)?1:.4};border-color:${CO[k][0]}">${t('ty_'+k)}</button>`).join('')}<select id="lgs"><option value="type">${t('lgsType')}</option><option value="d">${t('lgsD')}</option><option value="n">${t('lgsN')}</option></select></div><div class="lay"><div class="gal" id="gal"></div><div id="pgd"></div></div>`;
+ v.querySelectorAll('[data-f]').forEach(x=>x.onclick=()=>{const k=x.dataset.f;lf.has(k)?lf.delete(k):lf.add(k);libGrid()});
+ const s=document.getElementById('lgs');s.value=lgs;s.onchange=()=>{lgs=s.value;libCells()};
+ libCells();if(innerWidth>=760||libSel)libShow(libSel||earth)}
+function libCells(){const f=lq.toLowerCase(),list=ALL.filter(b=>lf.has(b.t)&&(!f||b.n.toLowerCase().includes(f)||b.z.includes(f)||t('ty_'+b.t).toLowerCase().includes(f)));
+ if(lgs=='d')list.sort((x,y)=>SORT.r(y)-SORT.r(x));else if(lgs=='n')list.sort((x,y)=>SORT.n(x)<SORT.n(y)?-1:1);else list.sort((x,y)=>(x===sun?-1:TYPES.indexOf(x.t))-(y===sun?-1:TYPES.indexOf(y.t)));
+ let h="",last="";list.forEach(b=>{if(lgs=='type'){const g=b===sun?nm(sun):b.k=='m'&&b.par?t('ty_'+b.t)+" · "+nm(b.par):t('ty_'+b.t);if(g!=last){h+=`<h5>${g}</h5>`;last=g}}h+=cellHtml(b)});
+ const g=document.getElementById('gal');g.innerHTML=h;g.querySelectorAll('.cell').forEach(c=>{const b=ALL.find(x=>x.n==c.dataset.n);portrait(b,c.querySelector('canvas'),2);c.onclick=()=>libShow(b)})}
 function libTbl(){const v=document.getElementById('pgv');
  v.innerHTML=`<div class="chips">${TYPES.map(k=>`<button data-f="${k}" style="opacity:${lf.has(k)?1:.4};border-color:${CO[k][0]}">${t('ty_'+k)}</button>`).join('')}</div><div class="lay"><div class="tw"><table class="tb"><thead><tr>${COLS.map(c=>`<th data-s="${c[0]}">${t(c[1])}${lsort[0]==c[0]?(lsort[1]>0?" ▲":" ▼"):""}</th>`).join('')}</tr></thead><tbody id="tbd"></tbody></table></div><div id="pgd"></div></div>`;
  v.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{const k=b.dataset.f;lf.has(k)?lf.delete(k):lf.add(k);libTbl()});
  v.querySelectorAll('th[data-s]').forEach(h=>h.onclick=()=>{const k=h.dataset.s;if(k=="img")return;lsort=[k,lsort[0]==k?-lsort[1]:1];libTbl()});
- libRows();libShow(libSel||earth)}
+ libRows();if(innerWidth>=760||libSel)libShow(libSel||earth)}
 function libRows(){const f=lq.toLowerCase(),s=lsort[0],list=ALL.filter(b=>lf.has(b.t)&&(!f||b.n.toLowerCase().includes(f)||b.z.includes(f)||t('ty_'+b.t).toLowerCase().includes(f)));
  if(SORT[s])list.sort((x,y)=>{const a=SORT[s](x),b=SORT[s](y);return(a<b?-1:a>b?1:0)*lsort[1]});
- const tb=document.getElementById('tbd');tb.innerHTML=list.map(b=>{const r=IM.radius(b);return`<tr data-n="${b.n}"><td><canvas class="th"></canvas></td><td>${IM.sym(b)?IM.sym(b)+" ":""}${nm(b)}<br><small class="mu">${nm2(b)}</small></td><td>${t('ty_'+b.t)}<br><small class="mu">${t('sz'+IM.size(b))}</small></td><td>${shapeTxt(b)}</td><td>${rTxt(b)}${r?`<br><small class="mu">${(r.km/6371).toFixed(r.km>=6371?2:4)} R⊕</small>`:""}</td><td>${aTxt(b).split(" (")[0].replace(" AU","")}</td><td>${ldTxt(b).replace(" LD","")}</td><td>${perTxt(b)}</td></tr>`}).join('');
+ const tb=document.getElementById('tbd');tb.innerHTML=list.map(b=>{const r=IM.radius(b);return`<tr data-n="${b.n}"><td><canvas class="th"></canvas></td><td>${IM.sym(b)?IM.sym(b)+" ":""}${nm(b)}<br><small class="mu">${nm2(b)}</small></td><td>${t('ty_'+b.t)}<br><small class="mu">${t('sz'+IM.size(b))}</small></td><td>${shapeTxt(b)}</td><td>${dimTxt(b)}${r?`<br><small class="mu">${t('xEarth',(r.km/6371).toPrecision(2))}</small>`:""}</td><td>${aTxt(b).split(" (")[0].replace(" AU","")}</td><td>${ldTxt(b).replace(" LD","")}</td><td>${perTxt(b)}</td></tr>`}).join('');
  [...tb.rows].forEach((tr,i)=>{portrait(list[i],tr.querySelector('canvas'));tr.onclick=()=>libShow(ALL.find(b=>b.n==tr.dataset.n))})}
-function libShow(b){libSel=b;const d=document.getElementById('pgd');if(!d)return;[...document.querySelectorAll('.tb tbody tr')].forEach(e=>e.classList.toggle('on',e.dataset.n==b.n));
+function libShow(b){libSel=b;const d=document.getElementById('pgd');if(!d)return;[...document.querySelectorAll('.tb tbody tr,.cell')].forEach(e=>e.classList.toggle('on',e.dataset.n==b.n));
  const I=INFO[b.n]||{},sh=shapeOf(b),r=IM.radius(b),mo=b.k=='m',list=a=>a==null?null:a.length?a.map(x=>"· "+x).join("<br>"):`<span class="mu">${t('none')}</span>`,row=(k,v)=>`<div class="sec"><b>${t(k)}</b><br>${v==null||v===""?`<span class="mu">${t('unrec')}</span>`:v}</div>`;
  const shp=sh?`<span class="bd">${t('sh'+sh.k)}${sh.est?t('estTag'):""}</span>${sh.f==null?"":` ${(sh.f*100).toFixed(2)}%`}${sh.eb>.001?` · ${(sh.eb*100).toFixed(1)}%`:""}`:`<span class="bd mu">${t('shNone')}</span>`;
  const rel=(b.par?`<button data-n="${b.par.n}">↑ ${nm(b.par)}</button> `:"")+(b.kids&&b.kids.length?b.kids.map(m=>`<button data-n="${m.n}">${nm(m)}</button>`).join(" "):"");
  const ex=[MASS[b.n]!=null?`${t('massE')} ${fn(MASS[b.n])} M⊕`:"",I.x||""].filter(Boolean).join("<br>");
- d.innerHTML=`<canvas id="lc"></canvas><h3>${IM.sym(b)?IM.sym(b)+" ":""}${nm(b)} <small class="mu">${nm2(b)}</small></h3><span class="bd">${t('ty_'+b.t)}</span><span class="bd">${t('sz'+IM.size(b))}</span>${loc=='en'&&(I.e||I.h)?`<span class="bd mu">${t('zhOnly')}</span>`:""}`+
-  row('secShape',(r?`${t('radius')} ${fn(r.km)} km · ${fn(r.km*2)} km Ø · ${(r.km/6371).toFixed(r.km>=6371?2:4)} R⊕${r.est?"*":""}<br>`:"")+(I.ax?I.ax.map(x=>fn(x,5)).join(" × ")+" km<br>":"")+shp)+
+ d.style.display='block';d.classList.toggle('sheet',innerWidth<760);d.innerHTML=`${innerWidth<760?'<button id="dclose" style="float:right">✕</button>':''}<canvas id="lc"></canvas><h3>${IM.sym(b)?IM.sym(b)+" ":""}${nm(b)} <small class="mu">${nm2(b)}</small></h3><span class="bd">${t('ty_'+b.t)}</span><span class="bd">${t('sz'+IM.size(b))}</span>${loc=='en'&&(I.e||I.h)?`<span class="bd mu">${t('zhOnly')}</span>`:""}`+
+  row('secShape',(r?`${t('diam')} ${dimTxt(b)} km<br>${t('radius')} ${fn(r.km)} km · ${(r.km/6371).toFixed(r.km>=6371?2:4)} R⊕${r.est?"*":""}<br>`:"")+(I.ax?t('semiAxes')+" "+I.ax.map(x=>fn(x,5)).join(" × ")+" km<br>":"")+shp)+
   row('secOrbit',b.hyp?`q ${b.q} AU · e ${b.e} · i ${b.i}°`:`a ${mo?b.a.toPrecision(4):b.a} AU${mo?` (${Math.round(b.km).toLocaleString()} km)`:""} = ${ldTxt(b)} · e ${b.e} · i ${b.i.toFixed(1)}° · ${t('per')} ${perTxt(b)}`)+
   (ex?row('secExtra',ex):"")+row('secEty',I.e)+row('secHist',I.h)+row('secCraft',list(I.c))+row('secPpl',list(I.p))+(rel?`<div class="sec"><b>${t('secNav')}</b><br>${rel}</div>`:"")+
   `<div class="sec"><button id="l3d">${t('to3d')}</button></div><p class="mu" style="font-size:12px">${t('rule')}</p>`;
- portrait(b,document.getElementById('lc'));
+ portrait(b,document.getElementById('lc'),2);const dc=document.getElementById('dclose');if(dc)dc.onclick=()=>{d.style.display='none'};
  d.querySelectorAll('button[data-n]').forEach(x=>x.onclick=()=>libShow(ALL.find(q=>q.n==x.dataset.n)));
  document.getElementById('l3d').onclick=()=>{location.hash='';pick(b)}}
 function libLd(){const v=document.getElementById('pgv');v.innerHTML=`<p class="mu">${t('ldNote')}</p><canvas id="ldc" width="900" height="580"></canvas>`;
@@ -461,7 +505,7 @@ function evLines(){const m=evData(),pc=x=>Math.round(x/m.n*100)+"%",A="信息库
  ["🟢","远处天体按“焦点半径”剔除（60 倍视距之外不绘制），修复比邻星、南门二在近距视角里被投影到太阳附近的渲染错误；点选 / 缩放可吸附并锁定天体，平移解除。",U],
  ["🟡","颜色是区分类型的唯一方式（小天体另有虚线），色觉障碍用户仍不友好；触屏平移 / 仰视没有操作提示。",U],
  [ok(m.gap==0,"🟢","🟡"),`界面文案已走词典（${m.keys} 项，英文缺 ${m.gap} 项）；信息库与评估面板的正文目前只有中文，英文界面下会回退为中文。`,G],
- ["🟡",`符号覆盖 ${m.sym}/${m.n}：仅行星、太阳、月球、谷神 / 智神 / 灶神星与彗星有通用符号；其余矮行星的 Unicode 字形字体支持差，未启用。`,G],
+ ["🟢","符号（☉ ☿ ♀ ⊕ ☽ ♂ ♃ ♄ ⛢ ♆ ♇ ⚳ ⚴ ⚶ ☄）只显示在信息库和信息卡里，不进入 3D 标签；其余矮行星没有通用 Unicode 符号，未启用。",G],
  ["•","时间轴 + 公转动画 + 真实日期星历（高优先）；真实尺寸 / 放大尺寸开关（高优先，现为 HACK）。",N],
  ["•","条目逐条核实并标注来源与更新日期；信息库支持收藏、对比、随机浏览，评估面板与信息库正文补全英文。",N],
  ["•","小行星带 / 柯伊伯带点云、土星环、黄道盘面网格；更多彗星与已解体彗星。",N],
@@ -480,7 +524,7 @@ document.getElementById('evb').onclick=()=>{if(ev.style.display=='block'){ev.sty
 setInterval(()=>{if(ev.style.display=='block')evRender()},1000);
 // ---------- locale ----------
 function applyLoc(){document.documentElement.lang=loc;document.querySelectorAll('[data-i]').forEach(e=>e.textContent=t(e.dataset.i));document.querySelectorAll('[data-ip]').forEach(e=>e.placeholder=t(e.dataset.ip));document.querySelectorAll('[data-it]').forEach(e=>e.title=t(e.dataset.it));
- document.getElementById('locsel').value=loc;fbuild();card();lockUI();if(pg.style.display=='block')libBuild();if(ev.style.display=='block'){const v=document.getElementById('evt').value;evBuild();document.getElementById('evt').value=v;evRender()}dirty=true;try{localStorage.setItem('sol-loc',loc)}catch(e){}}
+ document.getElementById('locsel').value=loc;fbuild();fltUI();card();lockUI();if(pg.style.display=='block')libBuild();if(ev.style.display=='block'){const v=document.getElementById('evt').value;evBuild();document.getElementById('evt').value=v;evRender()}dirty=true;try{localStorage.setItem('sol-loc',loc)}catch(e){}}
 document.getElementById('locsel').onchange=e=>{loc=e.target.value;applyLoc()};
 applyLoc();route();
 preset("all");T=tT.slice();D=tD;dirty=true;

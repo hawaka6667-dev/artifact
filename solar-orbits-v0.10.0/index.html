@@ -116,7 +116,7 @@ h4.ct{color:var(--ac);margin:14px 0 6px;font-size:14px;font-weight:600}
   <button id="ab" data-i="lib"></button><button id="szb" disabled data-i="size" data-it="sizeTip"></button>
 </div>
 <script>
-const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="1.0.0";
+const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.10.0";
 // ---------- orbital data (J2000, heliocentric) ----------
 const L=[
 ["Mercury","水星",0.3871,0.2056,7.005,48.331,29.124,217,"p"],["Venus","金星",0.7233,0.0068,3.395,76.680,54.884,245,"p"],["Earth","地球",1.0,0.0167,0,0,102.937,345,"p"],["Mars","火星",1.5237,0.0934,1.850,49.558,286.502,249,"p"],
@@ -410,6 +410,7 @@ function draw(){
  moons.forEach(m=>{m.vis=IM.visible(m)&&m.a*F/D>3.5&&dist2(m.par.p)<lim;if(m.vis){const st=IM.style(m);ctx.setLineDash(st.dash);ctx.globalAlpha=st.al;stroke(m.orb,st.col,st.w,lod(m),lim);ctx.setLineDash([]);ctx.globalAlpha=1}});
  const s=P([0,0,0]);if(s[2]>D*.05&&dist2([0,0,0])<lim){const gr=ctx.createRadialGradient(s[0],s[1],0,s[0],s[1],150);gr.addColorStop(0,"rgba(255,245,210,.35)");gr.addColorStop(1,"rgba(255,230,170,0)");ctx.fillStyle=gr;ctx.fillRect(s[0]-150,s[1]-150,300,300);ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(s[0],s[1],2.5,0,7);ctx.fill()}
  if(showGal)galDraw(lim);
+ if(MR.on&&MR.tr){const tr=MR.tr,c=MR.craft.orb,n=c.length/3;ctx.setLineDash([]);ctx.globalAlpha=1;stroke(tr.fp.subarray(0,c.length),'rgba(60,220,240,.35)',1,2,lim);for(let k=0;k<n;k+=73)stroke([c[3*k],c[3*k+1],c[3*k+2],c[3*k],c[3*k+1],0],'rgba(60,220,240,.55)',1,1,lim);stroke([c[c.length-3],c[c.length-2],c[c.length-1],c[c.length-3],c[c.length-2],0],'rgba(60,220,240,.95)',1,1,lim)}
  ctx.font='600 13px "Segoe UI","Segoe UI Symbol",-apple-system,"PingFang SC","Microsoft YaHei",sans-serif';
  const lab=(b,dx,dy)=>{if(dist2(b.p)>lim||(b.t!="s"&&b!==selO&&(b.sz||b.a)*F/D<.5))return;const q=P(b.p);if(q[2]<D*.05)return;const sel=b===selO,st=IM.style(b);ctx.globalAlpha=sel?1:Math.max(.6,st.al);ctx.fillStyle=sel?"#fff":(b.col||CO[b.t][1]);ctx.beginPath();ctx.arc(q[0],q[1],b.t=="s"?3.5:2,0,7);ctx.fill();
   const tx=nm(b),tw=ctx.measureText(tx).width,rx=q[0]+dx,ry=q[1]+dy-11;let ov=false;if((b.t!="p"||W<600)&&!sel)for(const o of placed)if(rx<o[0]+o[2]&&o[0]<rx+tw&&ry<o[1]+o[3]&&o[1]<ry+13){ov=true;break}if(!ov){ctx.fillText(tx,rx,q[1]+dy);placed.push([rx,ry,tw,13])}ctx.globalAlpha=1;hits.push([q[0],q[1],b])};
@@ -469,7 +470,7 @@ function mrTrack(m){if(MR.cache[m.id])return MR.cache[m.id];const legs=[];
  const v0=Math.sqrt(m.vnow*m.vnow+V1AU*V1AU*(1/rn0-1/rnow))*86400/AUKM;legs.push([last[1],MR_NOW+1,r0,v3.mul(dir,v0)]);
  const t0=m.ev[0][1],step=5,n=Math.ceil((MR_NOW-t0)/step)+1,pts=new Float64Array(3*n),sp=new Float32Array(n),jds=new Float64Array(n);
  for(let i=0;i<n;i++){const jd=Math.min(MR_NOW,t0+i*step);let L0=legs[legs.length-1];for(const l of legs)if(jd<=l[1]){L0=l;break}const[r,v]=propagate(L0[2],L0[3],jd-L0[0]);pts.set(r,3*i);sp[i]=v3.len(v)*AUKM/86400;jds[i]=jd}
- return MR.cache[m.id]={m,pts,sp,jds,scratch:new Float64Array(pts.length),t0,n}}
+ return MR.cache[m.id]={m,pts,sp,jds,scratch:new Float64Array(pts.length),fp:new Float64Array(pts.length),t0,n}}
 function mrAt(tr,jd){const f=Math.max(0,Math.min(tr.n-1,(jd-tr.t0)/5)),k=Math.min(tr.n-2,Math.floor(f)),u=f-k,a=tr.pts,i=3*k;
  return{k,p:[a[i]+(a[i+3]-a[i])*u,a[i+1]+(a[i+4]-a[i+1])*u,a[i+2]+(a[i+5]-a[i+2])*u],v:tr.sp[k]+(tr.sp[k+1]-tr.sp[k])*u}}
 function mrOpen(i){const m=MISSIONS[i];if(!MR.on){MR.saved=L.filter(b=>b.t=='p').map(b=>[b,b.p.slice()]);MR.on=true;selO=null;card();lock=null;lockAuto=null;lockUI();setFrame(E3);showGal=0}
@@ -480,7 +481,7 @@ function mrClose(){if(!MR.on)return;MR.on=false;MR.playing=false;MR.saved.forEac
 function mrTick(dt){if(MR.playing){MR.jd+=MR.rate*dt;if(MR.jd>=MR_NOW){MR.jd=MR_NOW;MR.playing=false;mrUI(true)}dirty=true}
  for(const[b]of MR.saved){const q=ephPos(b.n,MR.jd);b.p[0]=q[0];b.p[1]=q[1];b.p[2]=q[2]}
  const tr=MR.tr,s=mrAt(tr,MR.jd),c=MR.craft;c.p=s.p;
- const i=3*(s.k+1);tr.scratch.set(tr.pts.subarray(0,i));tr.scratch[i]=s.p[0];tr.scratch[i+1]=s.p[1];tr.scratch[i+2]=s.p[2];c.orb=tr.scratch.subarray(0,i+3);
+ const i=3*(s.k+1);tr.scratch.set(tr.pts.subarray(0,i));tr.scratch[i]=s.p[0];tr.scratch[i+1]=s.p[1];tr.scratch[i+2]=s.p[2];c.orb=tr.scratch.subarray(0,i+3);tr.fp.set(tr.scratch.subarray(0,i+3));for(let q=2;q<i+3;q+=3)tr.fp[q]=0;
  if(MR.fit){const rc=v3.len(s.p);let nxt=0;for(const e of MR.m.ev)if(e[1]>MR.jd-30){nxt=v3.len(ephPos(e[0],e[1]));break}const f=rc>12?.45:0;tT=[s.p[0]*f,s.p[1]*f,s.p[2]*f];tD=Math.max(9,2.4*rc*(1-f*.4),1.4*nxt)}
  const nw=performance.now();if(nw-MR.lastUI>90){MR.lastUI=nw;mrStats(s)}}
 function mrFmtLT(au){const s=au*499.0048;return s>=3600?(s/3600).toFixed(1)+(loc=='zh'?" 小时":" h"):s>=60?(s/60).toFixed(1)+(loc=='zh'?" 分钟":" min"):s.toFixed(0)+(loc=='zh'?" 秒":" s")}

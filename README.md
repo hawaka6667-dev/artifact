@@ -17,6 +17,7 @@ One folder per artifact, named `<slug>-v<version>`. Each folder holds the page a
 | `solar-orbits-v0.7.0/` | 太阳系轨道 Solar System Orbits: adds spacecraft (Voyager 1/2, Hubble, JWST, Cassini, ISS, New Horizons, Pioneer 10/11) and a three-scale (Earth / Jupiter / Sun) size comparison | 0.7.0 | 111.2 KB |
 | `solar-orbits-v0.8.0/` | 太阳系轨道 Solar System Orbits: mobile-friendly UI (two-row bar, compact info card, double-tap focus, landscape layout) | 0.8.0 | 113.8 KB |
 | `solar-orbits-v0.8.1/` | 太阳系轨道 Solar System Orbits: fixes two-finger drag (pan) on touch screens | 0.8.1 | 113.9 KB |
+| `solar-orbits-v0.8.2/` | 太阳系轨道 Solar System Orbits: two-finger pan / pinch also handled through Touch Events (fallback for WebViews that drop multi-touch Pointer Events); page zoom disabled | 0.8.2 | 115.0 KB |
 
 ## Rights
 

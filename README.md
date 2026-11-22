@@ -13,6 +13,8 @@ One folder per artifact, named `<slug>-v<version>`. Each folder holds the page a
 | `star-globe-v1.8.0/` | 星图球 Star Globe: 3D celestial globe with ecliptic and lunar orbit, bilingual star lookup | 1.8.0 | 81.6 KB |
 | `globe-painter-v3/` | 上色地球仪 Globe Painter: rotatable, see-through world globe; paint any country with adjustable opacity | 3 | 784.4 KB |
 | `solar-orbits-v0.5.0/` | 太阳系轨道 Solar System Orbits: true-scale 3D orbits, moons, comets, Proxima system, body library | 0.5.0 | 83.1 KB |
+| `solar-orbits-v0.6.0/` | 太阳系轨道 Solar System Orbits: adds TRAPPIST-1 system and a 3D nearby-stars map (galactic plane, stems) | 0.6.0 | 99.3 KB |
+| `solar-orbits-v0.7.0/` | 太阳系轨道 Solar System Orbits: adds spacecraft (Voyager 1/2, Hubble, JWST, Cassini, ISS, New Horizons, Pioneer 10/11) and a three-scale (Earth / Jupiter / Sun) size comparison | 0.7.0 | 111.2 KB |
 
 ## Rights
 

@@ -1,7 +1,0 @@
-{
-  "title": "太阳系轨道 Solar System Orbits",
-  "slug": "solar-orbits",
-  "url": "https://claude.ai/artifact/DRM4HrkdGNt2idfqRmMtLu",
-  "version": "0.8.1",
-  "note": "Self-contained page, no external dependencies. Republish this file to the url above. Orbital data are J2000 approximations; library entries are not yet verified against IAU/JPL sources (see the in-page review module)."
-}

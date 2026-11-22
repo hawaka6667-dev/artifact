@@ -116,7 +116,7 @@ h4.ct{color:var(--ac);margin:14px 0 6px;font-size:14px;font-weight:600}
   <button id="ab" data-i="lib"></button><button id="szb" disabled data-i="size" data-it="sizeTip"></button>
 </div>
 <script>
-const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.10.1";
+const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.11.0";
 // ---------- orbital data (J2000, heliocentric) ----------
 const L=[
 ["Mercury","水星",0.3871,0.2056,7.005,48.331,29.124,217,"p"],["Venus","金星",0.7233,0.0068,3.395,76.680,54.884,245,"p"],["Earth","地球",1.0,0.0167,0,0,102.937,345,"p"],["Mars","火星",1.5237,0.0934,1.850,49.558,286.502,249,"p"],
@@ -330,7 +330,7 @@ const MASS={Sun:332946,Mercury:.0553,Venus:.815,Earth:1,Moon:.0123,Mars:.1075,Ju
 const SYM={Sun:"☉",Mercury:"☿",Venus:"♀",Earth:"⊕",Moon:"☽",Mars:"♂",Jupiter:"♃",Saturn:"♄",Uranus:"⛢",Neptune:"♆",Pluto:"♇",Ceres:"⚳",Pallas:"⚴",Vesta:"⚶"};
 // ---------- i18n ----------
 const I18N={zh:{
- p_all:"全景",p_inner:"内太阳系",p_earth:"地球 · 月球",p_tno:"外海王星天体",p_prox:"比邻星系统",p_trap:"TRAPPIST-1 系统",p_stars:"近邻恒星",p_craft:"探测器 · 人造卫星",p_mission:"任务回溯",mrPlay:"播放",mrPause:"暂停",mrFit:"自动取景",mrRate:d=>`${d} 天/秒`,mrVel:v=>`速度 ${v} km/s（相对太阳）`,mrSun:(au,km)=>`距太阳 ${au} AU（${km} km）`,mrEarth:(au,lt)=>`距地球 ${au} AU · 单程光时 ${lt}`,mrNote:"行星位置由 JPL 近似星历按日期计算；探测器轨道是真实飞掠日期之间的两体（Lambert）拟合，飞掠后外推到现在，不是 Horizons 的实测轨道。",evLaunch:"发射",evFlyby:p=>`${p}飞掠`,evPale:"暗淡蓝点",evHelio:"进入星际空间",evNow:"现在",ty_v:"人造卫星 / 探测器",lat:"黄纬",xRef:(n,r)=>`${r}的 ${n} 倍`,refE:"地球",refJ:"木星",refS:"太阳",cmpE:"地球尺度 · 类地天体（白圈 = 地球）",cmpJ:"木星尺度 · 巨行星与小恒星（白圈 = 木星）",cmpS:"太阳尺度 · 恒星（白圈 = 太阳）",gal:"银道面 · 垂线",gc:"银心方向",search:"搜索天体…",width:"线宽",lib:"信息库",size:"尺寸 · HACK",sizeTip:"天体真实尺寸渲染：HACK 占位，待做",eval:"评估",lockOn:n=>`🔒 ${n} · 点击解除`,
+ p_all:"全景",p_inner:"内太阳系",p_earth:"地球 · 月球",p_tno:"外海王星天体",p_prox:"比邻星系统",p_trap:"TRAPPIST-1 系统",p_stars:"近邻恒星",p_craft:"探测器 · 人造卫星",p_mission:"任务回溯",mrPlay:"播放",mrPause:"暂停",mrFit:"自动取景",mrRate:d=>`${d} 天/秒`,mrVel:v=>`速度 ${v} km/s（相对太阳）`,mrSun:(au,km)=>`距太阳 ${au} AU（${km} km）`,mrEarth:(au,lt)=>`距地球 ${au} AU · 单程光时 ${lt}`,mrNote:"行星位置由 JPL 近似星历按日期计算；探测器轨道是真实飞掠日期之间的两体（Lambert）拟合，飞掠后外推到现在，不是 Horizons 的实测轨道。",evLaunch:"发射",evFlyby:p=>`${p}飞掠`,evPale:"暗淡蓝点",evHelio:"进入星际空间",evNow:"现在",evLost:"最后联系",evArrok:"飞越 Arrokoth",evNepx:"越过海王星轨道",ty_v:"人造卫星 / 探测器",lat:"黄纬",xRef:(n,r)=>`${r}的 ${n} 倍`,refE:"地球",refJ:"木星",refS:"太阳",cmpE:"地球尺度 · 类地天体（白圈 = 地球）",cmpJ:"木星尺度 · 巨行星与小恒星（白圈 = 木星）",cmpS:"太阳尺度 · 恒星（白圈 = 太阳）",gal:"银道面 · 垂线",gc:"银心方向",search:"搜索天体…",width:"线宽",lib:"信息库",size:"尺寸 · HACK",sizeTip:"天体真实尺寸渲染：HACK 占位，待做",eval:"评估",lockOn:n=>`🔒 ${n} · 点击解除`,
  ty_p:"行星",ty_d:"矮行星",ty_a:"小行星",ty_c:"周期彗星",ty_n:"非周期彗星",ty_m:"卫星",ty_s:"恒星",ty_e:"系外行星",szH:"尺寸",sz0:"大",sz1:"中",sz2:"小",sz3:"微",
  sh0:"球体",sh1:"近似球体",sh2:"椭球体",sh3:"不规则形状体",shNone:"形状未录入",
  dSun:"距太阳",dEarth:"距地球",orbA:"轨道半长轴",per:"周期",yr:"年",day:"天",nonper:"非周期",fly:"飞到这里",detail:"详细资料",radius:"半径",
@@ -344,7 +344,7 @@ const I18N={zh:{
  cmpNote:n=>`按半径等比例绘制，分三个尺度：地球（类地天体）、木星（巨行星与小恒星）、太阳（恒星）。恒星一律与太阳比较；带 * 的半径为推定。`,
  count:(a,b)=>`已收录 ${a} / ${b} 个天体`,massE:"质量",tabGrid:"图鉴",filter:"筛选",lgsType:"按类型",lgsD:"按直径",lgsN:"按名称",diam:"直径",semiAxes:"半轴",xEarth:n=>`地球的 ${n} 倍`,evTitle:"评估与改进",evMine:"我的评价（哪里不好 / 想要的功能）",evGen:"生成可复制报告",evPh:"例如：某条数据不对、标签太挤、想看真实日期……"},
 en:{
- p_all:"Overview",p_inner:"Inner system",p_earth:"Earth · Moon",p_tno:"Trans-Neptunian",p_prox:"Proxima system",p_trap:"TRAPPIST-1 system",p_stars:"Nearby stars",p_craft:"Spacecraft",p_mission:"Mission replay",mrPlay:"Play",mrPause:"Pause",mrFit:"Auto-frame",mrRate:d=>`${d} d/s`,mrVel:v=>`Speed ${v} km/s (relative to the Sun)`,mrSun:(au,km)=>`${au} AU from the Sun (${km} km)`,mrEarth:(au,lt)=>`${au} AU from Earth · one-way light time ${lt}`,mrNote:"Planet positions are computed from JPL approximate ephemerides for the date; the spacecraft path is a two-body (Lambert) fit between the real flyby dates, extrapolated to today. It is not a Horizons trajectory.",evLaunch:"Launch",evFlyby:p=>`${p} flyby`,evPale:"Pale Blue Dot",evHelio:"Interstellar space",evNow:"Today",ty_v:"Spacecraft",lat:"ecl. lat.",xRef:(n,r)=>`${n}× ${r}`,refE:"Earth",refJ:"Jupiter",refS:"Sun",cmpE:"Earth scale · rocky bodies (white ring = Earth)",cmpJ:"Jupiter scale · giants and small stars (white ring = Jupiter)",cmpS:"Sun scale · stars (white ring = Sun)",gal:"Galactic plane · stems",gc:"Galactic Centre",search:"Search bodies…",width:"Line width",lib:"Library",size:"Size · HACK",sizeTip:"True-size rendering: HACK placeholder, TODO",eval:"Review",lockOn:n=>`🔒 ${n} · click to unlock`,
+ p_all:"Overview",p_inner:"Inner system",p_earth:"Earth · Moon",p_tno:"Trans-Neptunian",p_prox:"Proxima system",p_trap:"TRAPPIST-1 system",p_stars:"Nearby stars",p_craft:"Spacecraft",p_mission:"Mission replay",mrPlay:"Play",mrPause:"Pause",mrFit:"Auto-frame",mrRate:d=>`${d} d/s`,mrVel:v=>`Speed ${v} km/s (relative to the Sun)`,mrSun:(au,km)=>`${au} AU from the Sun (${km} km)`,mrEarth:(au,lt)=>`${au} AU from Earth · one-way light time ${lt}`,mrNote:"Planet positions are computed from JPL approximate ephemerides for the date; the spacecraft path is a two-body (Lambert) fit between the real flyby dates, extrapolated to today. It is not a Horizons trajectory.",evLaunch:"Launch",evFlyby:p=>`${p} flyby`,evPale:"Pale Blue Dot",evHelio:"Interstellar space",evNow:"Today",evLost:"Last contact",evArrok:"Arrokoth flyby",evNepx:"Crosses Neptune's orbit",ty_v:"Spacecraft",lat:"ecl. lat.",xRef:(n,r)=>`${n}× ${r}`,refE:"Earth",refJ:"Jupiter",refS:"Sun",cmpE:"Earth scale · rocky bodies (white ring = Earth)",cmpJ:"Jupiter scale · giants and small stars (white ring = Jupiter)",cmpS:"Sun scale · stars (white ring = Sun)",gal:"Galactic plane · stems",gc:"Galactic Centre",search:"Search bodies…",width:"Line width",lib:"Library",size:"Size · HACK",sizeTip:"True-size rendering: HACK placeholder, TODO",eval:"Review",lockOn:n=>`🔒 ${n} · click to unlock`,
  ty_p:"Planets",ty_d:"Dwarf planets",ty_a:"Asteroids",ty_c:"Periodic comets",ty_n:"Non-periodic",ty_m:"Moons",ty_s:"Stars",ty_e:"Exoplanets",szH:"Size",sz0:"Large",sz1:"Medium",sz2:"Small",sz3:"Tiny",
  sh0:"Sphere",sh1:"Near-sphere",sh2:"Ellipsoid",sh3:"Irregular",shNone:"Shape not recorded",
  dSun:"Sun",dEarth:"Earth",orbA:"Orbit a",per:"P",yr:"yr",day:"d",nonper:"non-periodic",fly:"Fly to",detail:"Details",radius:"Radius",
@@ -383,7 +383,7 @@ const MR={on:false,m:null,jd:0,rate:180,playing:false,fit:true,cache:{},saved:nu
 const IM={
  radius(b){const I=INFO[b.n];if(I&&I.ax){const[a,x,c]=I.ax;return{km:Math.cbrt(a*x*c),est:I.ct!="m"}}if(RAD[b.n]!=null)return{km:RAD[b.n],est:true};const d={a:100,c:3,n:1,m:50}[b.t];return d==null?null:{km:d,est:true,dflt:true}},
  size(b){const r=IM.radius(b);if(!r)return b.t=="s"?0:2;return r.km>=1000?0:r.km>=200?1:r.km>=20?2:3},
- visible(b){if(MR.on)return b===sun||b.t=='p'||b===MR.craft;return show[b.t]&&showS[IM.size(b)]},
+ visible(b){if(MR.on)return b===sun||b.t=='p'||b.n=='Pluto'||b===MR.craft;return show[b.t]&&showS[IM.size(b)]},
  style(b){const s=IM.size(b),sel=b===selO;return{col:sel?"#fff":CO[b.t][0],w:wd(b,LW[b.t]*[1,1,.85,.7][s]),al:sel?1:[1,.8,.55,.35][s],dash:sel?[]:[[],[],[6,5],[2,4]][s]}},
  sym(b){return SYM[b.n]||(b.t=="c"||b.t=="n"?"☄":"")},
  ld(b){return(b.k=="m"?b.km:b.a*AU)/384400}
@@ -442,7 +442,8 @@ const EPH={Mercury:[[.38709927,.00000037],[.20563593,.00001906],[7.00497902,-.00
  Jupiter:[[5.202887,-.00011607],[.04838624,-.00013253],[1.30439695,-.00183714],[34.39644051,3034.74612775],[14.72847983,.21252668],[100.47390909,.20469106]],
  Saturn:[[9.53667594,-.0012506],[.05386179,-.00050991],[2.48599187,.00193609],[49.95424423,1222.49362201],[92.59887831,-.41897216],[113.66242448,-.28867794]],
  Uranus:[[19.18916464,-.00196176],[.04725744,-.00004397],[.77263783,-.00242939],[313.23810451,428.48202785],[170.9542763,.40805281],[74.01692503,.04240589]],
- Neptune:[[30.06992276,.00026291],[.00859048,.00005105],[1.77004347,.00035372],[-55.12002969,218.45945325],[44.96476227,-.32241464],[131.78422574,-.00508664]]};
+ Neptune:[[30.06992276,.00026291],[.00859048,.00005105],[1.77004347,.00035372],[-55.12002969,218.45945325],[44.96476227,-.32241464],[131.78422574,-.00508664]],
+ Pluto:[[39.48211675,-.00031596],[.2488273,.0000517],[17.14001206,.00004818],[238.92903833,145.20780515],[224.06891629,-.04062942],[110.30393684,-.01183482]]};
 function ephPos(n,jd){const T=jd/36525,[a,e,I,Lm,wp,Om]=EPH[n].map(v=>v[0]+v[1]*T),w=(wp-Om)*R,M=(((Lm-wp)%360)+360)%360*R;let E=M;for(let i=0;i<30;i++)E-=(E-e*Math.sin(E)-M)/(1-e*Math.cos(E));
  const xo=a*(Math.cos(E)-e),yo=a*Math.sqrt(1-e*e)*Math.sin(E),cw=Math.cos(w),sw=Math.sin(w),cO=Math.cos(Om*R),sO=Math.sin(Om*R),ci=Math.cos(I*R),si=Math.sin(I*R);
  return[(cw*cO-sw*sO*ci)*xo+(-sw*cO-cw*sO*ci)*yo,(cw*sO+sw*cO*ci)*xo+(-sw*sO+cw*cO*ci)*yo,sw*si*xo+cw*si*yo]}
@@ -461,25 +462,28 @@ function propagate(r0,v0,dt){if(dt<=0)return[r0,v0];const r0n=v3.len(r0),vr0=v3.
  let hi=1;while(F(hi)<0&&hi<1e9)hi*=2;let lo=0;for(let i=0;i<70;i++){const m=(lo+hi)/2;if(F(m)<0)lo=m;else hi=m}
  const c=(lo+hi)/2,z=al*c*c,[C,S]=stumpff(z),f=1-c*c/r0n*C,g=dt-c*c*c/sm*S,r=v3.add(v3.mul(r0,f),v3.mul(v0,g)),rn=v3.len(r),fd=sm/(rn*r0n)*c*(z*S-1),gd=1-c*c/rn*C;
  return[r,v3.add(v3.mul(r0,fd),v3.mul(v0,gd))]}
-const MR_NOW=jdOf(2026,11,22);
+const MR_NOW=jdOf(2026,11,22),mEnd=m=>m.end||MR_NOW,mrBody=b=>b.t=='p'||b.n=='Pluto';
 const MISSIONS=[
  {id:"V1",craft:"Voyager 1",vnow:16.95,ev:[["Earth",jdOf(1977,9,5,12,56),"L"],["Jupiter",jdOf(1979,3,5,12,5),"F"],["Saturn",jdOf(1980,11,12,23,46),"F"]],ms:[[jdOf(1990,2,14),"evPale"],[jdOf(2012,8,25),"evHelio"]]},
- {id:"V2",craft:"Voyager 2",vnow:15.35,ev:[["Earth",jdOf(1977,8,20,14,29),"L"],["Jupiter",jdOf(1979,7,9,22,29),"F"],["Saturn",jdOf(1981,8,26,3,24),"F"],["Uranus",jdOf(1986,1,24,17,59),"F"],["Neptune",jdOf(1989,8,25,3,56),"F"]],ms:[[jdOf(2018,11,5),"evHelio"]]}];
+ {id:"V2",craft:"Voyager 2",vnow:15.35,ev:[["Earth",jdOf(1977,8,20,14,29),"L"],["Jupiter",jdOf(1979,7,9,22,29),"F"],["Saturn",jdOf(1981,8,26,3,24),"F"],["Uranus",jdOf(1986,1,24,17,59),"F"],["Neptune",jdOf(1989,8,25,3,56),"F"]],ms:[[jdOf(2018,11,5),"evHelio"]]},
+ {id:"NH",craft:"New Horizons",vnow:13.0,ev:[["Earth",jdOf(2006,1,19,19,0),"L"],["Jupiter",jdOf(2007,2,28,5,43),"F"],["Pluto",jdOf(2015,7,14,11,49),"F"]],ms:[[jdOf(2019,1,1),"evArrok"]]},
+ {id:"P10",craft:"Pioneer 10",vnow:11.8,end:jdOf(2003,1,23),ev:[["Earth",jdOf(1972,3,3,1,49),"L"],["Jupiter",jdOf(1973,12,4,2,26),"F"]],ms:[[jdOf(1983,6,13),"evNepx"]]},
+ {id:"P11",craft:"Pioneer 11",vnow:11.2,end:jdOf(1995,11,24),ev:[["Earth",jdOf(1973,4,6,2,11),"L"],["Jupiter",jdOf(1974,12,3,5,22),"F"],["Saturn",jdOf(1979,9,1,16,31),"F"]],ms:[]}];
 function mrTrack(m){if(MR.cache[m.id])return MR.cache[m.id];const legs=[];
  for(let i=0;i+1<m.ev.length;i++){const[p1,j1]=m.ev[i],[p2,j2]=m.ev[i+1],r1=ephPos(p1,j1),r2=ephPos(p2,j2),[v1]=lambert(r1,r2,j2-j1);legs.push([j1,j2,r1,v1])}
  const last=m.ev[m.ev.length-1],r0=ephPos(last[0],last[1]),tg=byN[m.craft].p,rn0=v3.len(r0),rnow=v3.len(tg),d=v3.sub(tg,r0),dir=v3.mul(d,1/v3.len(d));
- const v0=Math.sqrt(m.vnow*m.vnow+V1AU*V1AU*(1/rn0-1/rnow))*86400/AUKM;legs.push([last[1],MR_NOW+1,r0,v3.mul(dir,v0)]);
- const t0=m.ev[0][1],step=5,n=Math.ceil((MR_NOW-t0)/step)+1,pts=new Float64Array(3*n),sp=new Float32Array(n),jds=new Float64Array(n);
- for(let i=0;i<n;i++){const jd=Math.min(MR_NOW,t0+i*step);let L0=legs[legs.length-1];for(const l of legs)if(jd<=l[1]){L0=l;break}const[r,v]=propagate(L0[2],L0[3],jd-L0[0]);pts.set(r,3*i);sp[i]=v3.len(v)*AUKM/86400;jds[i]=jd}
+ const v0=Math.sqrt(m.vnow*m.vnow+V1AU*V1AU*(1/rn0-1/rnow))*86400/AUKM;legs.push([last[1],mEnd(m)+1,r0,v3.mul(dir,v0)]);
+ const t0=m.ev[0][1],step=5,n=Math.ceil((mEnd(m)-t0)/step)+1,pts=new Float64Array(3*n),sp=new Float32Array(n),jds=new Float64Array(n);
+ for(let i=0;i<n;i++){const jd=Math.min(mEnd(m),t0+i*step);let L0=legs[legs.length-1];for(const l of legs)if(jd<=l[1]){L0=l;break}const[r,v]=propagate(L0[2],L0[3],jd-L0[0]);pts.set(r,3*i);sp[i]=v3.len(v)*AUKM/86400;jds[i]=jd}
  return MR.cache[m.id]={m,pts,sp,jds,scratch:new Float64Array(pts.length),fp:new Float64Array(pts.length),t0,n}}
 function mrAt(tr,jd){const f=Math.max(0,Math.min(tr.n-1,(jd-tr.t0)/5)),k=Math.min(tr.n-2,Math.floor(f)),u=f-k,a=tr.pts,i=3*k;
  return{k,p:[a[i]+(a[i+3]-a[i])*u,a[i+1]+(a[i+4]-a[i+1])*u,a[i+2]+(a[i+5]-a[i+2])*u],v:tr.sp[k]+(tr.sp[k+1]-tr.sp[k])*u}}
-function mrOpen(i){const m=MISSIONS[i];if(!MR.on){MR.saved=L.filter(b=>b.t=='p').map(b=>[b,b.p.slice()]);MR.on=true;selO=null;card();lock=null;lockAuto=null;lockUI();setFrame(E3);showGal=0}
+function mrOpen(i){const m=MISSIONS[i];if(!MR.on){MR.saved=L.filter(mrBody).map(b=>[b,b.p.slice()]);MR.on=true;selO=null;card();lock=null;lockAuto=null;lockUI();setFrame(E3);showGal=0}
  else mrRestoreCraft();
  MR.m=m;MR.tr=mrTrack(m);MR.craft=byN[m.craft];MR.savedCraft=[MR.craft.p.slice(),MR.craft.orb];MR.jd=m.ev[0][1];MR.playing=true;MR.fit=true;MR.lastK=-1;taz=0;tth=.9;ovw=false;mrUI();mrTick(0);T=tT.slice();D=tD;dirty=true}
 function mrRestoreCraft(){if(MR.craft&&MR.savedCraft){MR.craft.p=MR.savedCraft[0];MR.craft.orb=MR.savedCraft[1]}}
 function mrClose(){if(!MR.on)return;MR.on=false;MR.playing=false;MR.saved.forEach(([b,p])=>{b.p[0]=p[0];b.p[1]=p[1];b.p[2]=p[2]});mrRestoreCraft();document.getElementById('mr').style.display='none';dirty=true}
-function mrTick(dt){if(MR.playing){MR.jd+=MR.rate*dt;if(MR.jd>=MR_NOW){MR.jd=MR_NOW;MR.playing=false;mrUI(true)}dirty=true}
+function mrTick(dt){if(MR.playing){MR.jd+=MR.rate*dt;if(MR.jd>=mEnd(MR.m)){MR.jd=mEnd(MR.m);MR.playing=false;mrUI(true)}dirty=true}
  for(const[b]of MR.saved){const q=ephPos(b.n,MR.jd);b.p[0]=q[0];b.p[1]=q[1];b.p[2]=q[2]}
  const tr=MR.tr,s=mrAt(tr,MR.jd),c=MR.craft;c.p=s.p;
  const i=3*(s.k+1);tr.scratch.set(tr.pts.subarray(0,i));tr.scratch[i]=s.p[0];tr.scratch[i+1]=s.p[1];tr.scratch[i+2]=s.p[2];c.orb=tr.scratch.subarray(0,i+3);tr.fp.set(tr.scratch.subarray(0,i+3));for(let q=2;q<i+3;q+=3)tr.fp[q]=0;
@@ -492,14 +496,14 @@ function mrStats(s){const e=document.getElementById('mrs');if(!e)return;const rs
  document.querySelectorAll('#mrev button').forEach(b=>b.classList.toggle('on',Math.abs(+b.dataset.j-MR.jd)<20));
  const pb=document.getElementById('mrp');if(pb)pb.textContent=MR.playing?t('mrPause'):t('mrPlay')}
 function mrUI(){const el=document.getElementById('mr'),m=MR.m;if(!m)return;el.style.display='block';
- const evs=[...m.ev.map(e=>[e[1],e[2]=="L"?t('evLaunch'):t('evFlyby',nm(byN[e[0]]))]),...m.ms.map(x=>[x[0],t(x[1])]),[MR_NOW,t('evNow')]].sort((a,b)=>a[0]-b[0]);
+ const evs=[...m.ev.map(e=>[e[1],e[2]=="L"?t('evLaunch'):t('evFlyby',nm(byN[e[0]]))]),...m.ms.map(x=>[x[0],t(x[1])]),[mEnd(m),t(m.end?'evLost':'evNow')]].sort((a,b)=>a[0]-b[0]);
  el.innerHTML=`<div class="r1"><select id="mrm">${MISSIONS.map((x,i)=>`<option value="${i}" ${x===m?'selected':''}>${nm(byN[x.craft])}</option>`).join('')}</select><b id="mrd"></b><button id="mrx">✕</button></div>
- <div class="st" id="mrs"></div><input id="mrt" type="range" min="${m.ev[0][1]}" max="${MR_NOW}" step="1" value="${MR.jd}">
+ <div class="st" id="mrs"></div><input id="mrt" type="range" min="${m.ev[0][1]}" max="${mEnd(m)}" step="1" value="${MR.jd}">
  <div class="r2"><button id="mrp"></button><select id="mrsp">${[15,60,180,365,1000].map(d=>`<option value="${d}" ${d==MR.rate?'selected':''}>${t('mrRate',d)}</option>`).join('')}</select><button id="mrf">${t('mrFit')}</button></div>
  <div class="ev" id="mrev">${evs.map(e=>`<button data-j="${e[0]}">${e[1]} · ${dateTxt(e[0]).slice(0,4)}</button>`).join('')}</div><div class="nt">${t('mrNote')}</div>`;
  document.getElementById('mrm').onchange=e=>mrOpen(+e.target.value);document.getElementById('mrx').onclick=()=>{mrClose();preset('all')};
  document.getElementById('mrt').oninput=e=>{MR.jd=+e.target.value;MR.playing=false;dirty=true};
- document.getElementById('mrp').onclick=()=>{if(MR.jd>=MR_NOW)MR.jd=m.ev[0][1];MR.playing=!MR.playing;dirty=true};
+ document.getElementById('mrp').onclick=()=>{if(MR.jd>=mEnd(m))MR.jd=m.ev[0][1];MR.playing=!MR.playing;dirty=true};
  document.getElementById('mrsp').onchange=e=>{MR.rate=+e.target.value};document.getElementById('mrf').onclick=()=>{MR.fit=true;dirty=true};
  document.querySelectorAll('#mrev button').forEach(b=>b.onclick=()=>{MR.jd=+b.dataset.j;MR.playing=false;MR.fit=true;dirty=true});MR.lastUI=0}
 function frame(){

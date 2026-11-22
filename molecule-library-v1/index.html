@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>分子知识库</title>
+<style>
+:root{box-sizing:border-box;padding-bottom:env(safe-area-inset-bottom,0px);--bg:#e7e4d9;--nav:#dedbd0;--card:#eeebe1;--cv:#ece9de;--tx:#34322b;--mu:#77746a;--ln:#d3cfc2;--ac:#4a473e;--acx:#eeebe1;color-scheme:light}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1c1a;--nav:#242422;--card:#272725;--cv:#222220;--tx:#e2e0d8;--mu:#9a978c;--ln:#3a3a36;--ac:#d8d5ca;--acx:#1c1c1a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1c1c1a;--nav:#242422;--card:#272725;--cv:#222220;--tx:#e2e0d8;--mu:#9a978c;--ln:#3a3a36;--ac:#d8d5ca;--acx:#1c1c1a;color-scheme:dark}
+html{scroll-padding-top:60px}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.6 system-ui,"PingFang SC","Microsoft YaHei",sans-serif}
+.nav{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;padding:calc(10px + env(safe-area-inset-top,0px)) 18px 10px;background:var(--nav);border-bottom:1px solid var(--ln)}
+.brand{font-size:16px;letter-spacing:.02em}
+.nav nav{display:flex;gap:4px;flex:1 1 auto}
+.nav a{color:var(--mu);text-decoration:none;padding:4px 12px;border-radius:999px;font-size:14px;white-space:nowrap}
+.nav a:hover{color:var(--tx)}.nav a[aria-current]{background:var(--ac);color:var(--acx)}
+.right{display:flex;gap:8px;align-items:center;margin-left:auto}
+.lang{display:flex;background:var(--card);border:1px solid var(--ln);border-radius:999px;padding:2px}
+button{font:inherit;color:inherit}
+.lang button,.ic{border:0;background:none;cursor:pointer;border-radius:999px;font-size:13px;padding:3px 12px;color:var(--mu)}
+.lang button[aria-pressed="true"]{background:var(--ac);color:var(--acx)}
+.ic{border:1px solid var(--ln);background:var(--card);width:30px;height:30px;padding:0;font-size:15px}
+.tag{font-size:11px;border:1px dashed currentColor;border-radius:999px;padding:0 7px;margin-left:6px;opacity:.8}
+.view{display:none;max-width:860px;margin:0 auto;padding:22px 18px 56px}.view.on{display:block}
+.sub{margin:0 0 14px;color:var(--mu);font-size:14px}
+.stage{position:relative;border-radius:14px;overflow:hidden;background:var(--cv);border:1px solid var(--ln)}
+canvas{display:block;width:100%;aspect-ratio:4/3;touch-action:none;cursor:grab}
+#cap{position:absolute;left:8%;right:8%;bottom:6%;background:rgba(90,86,70,.16);backdrop-filter:blur(6px);border-radius:6px;padding:9px 14px;text-align:center;pointer-events:none}
+.t{font-size:15.5px}.f{font-size:12.5px;color:var(--mu);margin-top:3px}
+.arr{position:absolute;top:44%;width:36px;height:36px;border-radius:50%;border:1px solid var(--ln);background:var(--card);color:var(--tx);font-size:20px;line-height:1;cursor:pointer;opacity:.85}
+.arr.l{left:10px}.arr.r{right:10px}
+.zm{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:6px}.zm button{width:32px;height:32px;border-radius:50%;border:1px solid var(--ln);background:var(--card);color:var(--tx);font-size:16px;line-height:1;cursor:pointer;opacity:.85}
+.row{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;margin-top:12px;color:var(--mu);font-size:13px}
+.lg{display:flex;flex-wrap:wrap;gap:6px 16px}
+.lg i,.pal i{display:inline-block;width:20px;height:20px;border-radius:50%;border:1px solid rgba(70,60,35,.5);text-align:center;font:600 10.5px/18px system-ui;color:#3a372d;margin-right:6px;vertical-align:middle}
+.hint{margin:6px 0 0;font-size:12.5px;color:var(--mu)}
+.box{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:22px}
+.defer{border-style:dashed;background:transparent}
+h2{font-size:18px;margin:0 0 8px;font-weight:600}
+.defer ul{margin:12px 0;padding-left:20px;color:var(--mu)}
+.pal{display:flex;gap:8px;opacity:.5;margin-top:16px}.pal i{width:28px;height:28px;line-height:26px;font-size:12px;margin:0}
+.kh{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}.kh h2{margin:0 8px 0 0}.kh small{color:var(--mu);font-weight:400;font-size:13px;margin-left:6px}
+input{font:inherit;font-size:13px;color:inherit;background:var(--card);border:1px solid var(--ln);border-radius:999px;padding:6px 14px;width:230px}
+.chips{display:flex;gap:6px}
+.chips button{font-size:13px;background:var(--card);border:1px solid var(--ln);border-radius:999px;padding:4px 14px;cursor:pointer}
+.chips button[aria-pressed="true"]{border-color:var(--ac);background:var(--ac);color:var(--acx)}
+button:focus-visible,input:focus-visible,a:focus-visible,.card:focus-visible{outline:2px solid #6d8fd6;outline-offset:2px}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.card{background:var(--card);border:1.5px solid var(--ln);border-radius:12px;padding:8px 8px 12px;cursor:pointer;text-align:center}
+.card:hover{border-color:var(--mu)}.card.on{border-color:var(--ac)}
+.card canvas{border-radius:8px;cursor:pointer}
+.card .t{font-size:14.5px;margin-top:8px}.card .f{padding:0 6px}
+</style>
+</head>
+<body>
+<header class="nav"><b class="brand" data-i="title"></b>
+ <nav><a href="#viewer" data-v="viewer" data-i="nv"></a><a href="#library" data-v="library" data-i="nl"></a><a href="#builder" data-v="builder"><span data-i="nb"></span><span class="tag">deferred</span></a></nav>
+ <div class="right"><div class="lang" role="group" aria-label="Language"><button data-l="zh">中文</button><button data-l="en">English</button></div><button class="ic" id="th">◐</button></div>
+</header>
+<main>
+<section id="v-viewer" class="view on"><p class="sub" data-i="sub"></p>
+ <div class="stage"><canvas id="cv"></canvas><button class="arr l" id="prev">‹</button><button class="arr r" id="next">›</button><div class="zm"><button id="zi">+</button><button id="zo">−</button><button id="zr">⟲</button></div><div id="cap"></div></div>
+ <div class="row"><div class="lg" id="lg"></div><span id="pos"></span></div><p class="hint" data-i="drag"></p></section>
+<section id="v-library" class="view"><div class="kh"><h2><span data-i="nl"></span><small id="cnt"></small></h2><input id="q" type="search"><div class="chips"><button data-f="all"></button><button data-f="c"></button><button data-f="n"></button><button data-f="h"></button></div></div><div id="grid"></div></section>
+<section id="v-builder" class="view"><div class="box defer"><h2><span data-i="nb"></span><span class="tag">deferred</span></h2><p class="sub" data-i="bd"></p>
+ <ul><li data-i="b1"></li><li data-i="b2"></li><li data-i="b3"></li></ul>
+ <div class="pal" aria-hidden="true"><i style="background:#e8877b">H</i><i style="background:#e6c35c">C</i><i style="background:#96bf6c">N</i><i style="background:#8fb0e6">O</i></div></div></section>
+</main>
+<script>
+const EL={H:{c:'#e8877b',r:.26,v:1,z:'氢',e:'Hydrogen'},C:{c:'#e6c35c',r:.38,v:4,z:'碳',e:'Carbon'},N:{c:'#96bf6c',r:.36,v:3,z:'氮',e:'Nitrogen'},O:{c:'#8fb0e6',r:.35,v:2,z:'氧',e:'Oxygen'},P:{c:'#e0975f',r:.42,v:5,z:'磷',e:'Phosphorus'},S:{c:'#c3a6d6',r:.42,v:2,z:'硫',e:'Sulfur'},K:{c:'#d996a8',r:.45,v:1,z:'钾',e:'Potassium'},Cl:{c:'#6fc3b0',r:.42,v:1,z:'氯',e:'Chlorine'}};
+const T={zh:{title:'分子知识库',nv:'3D 浏览',nl:'知识库',nb:'搭建器',sub:'3D 查看分子结构，查阅名称、分子式和趣闻。',drag:'拖动旋转，滚轮或双指缩放，左右箭头切换分子。',bd:'自己搭建分子并收藏到知识库的功能，已推迟，当前版本不可用。',b1:'放置原子，自由连接单键、双键、三键',b2:'价键填满后自动识别分子',b3:'把搭好的分子收藏进知识库',q:'搜索名称、分子式、趣闻',all:'全部',c:'含碳',n:'无碳',h:'已隐藏',none:'没有匹配的条目',prev:'上一个',next:'下一个',zin:'放大',zout:'缩小',zrs:'重置视图',th:'切换明暗'},
+en:{title:'Molecule Library',nv:'3D Viewer',nl:'Library',nb:'Builder',sub:'View molecules in 3D, with names, formulas and trivia.',drag:'Drag to rotate, scroll or pinch to zoom, and use the arrows to switch molecules.',bd:'Building your own molecules and saving them to the library is deferred and not available in this version.',b1:'Place atoms and connect them with single, double or triple bonds',b2:'Recognize the molecule once all valences are filled',b3:'Save finished molecules into the library',q:'Search name, formula, trivia',all:'All',c:'Carbon',n:'No carbon',h:'Hidden',none:'No matches',prev:'Previous',next:'Next',zin:'Zoom in',zout:'Zoom out',zrs:'Reset view',th:'Toggle light or dark'}};
+const SRC=[
+['HH','氢气','Hydrogen','氢是宇宙中含量最多的元素。','Hydrogen is the most abundant element in the universe.'],
+['O','水','Water','地球表面约 71% 被水覆盖。','Water covers about 71% of Earth’s surface.'],
+['O=O','氧气','Oxygen','约占地球大气体积的 21%。','Makes up about 21% of Earth’s atmosphere by volume.'],
+['N#N','氮气','Nitrogen','约占地球大气的 78%，三键让它非常稳定。','About 78% of the atmosphere; its triple bond makes it very stable.'],
+['O=C=O','二氧化碳','Carbon dioxide','18 世纪由约瑟夫·布莱克研究，是最早被确认的气体之一。','Studied by Joseph Black in the 18th century; one of the first gases identified.'],
+['N','氨','Ammonia','哈伯-博施法让人类得以大规模合成氨，用于制造化肥。','The Haber–Bosch process made large-scale ammonia for fertilizer possible.'],
+['C','甲烷','Methane','甲烷是由亚历山德罗·伏特发现的，后来他发明了电池。','Methane was discovered by Alessandro Volta, who later invented the battery.'],
+['CC','乙烷','Ethane','1834 年，人类首次制造出乙烷，当时却将其误认为甲烷。','Ethane was first made in 1834, but was mistaken for methane at the time.'],
+['OCO','甲二醇','Methanediol','天体化学家希望能在遥远的恒星中找到这种物质的身影。','Astrochemists hope to find traces of it around distant stars.'],
+['O1OOO1','四聚氧','Tetraoxygen','四聚氧的存在早在 1924 年就被预测，但直到 2001 年才被切实地发现。','Predicted as early as 1924, but only observed for real in 2001.'],
+['NC(=O)N','尿素','Urea','尿素是第一种在实验室中人工合成的有机化合物。','Urea was the first organic compound synthesized in a laboratory.'],
+['CO','甲醇','Methanol','俗称木精，最初由木材干馏得到。','Known as wood alcohol; first obtained by distilling wood.'],
+['CCO','乙醇','Ethanol','酒精饮料中的醇，也是常用的溶剂和燃料。','The alcohol in drinks, and a common solvent and fuel.'],
+['COC','二甲醚','Dimethyl ether','乙醇的同分异构体：分子式相同，结构却不同。','An isomer of ethanol: same formula, different structure.'],
+['C=C','乙烯','Ethylene','植物激素之一，能催熟水果。','A plant hormone that ripens fruit.'],
+['C#C','乙炔','Acetylene','燃烧时火焰温度极高，常用于焊接和切割。','Burns extremely hot; used for welding and cutting.'],
+['C#N','氢氰酸','Hydrogen cyanide','剧毒，却是研究生命起源时绕不开的小分子。','Highly toxic, yet a key small molecule in origin-of-life research.'],
+['C=O','甲醛','Formaldehyde','福尔马林的主要成分。','The main component of formalin.'],
+['C(=O)O','甲酸','Formic acid','最初由蚂蚁蒸馏得到，故又名蚁酸。','First distilled from ants, hence its Chinese name “ant acid”.'],
+['CC(=O)O','乙酸','Acetic acid','食醋酸味的来源。','What gives vinegar its sourness.'],
+['CC(=O)C','丙酮','Acetone','常见溶剂，也是卸甲油的主要成分。','A common solvent and the main ingredient of nail polish remover.'],
+['C1=CC=CC=C1','苯','Benzene','据说凯库勒梦见蛇咬住自己的尾巴，由此想到了环状结构。','Kekulé reportedly dreamed of a snake biting its tail and pictured the ring.'],
+['OO','过氧化氢','Hydrogen peroxide','水溶液即双氧水，常用作消毒剂和漂白剂。','Its water solution is used as a disinfectant and bleach.'],
+['NN','肼','Hydrazine','常用作火箭燃料。','Used as a rocket fuel.'],
+['OCCO','乙二醇','Ethylene glycol','汽车防冻液的主要成分。','The main ingredient of car antifreeze.'],
+['NCC(=O)O','甘氨酸','Glycine','最简单的氨基酸，已在彗星样品中被发现。','The simplest amino acid, found in comet samples.'],
+['CN','甲胺','Methylamine','最简单的有机胺。','The simplest organic amine.'],
+['CC(=O)OC1=CC=CC=C1C(=O)O','阿司匹林','Aspirin','1897 年，拜耳公司的费利克斯·霍夫曼合成出可供药用的乙酰水杨酸，它的前身水杨酸最早取自柳树皮。','In 1897 Felix Hoffmann at Bayer made a usable form; its precursor, salicylic acid, was first taken from willow bark.'],
+['CC1(C)SC2C(NC(=O)CC3=CC=CC=C3)C(=O)N2C1C(=O)O','青霉素 G（抗生素）','Penicillin G (antibiotic)','1928 年弗莱明发现青霉菌能抑制细菌，青霉素后来成为第一种被广泛使用的抗生素。','Fleming noticed in 1928 that a mould held bacteria back; penicillin became the first widely used antibiotic.'],
+['KON(=O)=O','黑火药（硝酸钾）','Black powder (potassium nitrate)','黑火药由硝酸钾、硫磺和木炭混合而成，是中国古代四大发明之一。这里展示的是其中的氧化剂硝酸钾。','Black powder is a mix of potassium nitrate, sulfur and charcoal, one of China’s Four Great Inventions. Shown here is its oxidizer, potassium nitrate.'],
+['OCC1OC(O)C(O)C(O)C1O','葡萄糖','Glucose','细胞最直接的能量来源，大脑主要依靠它供能。','The most direct fuel for cells; the brain relies mainly on it.'],
+['NC1=NC=NC2=C1N=CN2C3OC(COP(=O)(O)OP(=O)(O)OP(=O)(O)O)C(O)C3O','ATP（三磷酸腺苷）','ATP (adenosine triphosphate)','细胞的“能量货币”，人体每天周转的 ATP 总量大约相当于自身体重。','The cell’s energy currency; the body recycles roughly its own weight in ATP every day.'],
+['OCC(O)C1OC(=O)C(O)=C1O','维生素 C（维他命 C）','Vitamin C (ascorbic acid)','缺乏维生素 C 会引起坏血病，大航海时代曾夺去许多水手的生命。','A lack of it causes scurvy, which killed many sailors in the age of sail.'],
+['OS(=O)(=O)O','硫酸','Sulfuric acid','“化学工业之母”，产量常被用来衡量一个国家的工业水平。','Often called the “king of chemicals”; its output is a rough gauge of a nation’s industry.'],
+['ON(=O)=O','硝酸','Nitric acid','古代炼金术士称它为“强水”，因为它能溶解银。','Alchemists called it aqua fortis, “strong water”, because it dissolves silver.'],
+['Cl','盐酸（氯化氢）','Hydrochloric acid (HCl)','盐酸是氯化氢的水溶液，我们胃液里的酸也是它。','Hydrochloric acid is a water solution of hydrogen chloride, and it is also the acid in your stomach.'],
+['KC#N','氰化物（氰化钾）','Cyanide (potassium cyanide)','剧毒，会阻止细胞利用氧；工业上也用于从矿石中提金。','Highly toxic: it stops cells from using oxygen. Also used industrially to extract gold from ore.'],
+['O=O=O','臭氧','Ozone','臭氧层吸收了阳光中的大部分紫外线，名字来自希腊语中“闻”的意思。','The ozone layer absorbs most of the Sun’s ultraviolet light; the name comes from the Greek word for “to smell”.']];
+function parse(s){const A=[],B=[],st=[],ring={};let prev=-1,ord=1;
+ for(const ch of s.match(/Cl|[A-Z]|[=#()]|\d/g)){
+  if(EL[ch]){A.push(ch);const k=A.length-1;if(prev>=0)B.push([prev,k,ord]);prev=k;ord=1}
+  else if(ch=='=')ord=2;else if(ch=='#')ord=3;
+  else if(ch=='(')st.push(prev);else if(ch==')')prev=st.pop();
+  else if(/\d/.test(ch)){if(ring[ch]!=null){B.push([ring[ch],prev,ord]);delete ring[ch];ord=1}else ring[ch]=prev}}
+ const n=A.length;
+ for(let k=0;k<n;k++){const u=B.filter(b=>b[0]==k||b[1]==k).reduce((s,b)=>s+b[2],0);for(let h=EL[A[k]].v-u;h>0;h--){A.push('H');B.push([k,A.length-1,1])}}
+ return{A,B}}
+function formula(E){const c={};E.forEach(e=>c[e]=(c[e]||0)+1);const ks=Object.keys(c).sort();
+ const o=c.C?['C',...(c.H?['H']:[]),...ks.filter(k=>k!='C'&&k!='H')]:ks;
+ return o.map(k=>k+(c[k]>1?'<sub>'+c[k]+'</sub>':'')).join('')}
+function lay3({A,B}){
+ const n=A.length,VE={H:1,C:4,N:5,O:6,P:5,S:6,K:1,Cl:7},bs=A.map(()=>0),own=[];
+ B.forEach(([a,b,o])=>{bs[a]+=o;bs[b]+=o});
+ A.forEach((e,i)=>{if(e=='C'||e=='H'||e=='K')return;const l=Math.round((VE[e]-bs[i])/2);for(let k=0;k<Math.min(l,3);k++)own.push(i)});
+ const P=Array.from({length:n+own.length},()=>({x:Math.random()-.5,y:Math.random()-.5,z:Math.random()-.5})),adj=new Set(B.flatMap(([a,b])=>[a+','+b,b+','+a])),flat=new Set();
+ own.forEach((o,k)=>{adj.add(o+','+(n+k));adj.add((n+k)+','+o)});
+ B.forEach(([a,b,o])=>{if(o>1)B.forEach(([c,d])=>{if([a,b].includes(c)||[a,b].includes(d)){flat.add(c);flat.add(d)}})});
+ own.forEach((o,k)=>{if(flat.has(o))flat.add(n+k)});
+ const sp=[...B.map(([a,b])=>[a,b,1]),...own.map((o,k)=>[o,n+k,.6])];
+ for(let t=0;t<500;t++){const F=P.map(()=>({x:0,y:0,z:0}));
+  for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){if(adj.has(i+','+j))continue;const dx=P[j].x-P[i].x,dy=P[j].y-P[i].y,dz=P[j].z-P[i].z,d=Math.hypot(dx,dy,dz)||.1,f=(i>=n||j>=n?.26:.2)/(d*d*d);F[i].x-=dx*f;F[i].y-=dy*f;F[i].z-=dz*f;F[j].x+=dx*f;F[j].y+=dy*f;F[j].z+=dz*f}
+  for(const [a,b,L] of sp){const dx=P[b].x-P[a].x,dy=P[b].y-P[a].y,dz=P[b].z-P[a].z,d=Math.hypot(dx,dy,dz)||.1,f=(d-L)*.5/d;F[a].x+=dx*f;F[a].y+=dy*f;F[a].z+=dz*f;F[b].x-=dx*f;F[b].y-=dy*f;F[b].z-=dz*f}
+  P.forEach((p,i)=>{if(flat.has(i))F[i].z-=p.z*1.2;p.x+=F[i].x*.4;p.y+=F[i].y*.4;p.z+=F[i].z*.4})}
+ const Q=P.slice(0,n),cx=Q.reduce((s,p)=>s+p.x,0)/n,cy=Q.reduce((s,p)=>s+p.y,0)/n,cz=Q.reduce((s,p)=>s+p.z,0)/n;
+ Q.forEach(p=>{p.x-=cx;p.y-=cy;p.z-=cz});
+ return{P:Q,ext:Math.max(...Q.map((p,i)=>Math.hypot(p.x,p.y,p.z)+EL[A[i]].r))}}
+const ringOf=E=>{const s=new Set(E);return s.has('N')?'g':[...s].every(e=>e=='O'||e=='H')?'p':'y'};
+const FM={'N':'NH<sub>3</sub>','NN':'N<sub>2</sub>H<sub>4</sub>','C#N':'HCN','OS(=O)(=O)O':'H<sub>2</sub>SO<sub>4</sub>','ON(=O)=O':'HNO<sub>3</sub>','Cl':'HCl','KC#N':'KCN'};
+const HID=new Set(['CC','O1OOO1','COC','C#C','C(=O)O','CC(=O)O','CC(=O)C','OCCO','CN']);
+const LIB=SRC.map(([s,z,e,zf,ef])=>{const g=parse(s);return{z,e,zf,ef,g,f:FM[s]||formula(g.A),hid:HID.has(s),...lay3(g)}});
+const VIS=LIB.map((m,i)=>i).filter(i=>!LIB[i].hid);
+const PAL={light:{bg:'#ece9de',bond:'#5f5b50',edge:'rgba(70,60,35,.5)',hi:'rgba(255,255,255,.2)',ring:{y:'#efe2b5',g:'#cde4d2',p:'#eccbc6'}},dark:{bg:'#222220',bond:'#b9b5a8',edge:'rgba(0,0,0,.45)',hi:'rgba(255,255,255,.14)',ring:{y:'#4a4326',g:'#2f4a3b',p:'#4f3433'}}};
+const dk=()=>{const t=document.documentElement.dataset.theme;return t?t=='dark':matchMedia('(prefers-color-scheme: dark)').matches};
+const VIEWS=['viewer','library','builder'];
+let lang='zh',cur=6,flt='all',q='',ry=.6,rx=.35,drag=null,view='viewer';
+try{lang=localStorage.getItem('mol-lang')||(/^zh/i.test(navigator.language)?'zh':'en');const th=localStorage.getItem('mol-theme');if(th)document.documentElement.dataset.theme=th}catch(e){}
+const $=s=>document.querySelector(s),cv=$('#cv'),reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const nm=m=>lang=='zh'?m.z:m.e,ft=m=>lang=='zh'?m.zf:m.ef,plain=h=>h.replace(/<\/?sub>/g,'');
+
+function size(c){const d=devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;if(c.width!=Math.round(w*d)||c.height!=Math.round(h*d)){c.width=Math.round(w*d);c.height=Math.round(h*d)}const x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return[x,w,h]}
+function draw(c,m,ry,rx,cyf,zm=1){
+ const[x,W,H]=size(c);if(!W)return;const P=PAL[dk()?'dark':'light'];
+ x.clearRect(0,0,W,H);x.fillStyle=P.bg;x.fillRect(0,0,W,H);
+ const bw=Math.max(1.6,W/320),ew=Math.max(1,W/520);
+ 
+ const U=.85*Math.min(W/2,H*Math.min(cyf,1-cyf))/m.ext/1.3*zm,cy=H*cyf,D=Math.max(6,m.ext*3.2),sy=Math.sin(ry),cyw=Math.cos(ry),sx=Math.sin(rx),cx=Math.cos(rx);
+ const Q=m.P.map((p,i)=>{const x1=p.x*cyw+p.z*sy,z1=-p.x*sy+p.z*cyw,y2=p.y*cx-z1*sx,z2=p.y*sx+z1*cx,s=D/(D-z2);return{x:W/2+x1*s*U,y:cy+y2*s*U,z:z2,r:EL[m.g.A[i]].r*s*U,e:m.g.A[i]}});
+ const items=[...Q.map(a=>({z:a.z,a})),...m.g.B.map(b=>({z:(Q[b[0]].z+Q[b[1]].z)/2,b}))].sort((u,v)=>u.z-v.z);
+ x.lineCap='round';
+ for(const it of items){
+  if(it.b){const[a,b,o]=it.b,p=Q[a],r=Q[b],dx=r.x-p.x,dy=r.y-p.y,l=Math.hypot(dx,dy)||1,ux=dx/l,uy=dy/l,off=o==1?[0]:o==2?[-.11,.11]:[-.19,0,.19];
+   x.strokeStyle=P.bond;x.lineWidth=bw;
+   for(const f of off){const ox=-uy*f*U,oy=ux*f*U;x.beginPath();x.moveTo(p.x+ux*p.r*.75+ox,p.y+uy*p.r*.75+oy);x.lineTo(r.x-ux*r.r*.75+ox,r.y-uy*r.r*.75+oy);x.stroke()}}
+  else{const a=it.a;x.beginPath();x.arc(a.x,a.y,a.r,0,7);x.fillStyle=EL[a.e].c;x.fill();x.lineWidth=ew;x.strokeStyle=P.edge;x.stroke();
+   x.beginPath();x.arc(a.x-a.r*.3,a.y-a.r*.32,a.r*.42,0,7);x.fillStyle=P.hi;x.fill();
+   x.fillStyle='#3a372d';x.font=`600 ${a.r*.9}px system-ui,sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText(a.e,a.x,a.y+a.r*.05)}}}
+function caption(){const m=LIB[cur];$('#cap').innerHTML=`<div class="t">${nm(m)}: ${m.f}</div><div class="f">${ft(m)}</div>`;const r=VIS.indexOf(cur);$('#pos').textContent=r<0?T[lang].h:(r+1)+' / '+VIS.length}
+function thumbs(){document.querySelectorAll('#grid canvas').forEach(c=>draw(c,LIB[+c.dataset.k],.55,.3,.5))}
+function grid(){const s=q.trim().toLowerCase();
+ const L=LIB.map((m,i)=>[m,i]).filter(([m])=>(flt=='h'?m.hid:!m.hid&&(flt=='all'||(flt=='c')==m.g.A.includes('C')))&&(!s||(m.z+m.e+m.zf+m.ef+plain(m.f)).toLowerCase().includes(s)));
+ $('#grid').innerHTML=L.map(([m,i])=>`<article class="card${i==cur?' on':''}" data-k="${i}" tabindex="0"><canvas data-k="${i}"></canvas><div class="t">${nm(m)}: ${m.f}</div><div class="f">${ft(m)}</div></article>`).join('')||`<p class="sub">${T[lang].none}</p>`;
+ $('#cnt').textContent=L.length+' / '+(flt=='h'?L.length:VIS.length);thumbs()}
+function applyLang(){const t=T[lang];document.documentElement.lang=lang;document.title=t.title;
+ document.querySelectorAll('[data-i]').forEach(e=>e.textContent=t[e.dataset.i]);$('#q').placeholder=t.q;
+ $('#prev').setAttribute('aria-label',t.prev);$('#zi').setAttribute('aria-label',t.zin);$('#zo').setAttribute('aria-label',t.zout);$('#zr').setAttribute('aria-label',t.zrs);$('#next').setAttribute('aria-label',t.next);$('#th').setAttribute('aria-label',t.th);
+ document.querySelectorAll('[data-f]').forEach(b=>{b.textContent=t[b.dataset.f];b.setAttribute('aria-pressed',b.dataset.f==flt)});
+ document.querySelectorAll('[data-l]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l==lang));
+ $('#lg').innerHTML=Object.entries(EL).map(([e,o])=>`<span><i style="background:${o.c}">${e}</i>${lang=='zh'?o.z:o.e}</span>`).join('');
+ caption();grid()}
+function route(){let v=location.hash.slice(1);if(!VIEWS.includes(v))v='viewer';view=v;
+ VIEWS.forEach(n=>$('#v-'+n).classList.toggle('on',n==v));
+ document.querySelectorAll('[data-v]').forEach(a=>a.dataset.v==v?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
+ if(v=='library')thumbs();scrollTo(0,0)}
+function step(d){do{cur=(cur+d+LIB.length)%LIB.length}while(LIB[cur].hid);ry=.6;rx=.35;caption();document.querySelectorAll('.card').forEach(c=>c.classList.toggle('on',+c.dataset.k==cur))}
+function pick(k){cur=k;ry=.6;rx=.35;caption();document.querySelectorAll('.card').forEach(c=>c.classList.toggle('on',+c.dataset.k==k));location.hash='viewer';route()}
+
+const ptrs=new Map();let zm=1,pinch=null;const zc=v=>Math.max(.4,Math.min(4,v));
+cv.addEventListener('pointerdown',e=>{ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});cv.setPointerCapture(e.pointerId);cv.style.cursor='grabbing';if(ptrs.size==2){const[a,b]=[...ptrs.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y)||1,z:zm};drag=null}else drag={x:e.clientX,y:e.clientY}});
+$('.stage').addEventListener('wheel',e=>{e.preventDefault();const d=e.deltaY*(e.deltaMode==1?16:e.deltaMode==2?400:1)*(e.ctrlKey?3:1);zm=zc(zm*Math.exp(-d*.002))},{passive:false});
+cv.addEventListener('dblclick',()=>{zm=1});
+cv.addEventListener('pointermove',e=>{if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});if(ptrs.size==2&&pinch){const[a,b]=[...ptrs.values()];zm=zc(pinch.z*Math.hypot(a.x-b.x,a.y-b.y)/pinch.d);return}if(!drag)return;ry+=(e.clientX-drag.x)*.01;rx=Math.max(-1.5,Math.min(1.5,rx+(e.clientY-drag.y)*.01));drag={x:e.clientX,y:e.clientY}});
+const pup=e=>{ptrs.delete(e.pointerId);pinch=null;drag=null;cv.style.cursor='grab'};cv.addEventListener('pointerup',pup);cv.addEventListener('pointercancel',pup);
+$('#zi').onclick=()=>{zm=zc(zm*1.25)};$('#zo').onclick=()=>{zm=zc(zm/1.25)};$('#zr').onclick=()=>{zm=1;rx=.35};
+$('#prev').onclick=()=>step(-1);$('#next').onclick=()=>step(1);
+addEventListener('keydown',e=>{if(view=='viewer'&&!/INPUT/.test(document.activeElement.tagName)){if(e.key=='ArrowLeft')step(-1);if(e.key=='ArrowRight')step(1)}});
+document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{lang=b.dataset.l;try{localStorage.setItem('mol-lang',lang)}catch(e){}applyLang()});
+document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{flt=b.dataset.f;document.querySelectorAll('[data-f]').forEach(x=>x.setAttribute('aria-pressed',x==b));grid()});
+$('#th').onclick=()=>{const t=dk()?'light':'dark';document.documentElement.dataset.theme=t;try{localStorage.setItem('mol-theme',t)}catch(e){}thumbs()};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',thumbs);
+$('#q').oninput=e=>{q=e.target.value;grid()};
+$('#grid').onclick=e=>{const c=e.target.closest('[data-k]');if(c)pick(+c.dataset.k)};
+$('#grid').onkeydown=e=>{if(e.key=='Enter'){const c=e.target.closest('[data-k]');if(c)pick(+c.dataset.k)}};
+addEventListener('hashchange',route);
+let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(thumbs,150)});
+(function loop(){if(view=='viewer'){if(!ptrs.size&&!reduce)ry+=.006;draw(cv,LIB[cur],ry,rx,.44,zm)}requestAnimationFrame(loop)})();
+applyLang();route();
+</script>
+</body>
+</html>

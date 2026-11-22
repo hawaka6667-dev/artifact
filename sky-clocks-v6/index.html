@@ -6,7 +6,7 @@
 /* Layout: parameter strip on top, then three instrument cards in a wrapping grid; each card = dial + readout. Look: cyanotype star chart (blueprint paper, indigo ink, one copper/gold sun). */
 :root{
   --bg:#e8eef3; --panel:#f5f8fa; --ink:#13283b; --ink2:#506478; --line:#b4c3cf; --faint:#d5dfe7;
-  --sun:#c26a14; --lit:#fbf6e2; --dark:#3a556f; --sign:#0d7773; --earth:#2f6f9a; --autumn:#a4452c; --saturn:#6a4c9c;
+  --sun:#c26a14; --lit:#fbf6e2; --dark:#3a556f; --sign:#0d7773; --earth:#2f6f9a; --autumn:#a4452c; --saturn:#6a4c9c; --jupiter:#9b5a3c;
   --tint-a:rgba(19,40,59,.10); --tint-b:rgba(19,40,59,.035); --day:rgba(194,106,20,.30);
   --display:'Newsreader',Georgia,'Songti SC','Noto Serif SC',serif;
   --sans:'IBM Plex Sans','PingFang SC','Noto Sans SC','Microsoft YaHei',system-ui,sans-serif;
@@ -15,14 +15,14 @@
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
     --bg:#09131d; --panel:#0e1c2a; --ink:#dce8f1; --ink2:#8ea6b9; --line:#2a4054; --faint:#182a3b;
-    --sun:#f2b650; --lit:#eef3f7; --dark:#1b2f43; --sign:#52d3c7; --earth:#5aa6d8; --autumn:#e08a63; --saturn:#b8a0f2;
+    --sun:#f2b650; --lit:#eef3f7; --dark:#1b2f43; --sign:#52d3c7; --earth:#5aa6d8; --autumn:#e08a63; --saturn:#b8a0f2; --jupiter:#d99a7f;
     --tint-a:rgba(220,232,241,.09); --tint-b:rgba(220,232,241,.03); --day:rgba(242,182,80,.24);
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --bg:#09131d; --panel:#0e1c2a; --ink:#dce8f1; --ink2:#8ea6b9; --line:#2a4054; --faint:#182a3b;
-  --sun:#f2b650; --lit:#eef3f7; --dark:#1b2f43; --sign:#52d3c7; --earth:#5aa6d8; --autumn:#e08a63; --saturn:#b8a0f2;
+  --sun:#f2b650; --lit:#eef3f7; --dark:#1b2f43; --sign:#52d3c7; --earth:#5aa6d8; --autumn:#e08a63; --saturn:#b8a0f2; --jupiter:#d99a7f;
   --tint-a:rgba(220,232,241,.09); --tint-b:rgba(220,232,241,.03); --day:rgba(242,182,80,.24);
   color-scheme:dark;
 }
@@ -150,6 +150,8 @@ footer p{margin:0}
       <p class="cap" data-i18n="cap1"></p>
       <svg viewBox="-262 -262 524 524" role="img" data-i18n-aria="aria1">
         <g id="ecStatic"></g>
+        <g id="ecJ"><line x1="0" y1="-34" x2="0" y2="-243" stroke="var(--jupiter)" stroke-width="1.1" stroke-dasharray="2 3" stroke-opacity=".6"/></g>
+        <g id="ecJIcon"><circle r="4.6" fill="var(--jupiter)"/><path d="M-4.4,-1.5H4.4M-4,1.7H4" stroke="var(--panel)" stroke-width=".9" opacity=".75"/></g>
         <g id="ecHand"><line x1="0" y1="0" x2="0" y2="-236" stroke="var(--sun)" stroke-width="2"/><path d="M0,-242L-5,-231L5,-231Z" fill="var(--sun)"/></g>
         <circle id="ecSun" r="8" fill="var(--sun)" stroke="var(--panel)" stroke-width="2"/>
         <circle r="5" fill="var(--earth)" stroke="var(--panel)" stroke-width="1.5"/>
@@ -193,6 +195,8 @@ footer p{margin:0}
           <circle r="3.8" fill="var(--saturn)"/>
           <ellipse rx="8.4" ry="2.6" transform="rotate(-18)" fill="none" stroke="var(--saturn)" stroke-width="1.4"/>
         </g>
+        <g id="hJup"><line x1="0" y1="-26" x2="0" y2="-243" stroke="var(--jupiter)" stroke-width="1.2" stroke-dasharray="2 3" stroke-opacity=".75"/></g>
+        <g id="jupIcon"><circle r="4.6" fill="var(--jupiter)"/><path d="M-4.4,-1.5H4.4M-4,1.7H4" stroke="var(--panel)" stroke-width=".9" opacity=".75"/></g>
         <g id="hAsc"><line x1="0" y1="0" x2="0" y2="-146" stroke="var(--sign)" stroke-width="5" stroke-linecap="round"/><path d="M0,-191L-6,-201L6,-201Z" fill="var(--sign)"/></g>
         <g id="hMoon"><line x1="0" y1="0" x2="0" y2="-196" stroke="var(--ink)" stroke-width="2.6"/><circle cy="-205" r="7.5" fill="var(--panel)" stroke="var(--ink)" stroke-width="2"/></g>
         <g id="hSun"><line x1="0" y1="0" x2="0" y2="-226" stroke="var(--sun)" stroke-width="1.6"/><circle cy="-226" r="8.5" fill="var(--sun)" stroke="var(--panel)" stroke-width="2"/></g>
@@ -253,8 +257,9 @@ function findSunLon(JD0,target){
   for(let i=0;i<8;i++){const d=((target-sunLon(JD).lon+540)%360)-180;JD+=d/0.9856;}
   return JD;
 }
-/* Saturn: JPL "Keplerian elements for approximate positions of the major planets", valid 1800-2050 (Saturn within ~0.2 deg) */
+/* Saturn and Jupiter: JPL "Keplerian elements for approximate positions of the major planets", valid 1800-2050 (Saturn and Jupiter each within ~0.2 deg) */
 const EL_EMB={a:[1.00000261,0.00000562],e:[0.01671123,-0.00004392],I:[-0.00001531,-0.01294668],L:[100.46457166,35999.37244981],w:[102.93768193,0.32327364],O:[0,0]};
+const EL_JUP={a:[5.20288700,0.00000011],e:[0.04838624,-0.00013253],I:[1.30439695,-0.00183714],L:[34.39644051,3034.74612775],w:[14.72847983,0.21252668],O:[100.47390909,0.20469106]};
 const EL_SAT={a:[9.53667594,-0.00125060],e:[0.05386179,-0.00050991],I:[2.48599187,0.00193609],L:[49.95424423,1222.49362201],w:[92.59887831,-0.41897216],O:[113.66242448,-0.28867794]};
 function helioXYZ(el,T){
   const v=k=>el[k][0]+el[k][1]*T;
@@ -270,12 +275,13 @@ function helioXYZ(el,T){
     (sw*sI)*xp+(cw*sI)*yp
   ];
 }
-function saturnPos(JD){
-  const T=(JD-2451545)/36525,s=helioXYZ(EL_SAT,T),e=helioXYZ(EL_EMB,T);
+function geoPos(EL,JD){
+  const T=(JD-2451545)/36525,s=helioXYZ(EL,T),e=helioXYZ(EL_EMB,T);
   const x=s[0]-e[0],y=s[1]-e[1],z=s[2]-e[2];
   const lon=norm(Math.atan2(y,x)*R2D+1.396971*T+0.0003086*T*T);
   return{lon,lat:Math.atan2(z,Math.hypot(x,y))*R2D,dist:Math.sqrt(x*x+y*y+z*z)};
 }
+const saturnPos=JD=>geoPos(EL_SAT,JD),jupiterPos=JD=>geoPos(EL_JUP,JD);
 /*MATH-END*/
 
 /* ---------- localization ---------- */
@@ -289,11 +295,11 @@ const I18N={
     sp1:'实时 ×1',sp0:'暂停',sp60:'1 分钟/秒',sp3600:'1 小时/秒',sp86400:'1 天/秒',sp2629800:'1 个月/秒',
     bNow:'回到现在',bHm:'−1 小时',bHp:'+1 小时',bDm:'−1 天',bDp:'+1 天',bMm:'−1 个月',bMp:'+1 个月',
     h2_1:'偏心钟',
-    cap1:'地球在 E（针的轴心），日历圈的圆心 C 偏向远日点一侧。针从 E 穿过圈上的太阳，指向外环的十二宫；日历圈刻有 12 个月与每一天。中间四个扇区是四季，以春分、夏至、秋分、冬至为界，长度并不相等。',
-    aria1:'偏心钟：针指向外环十二宫，内圈为 12 个月 365 天刻度',
+    cap1:'地球在 E（针的轴心），日历圈的圆心 C 偏向远日点一侧。针从 E 穿过圈上的太阳，指向外环的十二宫；日历圈刻有 12 个月与每一天。中间四个扇区是四季，以春分、夏至、秋分、冬至为界，长度并不相等。外缘带条纹的褐色圆点是木星，虚线连到圆心：它绕天一周约 11.86 年，大约每年行一宫，古人用它纪年，所以叫岁星。',
+    aria1:'偏心钟：针指向外环十二宫，内圈为 12 个月 365 天刻度，外缘标记为木星（岁星）',
     exag:'偏心放大',
     rd1_date:'公历日期',rd1_doy:'年内天数',rd1_lon:'太阳黄经 λ',rd1_sign:'所在宫位',rd1_dist:'日地距离',rd1_dev:'放大造成的指针偏差',
-    rd1_season:'当前季节',rd1_next:'下一个节点',
+    rd1_season:'当前季节',rd1_next:'下一个节点',rd1_jup:'木星（岁星）所在宫位',rd1_jlon:'木星黄经',rd1_jper:'岁星周期',jperVal:'11.86 年，约每年一宫',
     seasons:['春','夏','秋','冬'],terms:['春分','夏至','秋分','冬至'],
     daysFmt:x=>`${x} 天`,
     seasonFmt:(s,n)=>`${s} · ${n?'北半球':'南半球'}`,
@@ -308,13 +314,14 @@ const I18N={
     rd2_nNew:'下次新月',rd2_nFirst:'下次上弦',rd2_nFull:'下次满月',rd2_nLast:'下次下弦',
     ageFmt:(a,p)=>`${a} / ${p} 天`,
     h2_3:'24 小时天空钟',
-    cap3:'12 点在上，0 点在下。长针（金）指太阳，中针（空心）指月亮，短针（青）指上升点所在的宫。外环的十二宫随恒星时转动。最外缘带环的紫色标记是土星，虚线连到圆心。',
-    aria3:'24 小时天空钟：长针指太阳，中针指月亮，短针指上升星座，外缘标记为土星',
+    cap3:'12 点在上，0 点在下。长针（金）指太阳，中针（空心）指月亮，短针（青）指上升点所在的宫。外环的十二宫随恒星时转动。最外缘带环的紫色标记是土星，虚线连到圆心。带条纹的褐色圆点是木星。',
+    aria3:'24 小时天空钟：长针指太阳，中针指月亮，短针指上升星座，外缘标记为土星和木星',
     rd3_solar:'真太阳时（长针）',rd3_lunar:'月亮时（中针）',rd3_asc:'上升点（短针）',rd3_mc:'天顶 MC',rd3_lst:'地方恒星时',
     rd3_sat:'土星时（紫色标记）',rd3_satpos:'土星所在宫位',rd3_satalt:'土星高度',rd3_satd:'土星距地球',satFmt:(s,r)=>r?`${s}（逆行）`:s,
+    rd3_jup:'木星时（褐色标记）',rd3_jpos:'木星所在宫位',rd3_jalt:'木星高度',rd3_jd:'木星距地球',
     rd3_salt:'太阳高度',rd3_malt:'月亮高度',rd3_rs:'日出 / 日落（真太阳时）',
     polarNight:'极夜',polarDay:'极昼',
-    foot1:'算法：太阳取低精度黄经公式（约 0.01°），月亮取 Almanac 低精度级数（约 0.3°，未做视差修正），土星取 JPL 的开普勒近似根数（约 0.2°）。时角、高度、上升点由地方恒星时和经纬度算出。',
+    foot1:'算法：太阳取低精度黄经公式（约 0.01°），月亮取 Almanac 低精度级数（约 0.3°，未做视差修正），土星和木星取 JPL 的开普勒近似根数（各约 0.2°）。时角、高度、上升点由地方恒星时和经纬度算出。',
     foot2:'十二宫指回归黄道的十二个 30° 分区，与天空中的星座边界不同。月相周期取朔望月 29.53 天，恒星月为 27.32 天。'
   },
   en:{
@@ -323,11 +330,11 @@ const I18N={
     sp1:'Real time ×1',sp0:'Paused',sp60:'1 min per sec',sp3600:'1 hour per sec',sp86400:'1 day per sec',sp2629800:'1 month per sec',
     bNow:'Now',bHm:'−1 hour',bHp:'+1 hour',bDm:'−1 day',bDp:'+1 day',bMm:'−1 month',bMp:'+1 month',
     h2_1:'Eccentric Clock',
-    cap1:"Earth sits at E, the pivot of the hand. The calendar ring is centred on C, shifted toward the Sun's apogee. The hand runs from E through the Sun on the ring and points to the twelve signs on the outer ring. The calendar ring carries 12 months and every day. The four inner sectors are the seasons, bounded by the equinoxes and solstices; they are not equal in length.",
-    aria1:'Eccentric clock: the hand points to the twelve signs on the outer ring; the inner ring is marked with 12 months and 365 days',
+    cap1:"Earth sits at E, the pivot of the hand. The calendar ring is centred on C, shifted toward the Sun's apogee. The hand runs from E through the Sun on the ring and points to the twelve signs on the outer ring. The calendar ring carries 12 months and every day. The four inner sectors are the seasons, bounded by the equinoxes and solstices; they are not equal in length. The striped clay-brown dot on the rim, joined to the centre by a dashed line, is Jupiter. It circles the sky in about 11.86 years, roughly one sign a year, so ancient Chinese astronomers used it to count years and called it Suixing, the Year Star.",
+    aria1:'Eccentric clock: the hand points to the twelve signs on the outer ring; the inner ring is marked with 12 months and 365 days; the rim marker is Jupiter',
     exag:'Eccentricity exaggeration',
     rd1_date:'Date',rd1_doy:'Day of year',rd1_lon:'Solar longitude λ',rd1_sign:'Sign',rd1_dist:'Sun–Earth distance',rd1_dev:'Hand error from exaggeration',
-    rd1_season:'Season',rd1_next:'Next turning point',
+    rd1_season:'Season',rd1_next:'Next turning point',rd1_jup:'Jupiter (Suixing) sign',rd1_jlon:'Jupiter longitude',rd1_jper:'Jupiter period',jperVal:'11.86 years, about one sign a year',
     seasons:['Spring','Summer','Autumn','Winter'],terms:['March equinox','June solstice','September equinox','December solstice'],
     daysFmt:x=>`${x} days`,
     seasonFmt:(s,n)=>`${s} · ${n?'Northern':'Southern'} Hemisphere`,
@@ -342,13 +349,14 @@ const I18N={
     rd2_nNew:'Next new moon',rd2_nFirst:'Next first quarter',rd2_nFull:'Next full moon',rd2_nLast:'Next last quarter',
     ageFmt:(a,p)=>`${a} / ${p} days`,
     h2_3:'24-Hour Sky Clock',
-    cap3:'Noon is at the top and midnight at the bottom. The long gold hand is the Sun, the hollow-tipped middle hand is the Moon, and the short teal hand points to the sign now rising. The outer zodiac ring turns with sidereal time. The violet ringed marker on the outer rim is Saturn, joined to the centre by a dashed line.',
-    aria3:'24-hour sky clock: the long hand is the Sun, the middle hand the Moon, the short hand the rising sign, and the rim marker is Saturn',
+    cap3:'Noon is at the top and midnight at the bottom. The long gold hand is the Sun, the hollow-tipped middle hand is the Moon, and the short teal hand points to the sign now rising. The outer zodiac ring turns with sidereal time. The violet ringed marker on the outer rim is Saturn, joined to the centre by a dashed line. The striped clay-brown dot is Jupiter.',
+    aria3:'24-hour sky clock: the long hand is the Sun, the middle hand the Moon, the short hand the rising sign, and the rim markers are Saturn and Jupiter',
     rd3_solar:'Solar time (long hand)',rd3_lunar:'Lunar time (middle hand)',rd3_asc:'Ascendant (short hand)',rd3_mc:'Midheaven (MC)',rd3_lst:'Local sidereal time',
     rd3_sat:'Saturn time (violet marker)',rd3_satpos:'Saturn sign',rd3_satalt:'Saturn altitude',rd3_satd:'Saturn distance',satFmt:(s,r)=>r?`${s} (retrograde)`:s,
+    rd3_jup:'Jupiter time (clay-brown marker)',rd3_jpos:'Jupiter sign',rd3_jalt:'Jupiter altitude',rd3_jd:'Jupiter distance',
     rd3_salt:'Sun altitude',rd3_malt:'Moon altitude',rd3_rs:'Sunrise / sunset (solar time)',
     polarNight:'Polar night',polarDay:'Midnight sun',
-    foot1:'Algorithms: the Sun uses a low-precision longitude formula (about 0.01°); the Moon uses the Astronomical Almanac low-precision series (about 0.3°, no parallax correction); Saturn uses the JPL approximate Keplerian elements (about 0.2°). Hour angles, altitudes and the Ascendant come from local sidereal time and your latitude and longitude.',
+    foot1:'Algorithms: the Sun uses a low-precision longitude formula (about 0.01°); the Moon uses the Astronomical Almanac low-precision series (about 0.3°, no parallax correction); Saturn and Jupiter use the JPL approximate Keplerian elements (about 0.2° each). Hour angles, altitudes and the Ascendant come from local sidereal time and your latitude and longitude.',
     foot2:'The twelve signs are the twelve 30° divisions of the tropical zodiac, not the constellation boundaries seen in the sky. The lunar period is the synodic month, 29.53 days; the sidereal month is 27.32 days.'
   }
 };
@@ -488,7 +496,7 @@ function buildEcc(year){
   $('ecCLab').setAttribute('x',f2(C[0]+10));$('ecCLab').setAttribute('y',f2(C[1]-6));
   ecKey=eccKey(year);
 }
-const rd1=mkRd('rd1',['date','doy','season','next','lon','sign','dist','dev']);
+const rd1=mkRd('rd1',['date','doy','season','next','lon','sign','dist','dev','jup','jlon','jper']);
 
 /* ---------- clock 2: lunar ---------- */
 function buildMoon(){
@@ -538,7 +546,7 @@ function buildSky(){
   glyphEls=[];nameEls=[];
   for(let i=0;i<12;i++){glyphEls.push($('skg'+i));nameEls.push($('skn'+i));}
 }
-const rd3=mkRd('rd3',['solar','lunar','asc','mc','lst','salt','malt','rs','sat','satpos','satalt','satd']);
+const rd3=mkRd('rd3',['solar','lunar','asc','mc','lst','salt','malt','rs','sat','satpos','satalt','satd','jup','jpos','jalt','jd']);
 
 /* ---------- render ---------- */
 function render(now){
@@ -575,6 +583,9 @@ function render(now){
   setT(rd1.dist,sun.dist.toFixed(4)+' AU');
   const dev=((modelLon-sun.lon+540)%360)-180;
   setT(rd1.dev,(dev>=0?'+':'−')+Math.abs(dev).toFixed(2)+'°');
+  const jup=jupiterPos(JD),dJ=((jupiterPos(JD+0.5).lon-jupiterPos(JD-0.5).lon+540)%360)-180,ja=jup.lon-270;
+  setA($('ecJ'),'transform',`rotate(${f2(ja)})`);const jp=pt(250,ja);setA($('ecJIcon'),'transform',`translate(${f2(jp[0])},${f2(jp[1])})`);
+  setT(rd1.jup,t('satFmt',signStr(jup.lon),dJ<0));setT(rd1.jlon,jup.lon.toFixed(3)+'°');setT(rd1.jper,t('jperVal'));
 
   /* clock 2 */
   const D=norm(mo.lon-sun.lon),phs=D/360;
@@ -625,6 +636,9 @@ function render(now){
   setT(rd3.satpos,t('satFmt',signStr(sat.lon),dSat<0));
   setT(rd3.satalt,altOf(satEq.dec,Hsat,st.lat).toFixed(1)+'°');
   setT(rd3.satd,sat.dist.toFixed(2)+' AU');
+  const jEq=eclToEq(jup.lon,jup.lat,eps),Hj=norm(LST-jEq.ra);
+  setA($('hJup'),'transform',`rotate(${f2(Hj)})`);const jq=pt(250,Hj);setA($('jupIcon'),'transform',`translate(${f2(jq[0])},${f2(jq[1])})`);
+  setT(rd3.jup,hms(Hj/15+12));setT(rd3.jpos,t('satFmt',signStr(jup.lon),dJ<0));setT(rd3.jalt,altOf(jEq.dec,Hj,st.lat).toFixed(1)+'°');setT(rd3.jd,jup.dist.toFixed(2)+' AU');
 
   syncInputs(off);
 }

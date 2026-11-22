@@ -17,6 +17,11 @@ input[type=range]{accent-color:var(--ac);vertical-align:middle}
 #q,.ph input,#ev textarea,#pgq{-webkit-user-select:text;user-select:text}
 #q,.ph input{background:var(--pn);color:var(--tx);border:1px solid var(--bd);border-radius:8px;padding:6px 10px;font:inherit}
 #q{width:130px}
+#sg{position:fixed;display:none;z-index:30;min-width:220px;max-width:min(92vw,340px);max-height:min(46vh,340px);overflow:auto;background:rgba(10,20,16,.97);border:1px solid var(--bd);border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.6);padding:4px}
+#sg div{display:flex;justify-content:space-between;gap:12px;padding:7px 10px;border-radius:7px;cursor:pointer;white-space:nowrap}
+#sg div.on,#sg div:hover{background:rgba(120,255,170,.16)}#sg small{color:var(--mu,#8a9)}
+@media (min-width:761px){#q{width:170px;transition:width .15s}#q:focus{width:240px}}
+@media (max-width:760px) and (pointer:fine){.bar .seg:first-child{flex-wrap:wrap;overflow:visible;-webkit-mask-image:none;mask-image:none;padding-right:0;justify-content:center;gap:4px}.bar .seg:first-child button{margin-left:0;border-radius:8px}}
 .bar{position:fixed;left:0;right:0;bottom:0;display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,rgba(0,0,0,.82));font-size:14px;z-index:2}
 .bar .seg{display:flex;gap:0}
 .bar .seg button{border-radius:0;margin-left:-1px}
@@ -110,13 +115,13 @@ h4.ct{color:var(--ac);margin:14px 0 6px;font-size:14px;font-weight:600}
 <div id="mr"></div>
 <div class="bar">
   <div class="seg"><button data-p="all" data-i="p_all"></button><button data-p="inner" data-i="p_inner"></button><button data-p="earth" data-i="p_earth"></button><button data-p="tno" data-i="p_tno"></button><button data-p="prox" data-i="p_prox"></button><button data-p="trap" data-i="p_trap"></button><button data-p="stars" data-i="p_stars"></button><button data-p="craft" data-i="p_craft"></button><button data-p="mission" data-i="p_mission"></button></div>
-  <input id="q" list="dl" data-ip="search" autocomplete="off"><datalist id="dl"></datalist>
+  <input id="q" data-ip="search" autocomplete="off" spellcheck="false"><div id="sg" role="listbox"></div>
   <label><span data-i="width"></span> <input id="wsl" type="range" min=".3" max="3" step=".1" value="1" style="width:80px"></label>
   <div class="seg"><button id="zo">−</button><button id="zi">+</button></div>
   <button id="ab" data-i="lib"></button><button id="szb" disabled data-i="size" data-it="sizeTip"></button>
 </div>
 <script>
-const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.11.0";
+const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.11.1";
 // ---------- orbital data (J2000, heliocentric) ----------
 const L=[
 ["Mercury","水星",0.3871,0.2056,7.005,48.331,29.124,217,"p"],["Venus","金星",0.7233,0.0068,3.395,76.680,54.884,245,"p"],["Earth","地球",1.0,0.0167,0,0,102.937,345,"p"],["Mars","火星",1.5237,0.0934,1.850,49.558,286.502,249,"p"],
@@ -587,10 +592,20 @@ function fbuild(){const chip=(on,col,txt,attr)=>`<button ${attr} style="opacity:
  flt.innerHTML=TYPES.map(k=>chip(show[k],CO[k][0],t('ty_'+k),`data-k="${k}"`)).join('')+`<hr><small class="mu">${t('szH')}</small>`+[0,1,2,3].map(i=>chip(showS[i],"#9ab",t('sz'+i),`data-s="${i}"`)).join('')+`<hr>`+chip(showGal,"#4a6cff",t('gal'),`data-g="1"`);
  const ch=()=>{if(selO&&!IM.visible(selO)){selO=null;card()}fbuild();dirty=true};
  flt.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{show[b.dataset.k]^=1;ch()});flt.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{showS[+b.dataset.s]^=1;ch()});flt.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{showGal^=1;fbuild();dirty=true})}
-const dl=document.getElementById('dl'),qi=document.getElementById('q');
-dl.innerHTML=ALL.map(b=>`<option value="${b.n}">${b.z}</option><option value="${b.z}">${b.n}</option>${b.alias?`<option value="${b.alias}">${b.n}</option>`:""}`).join('');
+const qi=document.getElementById('q'),sg=document.getElementById('sg');
 function findBody(v){v=v.trim().toLowerCase();return ALL.find(b=>b.n.toLowerCase()==v||b.z==v||(b.alias&&b.alias.toLowerCase()==v))||ALL.find(b=>b.n.toLowerCase().startsWith(v)||b.z.startsWith(v))||ALL.find(b=>b.n.toLowerCase().includes(v)||b.z.includes(v))}
-qi.onchange=()=>{const b=qi.value&&findBody(qi.value);if(!b)return;pick(b);qi.blur()};
+let sgI=-1,sgL=[];
+function sgHide(){sg.style.display='none';sgI=-1;sgL=[]}
+function sgGo(b){sgHide();qi.value='';pick(b);qi.blur()}
+function sgShow(){const v=qi.value.trim().toLowerCase();if(!v){sgHide();return}
+ const sc=b=>{const k=[b.n.toLowerCase(),b.z,(b.alias||'').toLowerCase()];return k.some(x=>x==v)?0:k.some(x=>x&&x.startsWith(v))?1:k.some(x=>x&&x.includes(v))?2:9};
+ sgL=ALL.map(b=>[sc(b),b]).filter(x=>x[0]<9).sort((a,b)=>a[0]-b[0]||(b[1].t=='p')-(a[1].t=='p')).slice(0,8).map(x=>x[1]);
+ if(!sgL.length){sg.innerHTML=`<div style="cursor:default"><small>—</small></div>`;}else sg.innerHTML=sgL.map((b,i)=>`<div data-i="${i}" class="${i==sgI?'on':''}"><span>${loc=='zh'?b.z:b.n}</span><small>${loc=='zh'?b.n:b.z}</small></div>`).join('');
+ const r=qi.getBoundingClientRect();sg.style.display='block';sg.style.left=Math.max(6,Math.min(r.left,innerWidth-sg.offsetWidth-6))+'px';sg.style.bottom=(innerHeight-r.top+6)+'px';
+ sg.querySelectorAll('[data-i]').forEach(d=>d.onmousedown=e=>{e.preventDefault();sgGo(sgL[+d.dataset.i])})}
+qi.oninput=()=>{sgI=-1;sgShow()};qi.onfocus=sgShow;qi.onblur=()=>setTimeout(sgHide,120);
+qi.onkeydown=e=>{if(e.key=='ArrowDown'||e.key=='ArrowUp'){if(!sgL.length)return;e.preventDefault();sgI=(sgI+(e.key=='ArrowDown'?1:-1)+sgL.length)%sgL.length;sg.querySelectorAll('[data-i]').forEach((d,i)=>d.classList.toggle('on',i==sgI))}
+ else if(e.key=='Enter'){const b=sgL[Math.max(0,sgI)]||findBody(qi.value);if(b)sgGo(b)}else if(e.key=='Escape'){sgHide();qi.blur()}};
 const fltb=document.getElementById('fltb');let fltOpen=innerWidth>=900;
 function fltUI(){flt.style.display=fltOpen?'flex':'none';fltb.textContent=t('filter')+(fltOpen?' ▾':' ▸')}
 fltb.onclick=()=>{fltOpen=!fltOpen;fltUI()};

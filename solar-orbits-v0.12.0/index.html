@@ -30,6 +30,9 @@ input[type=range]{accent-color:var(--ac);vertical-align:middle}
 .bar .seg button:hover{position:relative;z-index:1}
 #top{position:fixed;right:10px;top:calc(10px + env(safe-area-inset-top,0px));display:flex;gap:8px;align-items:center;z-index:7}
 #mr{position:fixed;left:10px;bottom:calc(var(--bh,66px) + 10px);width:min(560px,calc(100vw - 20px));display:none;z-index:7;background:var(--pn);backdrop-filter:blur(8px);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;font-size:13px;box-sizing:border-box}
+#sy{position:fixed;left:10px;bottom:calc(var(--bh,66px) + 10px);width:min(620px,calc(100vw - 20px));display:none;z-index:7;background:var(--pn);backdrop-filter:blur(8px);border:1px solid var(--bd);border-radius:12px;padding:8px 10px;box-sizing:border-box;font-size:13px}
+#sy .ev{display:flex;gap:5px;flex-wrap:wrap}#sy button{padding:3px 8px;font-size:12px}#sy button.on{border-color:var(--ac);color:var(--ac)}#sy .nt{color:var(--mu);font-size:11.5px;margin-bottom:5px}
+@media (max-width:760px){#sy{left:8px;width:auto;right:8px;max-height:40vh;overflow:auto}}
 #mr .r1{display:flex;gap:8px;align-items:center;flex-wrap:wrap}#mr .r1 b{font-size:18px;font-variant-numeric:tabular-nums;flex:1}
 #mr .st{color:var(--tx);line-height:1.55;margin:6px 0 2px;font-variant-numeric:tabular-nums}#mr .st small,#mr .nt{color:var(--mu);font-size:11.5px}
 #mr input[type=range]{width:100%;margin:6px 0}#mr .r2{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
@@ -112,16 +115,16 @@ h4.ct{color:var(--ac);margin:14px 0 6px;font-size:14px;font-weight:600}
 <div id="cap"></div>
 <div id="top"><button id="lockb" style="display:none"></button><button id="evb" data-i="eval"></button><select id="locsel"><option value="zh">中文</option><option value="en">English</option></select></div>
 <div id="card"></div><div id="fltw"><button id="fltb"></button><div id="flt"></div></div><div id="ev"></div><div id="pg"></div>
-<div id="mr"></div>
+<div id="mr"></div><div id="sy"></div>
 <div class="bar">
-  <div class="seg"><button data-p="all" data-i="p_all"></button><button data-p="inner" data-i="p_inner"></button><button data-p="earth" data-i="p_earth"></button><button data-p="tno" data-i="p_tno"></button><button data-p="prox" data-i="p_prox"></button><button data-p="trap" data-i="p_trap"></button><button data-p="stars" data-i="p_stars"></button><button data-p="craft" data-i="p_craft"></button><button data-p="mission" data-i="p_mission"></button></div>
+  <div class="seg"><button data-p="all" data-i="p_all"></button><button data-p="inner" data-i="p_inner"></button><button data-p="earth" data-i="p_earth"></button><button data-p="tno" data-i="p_tno"></button><button data-p="prox" data-i="p_prox"></button><button data-p="trap" data-i="p_trap"></button><button data-p="exo" data-i="p_exo"></button><button data-p="stars" data-i="p_stars"></button><button data-p="craft" data-i="p_craft"></button><button data-p="mission" data-i="p_mission"></button></div>
   <input id="q" data-ip="search" autocomplete="off" spellcheck="false"><div id="sg" role="listbox"></div>
   <label><span data-i="width"></span> <input id="wsl" type="range" min=".3" max="3" step=".1" value="1" style="width:80px"></label>
   <div class="seg"><button id="zo">−</button><button id="zi">+</button></div>
   <button id="ab" data-i="lib"></button><button id="szb" disabled data-i="size" data-it="sizeTip"></button>
 </div>
 <script>
-const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.11.3";
+const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.12.0";
 // ---------- orbital data (J2000, heliocentric) ----------
 const L=[
 ["Mercury","水星",0.3871,0.2056,7.005,48.331,29.124,217,"p"],["Venus","金星",0.7233,0.0068,3.395,76.680,54.884,245,"p"],["Earth","地球",1.0,0.0167,0,0,102.937,345,"p"],["Mars","火星",1.5237,0.0934,1.850,49.558,286.502,249,"p"],
@@ -218,6 +221,28 @@ const tU=trap.p.map(x=>-x/Math.hypot(...trap.p)),tNr=(()=>{const v=[-tU[0]*tU[2]
  const g={a:r[1],e:r[2],i:tPl.i,O:tPl.O,w:0},m={n:"TRAPPIST-1 "+r[0],z:"TRAPPIST-1 "+r[0],a:r[1],km:r[1]*AU,e:r[2],i:r[4],O:0,w:0,per:r[3],par:trap,k:'m',t:'e',wm:1,dy:k%2?15:-6,al:.85,ph:true},p=at(g,kep(k*2.4+.5,g.e));
  m.p=[trap.p[0]+p[0],trap.p[1]+p[1],trap.p[2]+p[2]];m.orb=ring(g,trap.p);trap.kids.push(m);trap.ma=Math.max(trap.ma,m.a);moons.push(m)});
 const tV=(()=>{const c=Math.cos(35*R),s=Math.sin(35*R);return tNr.map((x,i)=>c*x+s*tU[i])})(),tAz=Math.atan2(tV[0],tV[1]),tTh=Math.acos(tV[2]);
+
+// ---------- more exoplanet systems: [letter, period d (or null), a AU (or null), radius km, e, note]. a from Kepler's third law with the stellar mass when only the period is known; orbit plane = angle th between the orbit normal and the line of sight (transiting ~89-90 deg), node on the sky arbitrary ----------
+const EXO=[
+{n:"LHS 1140",z:"LHS 1140（鲸鱼座）",ra:"00 44 59.3",dec:"-15 16 17",ly:49,sp:"M4.5V",M:.19,Rs:.216,th:89.9,h:"鲸鱼座红矮星；2017 年 MEarth 巡天发现凌星行星 b，2018 年发现 c。韦布望远镜的观测支持 b 拥有富氮大气或为“海洋世界（Hycean）”候选。",x:"质量约 0.19 M☉ · 半径约 0.22 R☉ · 宜居性研究热度仅次于 TRAPPIST-1",pl:[["b",24.737,null,11000,.06,"超级地球，位于宜居带内；密度偏低，被视为“海洋世界”候选。"],["c",3.7776,null,8100,0,"炽热的内侧岩质行星。"]]},
+{n:"GJ 1214",z:"GJ 1214（蛇夫座）",ra:"17 15 18.9",dec:"+04 57 50",ly:47.8,sp:"M4.5V",M:.18,Rs:.216,th:89.3,h:"2009 年 MEarth 发现凌星行星 GJ 1214 b，是第一颗被详细研究大气的“迷你海王星”。",x:"质量约 0.18 M☉ · 半径约 0.22 R☉",pl:[["b",1.58040,null,17500,0,"哈勃、斯皮策、韦布长期观测；大气被云或雾霾遮蔽，光谱几乎平坦。"]]},
+{n:"TOI-700",z:"TOI-700（剑鱼座）",ra:"06 28 23.0",dec:"-65 34 40",ly:101.4,sp:"M2V",M:.416,Rs:.42,th:89.7,h:"TESS 发现的首批宜居带地球大小行星系统之一；d 和 e 位于宜居带内。",x:"质量约 0.42 M☉ · 半径约 0.42 R☉ · 恒星活动相对温和",pl:[["b",9.977,null,6630,0,"接近地球大小的内侧行星。"],["c",16.051,null,16750,0,"迷你海王星。"],["d",37.426,null,6820,0,"位于宜居带内，约 1.07 R⊕。"],["e",27.80,null,6050,0,"位于宜居带内，略小于地球。"]]},
+{n:"L 98-59",z:"L 98-59（飞鱼座）",ra:"08 18 07.6",dec:"-68 18 46",ly:34.6,sp:"M3V",M:.30,Rs:.31,th:89,h:"TESS 发现的紧凑红矮星系统；韦布观测提示 b 或有火山活动，d 可能有含硫大气。",x:"质量约 0.30 M☉ · 半径约 0.31 R☉",pl:[["b",2.2531,null,5420,0,"小于地球的炽热岩质行星。"],["c",3.6906,null,8830,0,"约 1.4 R⊕。"],["d",7.4507,null,10000,0,"约 1.6 R⊕，可能是水世界或含大气行星。"],["e",12.796,null,8300,0,"半径为估计值，未必有凌星测定。"]]},
+{n:"HR 8799",z:"HR 8799（飞马座）",ra:"23 07 28.7",dec:"+21 08 03",ly:133,sp:"A5V",M:1.5,Rs:1.44,th:26,h:"2008 年首次直接拍摄到四颗行星 b、c、d、e（后者 2010 年发现）；多年实拍可拼出公转延时影像；大气中检测到水、CO、甲烷。",x:"质量约 1.5 M☉ · 年轻（约 3000 万年）· 有两条尘埃带 · 轨道近正对我们",pl:[["e",null,16,84000,0,"最内侧，约 9 MJ。"],["d",null,27,84000,0,"约 9 MJ。"],["c",null,42.9,84000,0,"约 9 MJ。"],["b",null,71.5,84000,0,"最外侧，约 6 MJ。"]]},
+{n:"Beta Pictoris",z:"绘架座 β",ra:"05 47 17.1",dec:"-51 04 00",ly:63.4,sp:"A6V",M:1.75,Rs:1.8,th:89,h:"年轻（约 2000 万年）恒星，有近乎侧向的碎屑盘；2008 年直接拍摄到 β Pic b，c 经由视向速度与成像发现；曾观测到大量“系外彗星”。",x:"质量约 1.75 M☉ · 半径约 1.8 R☉",pl:[["c",null,2.7,84000,0,"约 8 MJ，周期约 3 年。"],["b",null,10.2,98000,0,"约 9–12 MJ，周期约 24 年；最早被直接成像的行星之一。"]]},
+{n:"Barnard's Star",z:"巴纳德星",star:1,M:.162,th:60,pl:[["d",2.340,null,4800,0,"2025 年确认的第四颗行星；半径未知，此处按亚地球质量估计。"],["b",3.1533,null,4800,0,"2024 年报道（ESPRESSO 视向速度）；最小质量约 0.37 M⊕，半径为估计值。"],["c",4.124,null,4800,0,"2025 年确认；半径为估计值。"],["e",6.739,null,4800,0,"2025 年确认；半径为估计值。"]]},
+{n:"Tau Ceti",z:"天仓五",star:1,M:.783,th:35,pl:[["e",162.87,null,10200,0,"视向速度候选；信号曾因恒星活动多次修正，半径为估计值。"],["f",636.13,null,11000,0,"视向速度候选；位于宜居带外缘，半径为估计值。"]]},
+{n:"HD 110067",z:"HD 110067（后发座）",ra:"12 39 21.3",dec:"+20 01 20",ly:100,sp:"K0V",M:.80,Rs:.79,th:89.2,h:"2023 年发现六颗亚海王星，全员处于共振链（3:2、3:2、3:2、4:3、4:3）中，说明系统自诞生以来几乎未被扰动。",x:"质量约 0.80 M☉ · 半径约 0.79 R☉",pl:[["b",9.114,null,13950,0,"共振链最内侧。"],["c",13.673,null,15300,0,"与 b 构成 3:2 共振。"],["d",20.519,null,18150,0,"3:2 共振。"],["e",30.793,null,16250,0,"3:2 共振。"],["f",41.058,null,16800,0,"4:3 共振。"],["g",54.77,null,18500,0,"4:3 共振。"]]},
+{n:"Kepler-11",z:"Kepler-11（天鹅座）",ra:"19 48 27.6",dec:"+41 54 33",ly:2150,sp:"G",M:.96,Rs:1,th:89.5,h:"开普勒望远镜发现的紧凑系统，六颗低密度行星挤在水星轨道以内（外侧 g 稍远）；凌星时间变分（TTV）数据丰富，是轨道动力学建模的标杆。",x:"质量约 0.96 M☉ · 半径约 1.0 R☉ · 距离太阳约 2150 ly",pl:[["b",10.304,null,11500,0,"最内侧。"],["c",13.024,null,18300,0,"低密度。"],["d",22.687,null,19900,0,"低密度。"],["e",31.996,null,26700,0,"六颗中最大。"],["f",46.689,null,15900,0,"低密度。"],["g",118.38,null,21200,0,"最外侧。"]]}];
+const SYS=[];
+EXO.forEach(o=>{let st=o.star?L.find(b=>b.n==o.n):null;
+ if(!st){st={n:o.n,z:o.z,t:'s',k:'b',wm:1,kids:[],ma:0,a:0,e:0,i:0,al:1,p:sc(eqv(hms(o.ra),decD(o.dec)),o.ly*LY),orb:new Float64Array(0),col:SPC[o.sp[0]]||SPC.K,sp:o.sp};L.push(st)}
+ o.st=st;const sU=st.p.map(x=>-x/Math.hypot(...st.p)),zU=[-sU[0]*sU[2],-sU[1]*sU[2],1-sU[2]*sU[2]],zl=Math.hypot(...zU),uN=zU.map(x=>x/zl),th=o.th*R,nv=sU.map((x,i)=>Math.cos(th)*x+Math.sin(th)*uN[i]),pl={i:Math.acos(nv[2])/R,O:Math.atan2(nv[0],-nv[1])/R};
+ let w=sU.map((x,i)=>x-nv[i]*(sU[0]*nv[0]+sU[1]*nv[1]+sU[2]*nv[2]));let wl=Math.hypot(...w);w=wl<.05?uN:w.map(x=>x/wl);const cv=nv.map((x,i)=>Math.cos(35*R)*x+Math.sin(35*R)*w[i]);
+ o.pl.forEach((r,k)=>{const P=r[1],a=r[2]||Math.cbrt(o.M*Math.pow(P/365.25,2)),per=P||Math.sqrt(a*a*a/o.M)*365.25,nmz=(o.z.split("（")[0]);
+  const g={a,e:r[4],i:pl.i,O:pl.O,w:0},m={n:o.n+" "+r[0],z:nmz+" "+r[0],a,km:a*AU,e:r[4],i:o.th,O:0,w:0,per,par:st,k:'m',t:'e',wm:1,dy:k%2?15:-6,al:.85,ph:true},q=at(g,kep(k*2.4+.5+o.ly%1,g.e));
+  m.p=[st.p[0]+q[0],st.p[1]+q[1],st.p[2]+q[2]];m.orb=ring(g,st.p);st.kids.push(m);st.ma=Math.max(st.ma,m.a);moons.push(m)});
+ SYS.push({st,cam:[Math.atan2(cv[0],cv[1]),Math.acos(cv[2])],dist:3.4*st.ma})});
 // ---------- galactic-plane overlay data: rings at 5/10/15 ly, l=0/90/180/270 spokes, stems from each near star to the plane ----------
 const GST=L.filter(b=>b.near).map(b=>{const h=dot3(b.p,gN);return{h,pts:new Float64Array([b.p[0],b.p[1],b.p[2],b.p[0]-h*gN[0],b.p[1]-h*gN[1],b.p[2]-h*gN[2]])}});
 const GRG=[5,10,15].map(r=>{const a=new Float64Array(1083);for(let k=0;k<=360;k++){const q=k*R,c=Math.cos(q),s=Math.sin(q);for(let j=0;j<3;j++)a[3*k+j]=r*LY*(c*gC[j]+s*gY[j])}return a}),GSP=[gC,gY].map(v=>{const a=new Float64Array(6);for(let j=0;j<3;j++){a[j]=-15*LY*v[j];a[3+j]=15*LY*v[j]}return a});
@@ -318,6 +343,9 @@ NS.forEach(r=>{const I=INFO[r[0]]={ct:"e",cl:"sph",e:r[7],h:r[8],c:[],x:`光谱�
 const tpx="轨道倾角 i 为相对天球平面的值：≈90° 表示从太阳系看近乎侧向；3D 中的轨道面取与视线共面，在天球上的方位为任意值，仅供示意。";
 Object.assign(INFO,{"TRAPPIST-1":{ax:[82930,82930,82930],ct:"e",cl:"sph",e:"名称取自 TRAPPIST（TRAnsiting Planets and PlanetesImals Small Telescope，智利拉西拉天文台的比利时 0.6 米望远镜），名字亦双关比利时的特拉普啤酒。",h:"2000 年吉齐斯（John Gizis）等发表这颗超冷矮星；2016 年吉永（Michaël Gillon）团队用 TRAPPIST 发现 b、c 两颗凌星行星，2017 年 2 月借斯皮策望远镜确认共 7 颗（b–h）。",c:["斯皮策空间望远镜（2016–17 年观测，确认七颗行星）","开普勒 K2（2016 年观测）","詹姆斯·韦布空间望远镜（2023 年起观测 b、c 的大气）"],p:["迈克尔·吉永（Michaël Gillon）","约翰·吉齐斯（John Gizis）"],x:"光谱型 M8V · 质量约 0.09 M☉ · 半径约 0.12 R☉ · 年龄约 76 亿年 · 七颗行星的轨道都不到水星轨道半径的 1/5，周期约 1.5–18.8 天，并构成近共振链"}});
 [["b",7110,"2016 年发现；2023 年韦布望远镜测量其昼侧热辐射，表明它没有浓厚大气。",["斯皮策空间望远镜","詹姆斯·韦布空间望远镜（2023 年）"]],["c",6989,"2016 年发现；2023 年韦布观测排除了浓厚的二氧化碳大气，是否有稀薄大气仍有争议。",["斯皮策空间望远镜","詹姆斯·韦布空间望远镜（2023 年）"]],["d",5020,"2016 年有候选信号，2017 年确认；靠近宜居带内缘，质量约 0.39 M⊕。",["斯皮策空间望远镜"]],["e",5861,"2017 年确认；常被认为位于宜居带内，是否宜居尚无定论。",["斯皮策空间望远镜"]],["f",6658,"2017 年确认；常被认为位于宜居带内。",["斯皮策空间望远镜"]],["g",7193,"2017 年确认；常被认为位于宜居带内，是七颗中最大的一颗（约 1.13 R⊕）。",["斯皮策空间望远镜"]],["h",4938,"2017 年确认；最外侧，位于宜居带之外，估计偏冷。",["斯皮策空间望远镜"]]].forEach((r,k)=>{INFO["TRAPPIST-1 "+r[0]]={ax:[r[1],r[1],r[1]],ct:"e",cl:"sph",e:k?"同上。":"IAU 惯例：恒星名加小写字母，按发现顺序，b 为第一颗被发现的行星。",h:r[2],c:r[3],x:tpx}});
+// extra exoplanet systems library entries
+EXO.forEach(o=>{const st=o.st;if(!o.star){const Rk=o.Rs*695700;INFO[st.n]={ax:[Rk,Rk,Rk],ct:"e",cl:"sph",e:"",h:o.h,c:[],p:[],x:o.x}}
+ o.pl.forEach(r=>{INFO[o.n+" "+r[0]]={ax:[r[3],r[3],r[3]],ct:"e",cl:"sph",e:"",h:r[5],c:[],p:[],x:"轨道周期 "+(r[1]||Math.sqrt(Math.pow(r[2],3)/o.M)*365.25).toFixed(r[1]&&r[1]<100?2:0)+" 天 · 半径取值为近似/估计"}})});
 // spacecraft library entries (x = extra facts; positions are estimates, see the in-page review)
 Object.assign(INFO,{
 "Voyager 1":{ct:"e",e:"Voyager 意为“航行者 / 旅行者”，中文也常译“航海家”。任务原称“水手木星-土星”（Mariner Jupiter–Saturn），发射前改名。",h:"1977-09-05 发射；1979-03 飞越木星，1980-11 飞越土星并近距离探测土卫六；1990-02-14 回望拍下“暗淡蓝点”；2012-08 穿过日球层顶，是首个进入星际空间的人造物体（2013 年确认）。",p:["卡尔·萨根（金唱片委员会主席）","爱德华·斯通（项目科学家）"],x:"携带“金唱片”（Golden Record）· 当前距离约 173 AU 为估计值，预计 2026 年 11 月前后达到约 1 光日"},
@@ -336,7 +364,7 @@ const MASS={Sun:332946,Mercury:.0553,Venus:.815,Earth:1,Moon:.0123,Mars:.1075,Ju
 const SYM={Sun:"☉",Mercury:"☿",Venus:"♀",Earth:"⊕",Moon:"☽",Mars:"♂",Jupiter:"♃",Saturn:"♄",Uranus:"⛢",Neptune:"♆",Pluto:"♇",Ceres:"⚳",Pallas:"⚴",Vesta:"⚶"};
 // ---------- i18n ----------
 const I18N={zh:{
- p_all:"全景",p_inner:"内太阳系",p_earth:"地球 · 月球",p_tno:"外海王星天体",p_prox:"比邻星系统",p_trap:"TRAPPIST-1 系统",p_stars:"近邻恒星",p_craft:"探测器 · 人造卫星",p_mission:"任务回溯",mrPlay:"播放",mrPause:"暂停",mrFit:"自动取景",mrRate:d=>`${d} 天/秒`,mrVel:v=>`速度 ${v} km/s（相对太阳）`,mrSun:(au,km)=>`距太阳 ${au} AU（${km} km）`,mrEarth:(au,lt)=>`距地球 ${au} AU · 单程光时 ${lt}`,mrNote:"行星位置由 JPL 近似星历按日期计算；探测器轨道是真实飞掠日期之间的两体（Lambert）拟合，飞掠后外推到现在，不是 Horizons 的实测轨道。",evLaunch:"发射",evFlyby:p=>`${p}飞掠`,evPale:"暗淡蓝点",evHelio:"进入星际空间",evNow:"现在",evLost:"最后联系",evArrok:"飞越 Arrokoth",evNepx:"越过海王星轨道",ty_v:"人造卫星 / 探测器",lat:"黄纬",xRef:(n,r)=>`${r}的 ${n} 倍`,refE:"地球",refJ:"木星",refS:"太阳",cmpE:"地球尺度 · 类地天体（白圈 = 地球）",cmpJ:"木星尺度 · 巨行星与小恒星（白圈 = 木星）",cmpS:"太阳尺度 · 恒星（白圈 = 太阳）",gal:"银道面 · 垂线",gc:"银心方向",search:"搜索天体…",width:"线宽",lib:"信息库",size:"尺寸 · HACK",sizeTip:"天体真实尺寸渲染：HACK 占位，待做",eval:"评估",lockOn:n=>`🔒 ${n} · 点击解除`,
+ p_all:"全景",p_inner:"内太阳系",p_earth:"地球 · 月球",p_tno:"外海王星天体",p_prox:"比邻星系统",p_trap:"TRAPPIST-1 系统",p_stars:"近邻恒星",p_craft:"探测器 · 人造卫星",p_mission:"任务回溯",p_exo:"系外行星系统",syNote:"点击飞到该恒星系；轨道面朝向与部分半径为估计值",mrPlay:"播放",mrPause:"暂停",mrFit:"自动取景",mrRate:d=>`${d} 天/秒`,mrVel:v=>`速度 ${v} km/s（相对太阳）`,mrSun:(au,km)=>`距太阳 ${au} AU（${km} km）`,mrEarth:(au,lt)=>`距地球 ${au} AU · 单程光时 ${lt}`,mrNote:"行星位置由 JPL 近似星历按日期计算；探测器轨道是真实飞掠日期之间的两体（Lambert）拟合，飞掠后外推到现在，不是 Horizons 的实测轨道。",evLaunch:"发射",evFlyby:p=>`${p}飞掠`,evPale:"暗淡蓝点",evHelio:"进入星际空间",evNow:"现在",evLost:"最后联系",evArrok:"飞越 Arrokoth",evNepx:"越过海王星轨道",ty_v:"人造卫星 / 探测器",lat:"黄纬",xRef:(n,r)=>`${r}的 ${n} 倍`,refE:"地球",refJ:"木星",refS:"太阳",cmpE:"地球尺度 · 类地天体（白圈 = 地球）",cmpJ:"木星尺度 · 巨行星与小恒星（白圈 = 木星）",cmpS:"太阳尺度 · 恒星（白圈 = 太阳）",gal:"银道面 · 垂线",gc:"银心方向",search:"搜索天体…",width:"线宽",lib:"信息库",size:"尺寸 · HACK",sizeTip:"天体真实尺寸渲染：HACK 占位，待做",eval:"评估",lockOn:n=>`🔒 ${n} · 点击解除`,
  ty_p:"行星",ty_d:"矮行星",ty_a:"小行星",ty_c:"周期彗星",ty_n:"非周期彗星",ty_m:"卫星",ty_s:"恒星",ty_e:"系外行星",szH:"尺寸",sz0:"大",sz1:"中",sz2:"小",sz3:"微",
  sh0:"球体",sh1:"近似球体",sh2:"椭球体",sh3:"不规则形状体",shNone:"形状未录入",
  dSun:"距太阳",dEarth:"距地球",orbA:"轨道半长轴",per:"周期",yr:"年",day:"天",nonper:"非周期",fly:"飞到这里",detail:"详细资料",radius:"半径",
@@ -350,7 +378,7 @@ const I18N={zh:{
  cmpNote:n=>`按半径等比例绘制，分三个尺度：地球（类地天体）、木星（巨行星与小恒星）、太阳（恒星）。恒星一律与太阳比较；带 * 的半径为推定。`,
  count:(a,b)=>`已收录 ${a} / ${b} 个天体`,massE:"质量",tabGrid:"图鉴",filter:"筛选",lgsType:"按类型",lgsD:"按直径",lgsN:"按名称",diam:"直径",semiAxes:"半轴",xEarth:n=>`地球的 ${n} 倍`,evTitle:"评估与改进",evMine:"我的评价（哪里不好 / 想要的功能）",evGen:"生成可复制报告",evPh:"例如：某条数据不对、标签太挤、想看真实日期……"},
 en:{
- p_all:"Overview",p_inner:"Inner system",p_earth:"Earth · Moon",p_tno:"Trans-Neptunian",p_prox:"Proxima system",p_trap:"TRAPPIST-1 system",p_stars:"Nearby stars",p_craft:"Spacecraft",p_mission:"Mission replay",mrPlay:"Play",mrPause:"Pause",mrFit:"Auto-frame",mrRate:d=>`${d} d/s`,mrVel:v=>`Speed ${v} km/s (relative to the Sun)`,mrSun:(au,km)=>`${au} AU from the Sun (${km} km)`,mrEarth:(au,lt)=>`${au} AU from Earth · one-way light time ${lt}`,mrNote:"Planet positions are computed from JPL approximate ephemerides for the date; the spacecraft path is a two-body (Lambert) fit between the real flyby dates, extrapolated to today. It is not a Horizons trajectory.",evLaunch:"Launch",evFlyby:p=>`${p} flyby`,evPale:"Pale Blue Dot",evHelio:"Interstellar space",evNow:"Today",evLost:"Last contact",evArrok:"Arrokoth flyby",evNepx:"Crosses Neptune's orbit",ty_v:"Spacecraft",lat:"ecl. lat.",xRef:(n,r)=>`${n}× ${r}`,refE:"Earth",refJ:"Jupiter",refS:"Sun",cmpE:"Earth scale · rocky bodies (white ring = Earth)",cmpJ:"Jupiter scale · giants and small stars (white ring = Jupiter)",cmpS:"Sun scale · stars (white ring = Sun)",gal:"Galactic plane · stems",gc:"Galactic Centre",search:"Search bodies…",width:"Line width",lib:"Library",size:"Size · HACK",sizeTip:"True-size rendering: HACK placeholder, TODO",eval:"Review",lockOn:n=>`🔒 ${n} · click to unlock`,
+ p_all:"Overview",p_inner:"Inner system",p_earth:"Earth · Moon",p_tno:"Trans-Neptunian",p_prox:"Proxima system",p_trap:"TRAPPIST-1 system",p_stars:"Nearby stars",p_craft:"Spacecraft",p_mission:"Mission replay",p_exo:"Exoplanet systems",syNote:"Tap to fly to a system; orbit orientations and some radii are estimates",mrPlay:"Play",mrPause:"Pause",mrFit:"Auto-frame",mrRate:d=>`${d} d/s`,mrVel:v=>`Speed ${v} km/s (relative to the Sun)`,mrSun:(au,km)=>`${au} AU from the Sun (${km} km)`,mrEarth:(au,lt)=>`${au} AU from Earth · one-way light time ${lt}`,mrNote:"Planet positions are computed from JPL approximate ephemerides for the date; the spacecraft path is a two-body (Lambert) fit between the real flyby dates, extrapolated to today. It is not a Horizons trajectory.",evLaunch:"Launch",evFlyby:p=>`${p} flyby`,evPale:"Pale Blue Dot",evHelio:"Interstellar space",evNow:"Today",evLost:"Last contact",evArrok:"Arrokoth flyby",evNepx:"Crosses Neptune's orbit",ty_v:"Spacecraft",lat:"ecl. lat.",xRef:(n,r)=>`${n}× ${r}`,refE:"Earth",refJ:"Jupiter",refS:"Sun",cmpE:"Earth scale · rocky bodies (white ring = Earth)",cmpJ:"Jupiter scale · giants and small stars (white ring = Jupiter)",cmpS:"Sun scale · stars (white ring = Sun)",gal:"Galactic plane · stems",gc:"Galactic Centre",search:"Search bodies…",width:"Line width",lib:"Library",size:"Size · HACK",sizeTip:"True-size rendering: HACK placeholder, TODO",eval:"Review",lockOn:n=>`🔒 ${n} · click to unlock`,
  ty_p:"Planets",ty_d:"Dwarf planets",ty_a:"Asteroids",ty_c:"Periodic comets",ty_n:"Non-periodic",ty_m:"Moons",ty_s:"Stars",ty_e:"Exoplanets",szH:"Size",sz0:"Large",sz1:"Medium",sz2:"Small",sz3:"Tiny",
  sh0:"Sphere",sh1:"Near-sphere",sh2:"Ellipsoid",sh3:"Irregular",shNone:"Shape not recorded",
  dSun:"Sun",dEarth:"Earth",orbA:"Orbit a",per:"P",yr:"yr",day:"d",nonper:"non-periodic",fly:"Fly to",detail:"Details",radius:"Radius",
@@ -528,7 +556,10 @@ function frame(){
 requestAnimationFrame(frame);
 function go(tg,d,a,h,c){ovw=false;lock=null;lockUI();d=Math.max(DMIN,d);cap.textContent=c||"";taz=a;tth=h;az+=Math.round((taz-az)/(2*Math.PI))*2*Math.PI;const dist=Math.hypot(tg[0]-T[0],tg[1]-T[1],tg[2]-T[2]);
  if(dist>25*Math.max(D,d)){fl={t:tg.slice(),d};fph=1;tT=T.slice();tD=Math.max(D,dist*.9)}else{fl=null;tT=tg.slice();tD=d}}
-function preset(k){if(k=="mission"){mrOpen(0);return}if(MR.on)mrClose();const asp=Math.max(1,H/W);setFrame(k=="stars"?G3:E3);showGal=k=="stars"?1:0;fbuild();
+function syUI(on){const e=document.getElementById('sy');if(!on){e.style.display='none';return}e.style.display='block';const sl=[{st:prox,cam:[0,.5],dist:7.5},{st:trap,cam:[tAz,tTh],dist:.21},...SYS];
+ e.innerHTML=`<div class="nt">${t('syNote')}</div><div class="ev">${sl.map((x,i)=>`<button data-i="${i}">${loc=='zh'?x.st.z.split("（")[0]:x.st.n}</button>`).join('')}</div>`;
+ e.querySelectorAll('button').forEach(b=>b.onclick=()=>{const x=sl[+b.dataset.i],asp=Math.max(1,H/W);setFrame(E3);showGal=0;show.s=1;show.e=1;fbuild();go(x.st.p,x.dist*asp,x.cam[0],x.cam[1],x.st.n);e.querySelectorAll('button').forEach(c=>c.classList.toggle('on',c===b))})}
+function preset(k){syUI(k=="exo");if(k=="exo"){document.querySelector('#sy button[data-i="2"]').click();return}if(k=="mission"){mrOpen(0);return}if(MR.on)mrClose();const asp=Math.max(1,H/W);setFrame(k=="stars"?G3:E3);showGal=k=="stars"?1:0;fbuild();
  if(k=="all"){go([20,0,0],175*asp,0,.14,"");ovw=true}
  if(k=="inner")go([0,0,0],14.8*asp,0,.17,"");
  if(k=="earth")go(earth.p,.134*asp,0,.17,"Starting at earth");
@@ -754,6 +785,7 @@ function evLines(){const m=evData(),pc=x=>Math.round(x/m.n*100)+"%",A="信息库
  [ok(m.dedic/m.n>.5,"🟢","🟡"),`有专属配色的天体 ${m.dedic}/${m.n}，其余使用通用示意图（不代表真实外观）。`,C],
  ["🟢","示意图外形按形状分类绘制：球体 / 近似球体为圆或略扁，椭球体按轴比，不规则体为不规则形，形状未知为虚线圆。",C],
  ["🟡","未绘制：木星环、海王星环、妊神星环、创神星环、表面真实地貌。",C],
+ ["🟡","新增的 10 个系外行星系统（LHS 1140、GJ 1214、TOI-700、L 98-59、HR 8799、绘架座 β、巴纳德星、天仓五、HD 110067、Kepler-11）：位置由赤经 / 赤纬 / 距离换算，周期、半径取自公开资料整理（未对照原始文献）；未测得半径的行星按估计值绘制；半长轴由周期和恒星质量推算（直接成像的 HR 8799、绘架座 β 用投影半长轴近似）；轨道面朝向只由“与视线的夹角”约束，天球上的方位是任意的；巴纳德星与天仓五的行星仍有争议或为候选。",C],
  ["🟡","TRAPPIST-1 行星的配色参照 NASA 示意图，属艺术想象，并非真实外观。",C],
  ["🟠","HACK：3D 里天体仍是点状，真实 / 放大尺寸渲染未做。",C],
  ["🟢","信息库“大小对比”已改为三尺度：地球 / 木星 / 太阳；恒星一律与太阳比较，半径只对已录入的天体可用。",C],

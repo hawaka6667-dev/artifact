@@ -128,14 +128,14 @@ h4.ct{color:var(--ac);margin:14px 0 6px;font-size:14px;font-weight:600}
   <button id="ab" data-i="lib"></button>
 </div>
 <script>
-const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.13.0";
+const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.14.0";
 // ---------- orbital data (J2000, heliocentric) ----------
 const L=[
 ["Mercury","水星",0.3871,0.2056,7.005,48.331,29.124,217,"p"],["Venus","金星",0.7233,0.0068,3.395,76.680,54.884,245,"p"],["Earth","地球",1.0,0.0167,0,0,102.937,345,"p"],["Mars","火星",1.5237,0.0934,1.850,49.558,286.502,249,"p"],
 ["Ceres","谷神星",2.767,0.0758,10.594,80.305,73.597,354,"d"],["Jupiter","木星",5.2026,0.0485,1.303,100.464,273.867,240,"p"],["Saturn","土星",9.5549,0.0555,2.489,113.665,339.392,230,"p"],["Uranus","天王星",19.2184,0.0464,0.773,74.006,96.999,338,"p"],["Neptune","海王星",30.11,0.0095,1.770,131.784,276.336,314,"p"],
 ["Pluto","冥王星",39.482,0.2488,17.14,110.299,113.834,258,"d"],["Haumea","妊神星",43.13,0.1951,28.22,121.9,239.0,120,"d"],["Makemake","鸟神星",45.43,0.1613,28.98,79.4,294.8,25,"d"],["Quaoar","创神星",43.69,0.0406,7.99,188.8,147.5,236,"d"],["Eris","阋神星",67.78,0.4407,43.87,35.95,151.64,340,"d"],
 ["Sedna","赛德娜",506.8,0.8496,11.93,144.5,311.35,null,"d",358.5],["Gonggong","共工星",67.5,0.5,30.7,336.8,206.6,null,"d",110],["Orcus","亡神星",39.17,0.227,20.59,268.4,73.7,null,"d",110],
-["Vesta","灶神星",2.362,0.0887,7.14,103.8,151.2,null,"a",120],["Pallas","智神星",2.77,0.231,34.8,173.0,310.0,null,"a",250],["Hygiea","健神星",3.14,0.117,3.83,283.2,312.3,null,"a",40],["Eros","爱神星",1.458,0.223,10.83,304.3,178.9,null,"a",300],
+["Vesta","灶神星",2.362,0.0887,7.14,103.8,151.2,null,"a",120],["Pallas","智神星",2.77,0.231,34.8,173.0,310.0,null,"a",250],["Hygiea","健神星",3.14,0.117,3.83,283.2,312.3,null,"a",40],["Eros","爱神星",1.458,0.223,10.83,304.3,178.9,null,"a",300],["Itokawa","丝川小行星",1.324,.2801,1.622,69.08,162.8,null,"a",200],["Bennu","贝努",1.1264,.2037,6.035,2.061,66.22,null,"a",90],["Ryugu","龙宫",1.1896,.1902,5.884,251.6,211.4,null,"a",30],["Donaldjohanson","唐纳德约翰逊",2.38,.187,4.43,263,213,null,"a",148],["2015 TB145","2015 TB145（万圣节小行星）",2.1007,.86002,39.69,37.698,121.744,null,"a",100],["2024 ON","2024 ON",2.387,.579,7.63,172.234,185.547,null,"a",7.2],
 ["Halley","哈雷彗星",17.834,0.96714,162.26,58.42,111.33,null,"c",191],["Encke","恩克彗星",2.2154,0.8483,11.78,334.57,186.55,null,"c",330],["67P/C-G","丘留莫夫-格拉西缅科",3.463,0.641,7.04,50.14,12.78,null,"c",280],["Hale-Bopp","海尔-波普",177,0.9951,89.43,282.47,130.59,null,"c",4.4],["Swift-Tuttle","斯威夫特-塔特尔",26.09,0.9632,113.45,139.38,152.98,null,"c",92],["Tempel-Tuttle","坦普尔-塔特尔",10.34,0.9055,162.49,235.26,172.5,null,"c",304],["Tempel 1","坦普尔 1 号",3.12,0.5126,10.47,68.9,179.1,null,"c",308],["Wild 2","怀尔德 2 号",3.44,0.54,3.24,136.1,41.7,null,"c",219],["Borrelly","博雷利",3.59,0.6,30.3,75.4,353.3,null,"c",250],["Giacobini-Zinner","贾科比尼-津纳",3.52,0.71,32,195.4,172.5,null,"c",93]
 ].map(r=>({n:r[0],z:r[1],a:r[2],e:r[3],i:r[4],O:r[5],w:r[6],lon:r[7],t:r[8],m0:r[9],k:'b',wm:1,kids:[],ma:0}));
 const MAJD=new Set(["Ceres","Pluto","Eris","Haumea","Makemake"]);
@@ -282,6 +282,12 @@ Ceres:{ax:[482.6,480.6,445.6],ct:"m",P:4.604,e:"罗马农业女神刻瑞斯（Ce
 Vesta:{ax:[286.3,278.6,223.2],ct:"m",e:"罗马灶神维斯塔（Vesta）。",h:"1807 年奥伯斯发现。",c:["黎明号（2011–2012 环绕）"],p:["奥伯斯","高斯（获命名权）"]},
 Pallas:{ax:[284,266,224],ct:"e",e:"希腊智慧女神雅典娜的别名 Pallas。",h:"1802 年奥伯斯发现，第二颗被发现的小行星。",c:[]},
 Hygiea:{cl:"near",ct:"e",e:"希腊健康女神许癸厄亚（Hygieia）。",h:"1849 年德加斯帕里斯发现；2019 年 SPHERE 观测显示其近似球形，直径约 434 km。",c:[]},
+Itokawa:{ax:[.268,.147,.104],cl:"irr",ct:"m",e:"以日本火箭之父糸川英夫命名。",h:"隼鸟号（Hayabusa）2005 年探访并于 2010 年带回样品，是首个被取样返回的小行星；由两块碎石堆体“粘合”成的接触双小行星，形似花生或仰泳的水獭。",x:"约 535 × 294 × 209 m"},
+"2015 TB145":{ax:[.325,.325,.325],cl:"irr",ct:"e",e:"按发现时间编号的临时编号；因 2015 年万圣节前后飞掠被称为“万圣节小行星”。",h:"2015 年 10 月 31 日飞掠地球约 1.27 个地月距离；雷达图像上有两个大凹坑，像一颗骷髅头。直径约 650 m。可能是已耗尽挥发物的彗星核。",x:"形状为雷达图像的示意（凹坑位置为示意）"},
+Bennu:{ax:[.2465,.2465,.2290],cl:"irr",ct:"m",e:"取自古埃及神话中的灵鸟 Bennu。",h:"OSIRIS-REx 2020 年取样、2023 年送回样品；陀螺状，赤道隆起由自转加快（YORP 效应）使碎石向赤道聚集形成；表面布满巨石。",x:"平均直径约 490 m"},
+Ryugu:{ax:[.502,.502,.436],cl:"irr",ct:"m",e:"日语“龍宮”，出自浦岛太郎传说中的海底龙宫。",h:"隼鸟 2 号 2018 年到达、2020 年送回样品；陀螺状，赤道隆起明显，碎石堆结构，表面很暗。",x:"平均直径约 900 m"},
+Donaldjohanson:{ax:[4,1.75,1.75],cl:"irr",ct:"m",e:"以发现“露西”化石的古人类学家唐纳德·约翰逊命名。",h:"露西号 2025 年 4 月近距离飞掠；由两个天体碰撞融合而成，中间有狭窄的颈部，像两个嵌套的冰淇淋甜筒。",x:"长约 8 km（形状为示意）"},
+"2024 ON":{ax:[.2,.18,.15],cl:"irr",ct:"e",e:"按发现时间编号的临时编号。",h:"2024 年 9 月 17 日飞掠地球约 100 万 km，被雷达拍到是双瓣的接触双小行星，形似雪人或花生，直径约 350 m。",x:"轨道要素取自维基百科的历元 2025-11-21 数值"},
 Eros:{ax:[17.0,5.5,5.5],cl:"irr",ct:"m",e:"希腊爱神厄洛斯（Eros）。",h:"1898 年维特与沙尔卢瓦各自发现。",c:["NEAR 舒梅克号（2000 环绕，2001 着陆）"]},
 Jupiter:{ax:[71492,71492,66854],ct:"m",P:11.862,e:"罗马众神之王朱庇特（Jupiter）。",h:"1610 年伽利略发现四颗大卫星；1994 年舒梅克-列维 9 号彗星撞击木星。",c:["先驱者 10/11 号（1973/74）","旅行者 1/2 号（1979）","伽利略号（1995–2003）","朱诺号（2016 起）","JUICE（2023 发射）","Europa Clipper（2024 发射）"],p:["伽利略","罗默（1676 年借木卫食估算光速）"]},
 Io:{ax:[1829.4,1819.3,1815.7],ct:"m",e:"希腊神话中被宙斯所爱的伊俄（Io）。",h:"1610 年伽利略（与马里乌斯各自）发现；1979 年旅行者 1 号发现活火山。",c:["旅行者 1 号","伽利略号","朱诺号"],p:["伽利略","西蒙·马里乌斯（建议命名）","琳达·莫拉比托（1979 年发现火山喷发）"]},
@@ -586,37 +592,51 @@ const DEFV={v:["#cfcfcf","#777","rock"],p:["#8fd68f","#4f9f4f","rock"],d:["#9adc
 const TBR={O:[50000,30000],B:[30000,10000],A:[10000,7500],F:[7500,6000],G:[6000,5200],K:[5200,3700],M:[3700,2400]};
 function starTemp(b){if(b===sun)return 5772;const m=/^([OBAFGKM])(\d(?:\.\d)?)?/.exec(b.sp||'');if(!m)return null;const r=TBR[m[1]],f=(m[2]?+m[2]:5)/10;return r[0]+(r[1]-r[0])*f}
 function bbRGB(T){const t=T/100,cl=x=>Math.max(0,Math.min(255,Math.round(x)));let r,g,bl;r=t<=66?255:329.7*Math.pow(t-60,-.1332);g=t<=66?99.47*Math.log(t)-161.1:288.1*Math.pow(t-60,-.0755);bl=t>=66?255:t<=19?0:138.5*Math.log(t-10)-305;return[cl(r),cl(g),cl(bl)]}
-function starPortrait(b,g,w,h){
- const T=starTemp(b),rr=IM.radius(b),R=rr?rr.km/695700:1,L=T?R*R*Math.pow(T/5772,4):null,col=T?bbRGB(T):(b.col?[1,3,5].map(q=>parseInt(b.col.slice(q,q+2),16)):[255,235,170]),css=(c,a=1)=>`rgba(${c[0]},${c[1]},${c[2]},${a})`,mix=(c,k)=>c.map(x=>Math.round(x*k));
- let sd=0;for(const ch of b.n)sd=(sd*31+ch.charCodeAt(0))>>>0;const rnd=()=>{sd=(sd+0x6D2B79F5)>>>0;let t=sd;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296};
- const cx=38,cy=40,Rmax=Math.max(R,1),Rp=Math.max(1.6,R/Rmax*30),Rs=Math.max(1.2,1/Rmax*30);
- // corona
- const ro=Math.min(37,Rp*1.5+5);let gr=g.createRadialGradient(cx,cy,Rp*.85,cx,cy,ro);gr.addColorStop(0,css(col,.4));gr.addColorStop(1,css(col,0));g.fillStyle=gr;g.beginPath();g.arc(cx,cy,ro,0,7);g.fill();
- // disc with limb darkening
- g.save();g.beginPath();g.arc(cx,cy,Rp,0,7);g.clip();
- gr=g.createRadialGradient(cx,cy,0,cx,cy,Rp);const hot=col.map(x=>Math.min(255,x+40));gr.addColorStop(0,css(hot));gr.addColorStop(.7,css(col));gr.addColorStop(1,css(mix(col,.45)));g.fillStyle=gr;g.fillRect(cx-Rp,cy-Rp,Rp*2,Rp*2);
- if(Rp>8){const n=T&&T>9500?0:Math.round(Rp*5);for(let i=0;i<n;i++){const a=rnd()*6.283,d=Math.sqrt(rnd())*Rp,x=cx+Math.cos(a)*d,y=cy+Math.sin(a)*d,r=.7+rnd()*(Rp>20?1.6:1);g.fillStyle=rnd()<.5?css(mix(col,.8),.22):css(hot,.14);g.beginPath();g.arc(x,y,r,0,7);g.fill()}
-  const ns=T&&T<6500&&T>2500?1+Math.floor(rnd()*3):0;for(let i=0;i<ns;i++){const a=rnd()*6.283,d=rnd()*Rp*.6;g.fillStyle='rgba(30,10,0,.55)';g.beginPath();g.arc(cx+Math.cos(a)*d,cy+Math.sin(a)*d,Math.max(.9,Rp*.05),0,7);g.fill()}}
- g.restore();
- // Sun reference ring
- if(b!==sun){g.strokeStyle='rgba(255,230,120,.8)';g.lineWidth=.8;g.setLineDash([2,2]);g.beginPath();g.arc(cx,cy,Rs,0,7);g.stroke();g.setLineDash([]);g.fillStyle='rgba(255,230,120,.9)';g.font='6px sans-serif';g.textAlign='left';g.fillText('☉ = Sun',4,8)}
- g.fillStyle='rgba(220,235,230,.9)';g.font='6.5px sans-serif';g.textAlign='center';g.fillText(`R ${R<10?R.toFixed(R<1?2:1):Math.round(R)} R☉`,cx,78);
- if(T==null)return;
- // H-R diagram
- const X0=86,X1=154,Y0=6,Y1=62,hx=t=>X0+(4.75-Math.log10(t))/(4.75-3.35)*(X1-X0),hy=l=>Y0+(6.2-l)/(6.2+5)*(Y1-Y0);
- g.strokeStyle='rgba(150,190,180,.35)';g.lineWidth=.5;g.strokeRect(X0,Y0,X1-X0,Y1-Y0);
- const curve=(pts,c,wd)=>{g.strokeStyle=c;g.lineWidth=wd;g.beginPath();pts.forEach((q,i)=>i?g.lineTo(hx(q[0]),hy(q[1])):g.moveTo(hx(q[0]),hy(q[1])));g.stroke()};
- curve([[40000,5.5],[20000,3.6],[10000,1.6],[7500,.8],[6000,.1],[5200,-.35],[3700,-1.5],[2800,-3]],'rgba(120,200,255,.55)',3);
- curve([[5200,1.6],[4300,2.4],[3600,3.1]],'rgba(255,170,90,.45)',3);curve([[18000,5.2],[8000,5.4],[4500,5.2],[3500,5]],'rgba(255,140,120,.35)',3);
- curve([[22000,-1.6],[12000,-2.6],[7000,-3.6]],'rgba(220,235,255,.45)',3);
- g.fillStyle='rgba(180,210,200,.8)';g.font='4.6px sans-serif';g.textAlign='left';g.fillText('MS',hx(4300)+0,hy(-1.2)+0);g.fillText('Giants',hx(3900),hy(2.9)-3);g.fillText('WD',hx(14000),hy(-3));g.fillText('L ↑',X0+1,Y0+6);g.textAlign='right';g.fillText('T ←',X1-1,Y1-1.5);
- const px=hx(Math.min(48000,Math.max(2300,T))),py=hy(Math.max(-5,Math.min(6,Math.log10(L))));g.fillStyle=css(col);g.strokeStyle='#fff';g.lineWidth=.8;g.beginPath();g.arc(px,py,2.6,0,7);g.fill();g.stroke();
- g.fillStyle='rgba(220,235,230,.95)';g.font='6px sans-serif';g.textAlign='right';g.fillText(`${Math.round(T/10)*10} K · ${L>=100?Math.round(L):L>=1?L.toFixed(1):L.toPrecision(2)} L☉`,X1,70);
- // spectral strip
- const cls='OBAFGKM',cur=spCls(b),cw=(152-8)/7;cls.split('').forEach((c,i)=>{const tt=(TBR[c][0]+TBR[c][1])/2,x=8+i*cw;g.fillStyle=css(bbRGB(tt),c==cur?1:.4);g.fillRect(x,82,cw-1,9);g.fillStyle=c==cur?'#000':'rgba(0,0,0,.6)';g.font=(c==cur?'bold ':'')+'6.5px sans-serif';g.textAlign='center';g.fillText(c,x+cw/2-.5,89);if(c==cur){g.strokeStyle='#fff';g.lineWidth=.9;g.strokeRect(x-.2,81.5,cw-.6,10)}});
- g.fillStyle='rgba(180,210,200,.7)';g.font='4.6px sans-serif';g.textAlign='left';g.fillText('hot 50,000 K',8,96.5);g.textAlign='right';g.fillText('cool 2,400 K',152,96.5)}
+// ---------- shared pixel helpers ----------
+const hsh=(x,y,sd)=>{let h=(x*374761393+y*668265263+sd*1442695041)|0;h=(h^(h>>>13))*1274126177|0;return((h^(h>>>16))>>>0)/4294967296};
+function vnoise(x,y,sd){const xi=Math.floor(x),yi=Math.floor(y),fx=x-xi,fy=y-yi,u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy),a=hsh(xi,yi,sd),b=hsh(xi+1,yi,sd),c=hsh(xi,yi+1,sd),d=hsh(xi+1,yi+1,sd);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v}
+const fbm=(x,y,sd)=>vnoise(x,y,sd)*.55+vnoise(x*2.1,y*2.1,sd+7)*.3+vnoise(x*4.3,y*4.3,sd+13)*.15;
+const nameSeed=n=>{let s=7;for(const c of n)s=(s*31+c.charCodeAt(0))>>>0;return s%9973};
+function pixPaint(g,w,h,pk,fn){const W=Math.round(w*pk),H=Math.round(h*pk),cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d'),im=c.createImageData(W,H),d=im.data;for(let j=0;j<H;j++)for(let i=0;i<W;i++){const o=(j*W+i)*4,q=fn(i/pk,j/pk);d[o]=q[0];d[o+1]=q[1];d[o+2]=q[2];d[o+3]=q[3]==null?255:q[3]}c.putImageData(im,0,0);g.drawImage(cv,0,0,w,h)}
+// ---------- star portrait: one textured, limb-darkened disc with glow (colour from temperature) ----------
+function starPortrait(b,g,w,h,pk){
+ const T=starTemp(b),rr=IM.radius(b),R=rr?rr.km/695700:1,col=T?bbRGB(T):(b.col?[1,3,5].map(q=>parseInt(b.col.slice(q,q+2),16)):[255,235,170]),sd=nameSeed(b.n),
+  Rp=Math.max(26,Math.min(46,30+16*(Math.log10(Math.max(R,.02))+1)/2.2)),cx=w/2,cy=h/2,warm=T&&T<6500?1:0;
+ pixPaint(g,w,h,pk,(x,y)=>{const dx=x-cx,dy=y-cy,r=Math.hypot(dx,dy),u=r/Rp;
+  if(u>1){const gl=Math.exp(-(u-1)*3.2)*.85,red=T&&T<7000?1:.6;return[Math.min(255,2+col[0]*gl),Math.min(255,2+col[1]*gl*(.55+.45*(1-red*.5))),Math.min(255,6+col[2]*gl*(.5+.5*(1-red*.5))),255]}
+  const mu=Math.sqrt(1-u*u),limb=.2+.8*Math.pow(mu,.7),gran=fbm(x/(Rp/9),y/(Rp/9),sd),fine=vnoise(x*1.6,y*1.6,sd+3),act=Math.pow(vnoise(x/(Rp/3),y/(Rp/3),sd+21),3)*1.5;
+  let k=.82*limb*(.55+.9*gran+.12*fine)+act*.18*(warm?1:.2);
+  // sunspot-like dark patches on cool/yellow stars
+  if(T&&T<6300){const sp=vnoise(x/(Rp/2.2),y/(Rp/2.2),sd+40);if(sp>.9)k*=.55+.45*(sp-.9)*10}
+  const m=Math.max(col[0],col[1],col[2])/255,cc=col.map((v,q)=>v/m*(T&&T<7600?(q==2?Math.max(.7,(T-2500)/6500):q==1?1:1):1)),hot=Math.max(0,k-.95);return[Math.min(255,cc[0]*k+hot*60),Math.min(255,cc[1]*k+hot*40),Math.min(255,cc[2]*k+hot*30),255]})}
+// ---------- asteroid portrait: lit relief from a signed-distance outline + craters + noise ----------
+const sdE=(x,y,cx,cy,rx,ry,rot=0)=>{const c=Math.cos(rot),s=Math.sin(rot),px=(x-cx)*c+(y-cy)*s,py=-(x-cx)*s+(y-cy)*c;return(Math.hypot(px/rx,py/ry)-1)*Math.min(rx,ry)},
+ smin=(a,b,k)=>-Math.log(Math.exp(-a/k)+Math.exp(-b/k))*k,
+ sdBox=(x,y,cx,cy,hx,hy,rot,rd)=>{const c=Math.cos(rot),s=Math.sin(rot),px=Math.abs((x-cx)*c+(y-cy)*s)-hx+rd,py=Math.abs(-(x-cx)*s+(y-cy)*c)-hy+rd;return Math.hypot(Math.max(px,0),Math.max(py,0))+Math.min(Math.max(px,py),0)-rd};
+const AST={
+ "1I/ʻOumuamua":{sdf:(x,y)=>sdE(x,y,80,50,72,8.5+2.2*Math.cos((x-80)/10),-.2),tint:[168,112,92],rad:0,cr:[]},
+ "2015 TB145":{sdf:(x,y)=>smin(sdE(x,y,80,44,33,31),sdE(x,y,80,70,19,13),5),tint:[170,166,158],cr:[[65,43,11,1.7],[96,43,11,1.7],[80,58,4,1.1],[70,77,3,.8],[80,79,3,.8],[90,77,3,.8],[80,28,7,.5]]},
+ "Itokawa":{sdf:(x,y)=>smin(sdE(x,y,50,60,30,22,.3),sdE(x,y,106,44,42,31,-.3),3),tint:[190,176,152],cr:[[100,40,8,.6],[116,52,6,.6],[52,62,6,.5],[84,52,5,.4]],rub:1},
+ "Bennu":{sdf:(x,y)=>sdBox(x,y,80,50,27,27,.785,9)*.9,tint:[96,92,88],cr:[[70,36,6,.6],[96,60,7,.5]],rub:1},
+ "Ryugu":{sdf:(x,y)=>sdBox(x,y,80,50,26,26,.785,15),tint:[92,90,86],cr:[[76,40,10,.8],[92,62,6,.5],[64,58,5,.4]],rub:1},
+ "Donaldjohanson":{sdf:(x,y)=>smin(sdE(x,y,44,52,33,22,.15),sdE(x,y,117,47,33,19,-.15),11),tint:[176,172,166],cr:[[30,44,7,.5],[126,46,6,.5],[84,50,4,.3]]},
+ "2024 ON":{sdf:(x,y)=>smin(sdE(x,y,56,52,29,26),sdE(x,y,108,52,20,18),4),tint:[205,205,205],cr:[],radar:1},
+ "Eros":{sdf:(x,y)=>smin(sdE(x,y,50,56,38,20,.18),sdE(x,y,106,46,40,15,-.2),9),tint:[196,180,160],cr:[[40,52,9,.8],[110,46,6,.5]]}};
+function asteroidPortrait(b,g,w,h,pk){
+ const sd=nameSeed(b.n);let P=AST[b.n];
+ if(!P){const I=INFO[b.n],ax=I&&I.ax?I.ax:null,e=ax?Math.min(.8,1-ax[1]/ax[0]):.15,rx=64,ry=Math.max(18,rx*(1-e)*.75),rot=(hsh(sd,1,2)-.5)*.5,cr=[];for(let q=0;q<9;q++){const a=hsh(sd,q,3)*6.28,d=Math.sqrt(hsh(sd,q,4))*.7;cr.push([80+Math.cos(a)*d*rx*.9,50+Math.sin(a)*d*ry*.9,4+hsh(sd,q,5)*10,.4+hsh(sd,q,6)*.6])}
+  P={sdf:(x,y)=>sdE(x,y,80,50,rx,ry,rot)+(vnoise(x/14,y/14,sd)-.5)*7,tint:[176,164,148],cr}}
+ const L=[-.55,-.5,.68],Ll=Math.hypot(...L),hs=P.rad===0?2.6:3.2,
+  H=(x,y)=>{let hh=hs*Math.sqrt(Math.max(0,-P.sdf(x,y)));for(const c of P.cr){const d=Math.hypot(x-c[0],y-c[1])/c[2];if(d<1)hh-=c[3]*3*(1-d*d);else if(d<1.35)hh+=c[3]*.9*Math.exp(-Math.pow((d-1)/.12,2))}return hh+(fbm(x/4.5,y/4.5,sd)-.5)*(P.rub?3.2:2.0)+(vnoise(x*1.3,y*1.3,sd+5)-.5)*.9},
+  tint=b.n=="1I/ʻOumuamua"?P.tint:(INFO[b.n]&&INFO[b.n].col?INFO[b.n].col:P.tint);
+ pixPaint(g,w,h,pk,(x,y)=>{const s0=P.sdf(x,y);
+  if(s0>1.2)return P.radar?(()=>{const n=vnoise(x*2.3,y*2.3,sd+9)*.6+hsh(Math.floor(x*2),Math.floor(y*2),sd)*.4;const v=30+60*n;return[v,v,v,255]})():[2,6,10,255];
+  const e=.55/pk,hx=H(x+e,y)-H(x-e,y),hy=H(x,y+e)-H(x,y-e),nx=-hx/(2*e),ny=-hy/(2*e),nl=Math.hypot(nx,ny,1),lam=Math.max(0,(nx*L[0]+ny*L[1]+L[2])/(nl*Ll)),al=.72+.5*fbm(x/3,y/3,sd+2),k=Math.min(1.25,(.1+1.05*lam)*al),edge=Math.max(0,Math.min(1,(1.2-s0)/1.6));
+  if(P.radar){const sp=.55+.9*hsh(Math.floor(x*2),Math.floor(y*2),sd+4),v=Math.min(255,255*k*sp*.95);return[v,v,v,255]}
+  return[Math.min(255,tint[0]*k*edge+2),Math.min(255,tint[1]*k*edge+6*(1-edge)),Math.min(255,tint[2]*k*edge+10*(1-edge)),255]})}
 function portrait(b,cv,pk=1){const w=160,h=100;cv.width=160*pk;cv.height=100*pk;const g=cv.getContext('2d');g.scale(pk,pk);const sh=shapeOf(b),cx=80,cy=50;g.fillStyle="#02060a";g.fillRect(0,0,w,h);
- if(b.t=="s"){starPortrait(b,g,w,h);return}
+ if(b.t=="s"){starPortrait(b,g,w,h,pk);return}
+ if(b.t=="a"||AST[b.n]){asteroidPortrait(b,g,w,h,pk);return}
  if(b.t=="v"){const kd=b.n=="JWST"?"hex":(b.n=="Hubble"||b.n=="ISS")?"panel":"dish";g.save();g.translate(cx,cy);g.lineWidth=1.2;
   if(kd=="hex"){const hx=(x,y,r)=>{g.beginPath();for(let q=0;q<6;q++){const a=q*Math.PI/3+Math.PI/6;g.lineTo(x+r*Math.cos(a),y+r*Math.sin(a))}g.closePath();g.fill();g.stroke()};g.fillStyle="#5a6aa8";g.beginPath();g.moveTo(-56,26);g.lineTo(0,40);g.lineTo(56,26);g.lineTo(0,10);g.closePath();g.fill();g.fillStyle="#e8c34a";g.strokeStyle="#7a5a10";const r0=10,dx=r0*1.732;hx(0,-6,r0);for(let q=0;q<6;q++){const a=q*Math.PI/3;hx(dx*Math.cos(a),-6+dx*Math.sin(a),r0)}}
   else if(kd=="panel"){g.fillStyle="#8a8f99";g.fillRect(-10,-9,20,18);g.fillStyle="#2f4fa8";g.strokeStyle="#8fb0ff";for(const sx of[-1,1]){const x0=sx>0?14:-52;g.fillRect(x0,-14,38,28);for(let q=0;q<=4;q++){g.beginPath();g.moveTo(x0+q*9.5,-14);g.lineTo(x0+q*9.5,14);g.stroke()}g.beginPath();g.moveTo(x0,0);g.lineTo(x0+38,0);g.stroke()}}

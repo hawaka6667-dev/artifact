@@ -128,7 +128,7 @@ h4.ct{color:var(--ac);margin:14px 0 6px;font-size:14px;font-weight:600}
   <button id="ab" data-i="lib"></button>
 </div>
 <script>
-const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.14.0";
+const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.14.1";
 // ---------- orbital data (J2000, heliocentric) ----------
 const L=[
 ["Mercury","水星",0.3871,0.2056,7.005,48.331,29.124,217,"p"],["Venus","金星",0.7233,0.0068,3.395,76.680,54.884,245,"p"],["Earth","地球",1.0,0.0167,0,0,102.937,345,"p"],["Mars","火星",1.5237,0.0934,1.850,49.558,286.502,249,"p"],
@@ -605,9 +605,9 @@ function starPortrait(b,g,w,h,pk){
  pixPaint(g,w,h,pk,(x,y)=>{const dx=x-cx,dy=y-cy,r=Math.hypot(dx,dy),u=r/Rp;
   if(u>1){const gl=Math.exp(-(u-1)*3.2)*.85,red=T&&T<7000?1:.6;return[Math.min(255,2+col[0]*gl),Math.min(255,2+col[1]*gl*(.55+.45*(1-red*.5))),Math.min(255,6+col[2]*gl*(.5+.5*(1-red*.5))),255]}
   const mu=Math.sqrt(1-u*u),limb=.2+.8*Math.pow(mu,.7),gran=fbm(x/(Rp/9),y/(Rp/9),sd),fine=vnoise(x*1.6,y*1.6,sd+3),act=Math.pow(vnoise(x/(Rp/3),y/(Rp/3),sd+21),3)*1.5;
-  let k=.82*limb*(.55+.9*gran+.12*fine)+act*.18*(warm?1:.2);
+  let k=1.08*limb+(gran-.5)*.06;
   // sunspot-like dark patches on cool/yellow stars
-  if(T&&T<6300){const sp=vnoise(x/(Rp/2.2),y/(Rp/2.2),sd+40);if(sp>.9)k*=.55+.45*(sp-.9)*10}
+  
   const m=Math.max(col[0],col[1],col[2])/255,cc=col.map((v,q)=>v/m*(T&&T<7600?(q==2?Math.max(.7,(T-2500)/6500):q==1?1:1):1)),hot=Math.max(0,k-.95);return[Math.min(255,cc[0]*k+hot*60),Math.min(255,cc[1]*k+hot*40),Math.min(255,cc[2]*k+hot*30),255]})}
 // ---------- asteroid portrait: lit relief from a signed-distance outline + craters + noise ----------
 const sdE=(x,y,cx,cy,rx,ry,rot=0)=>{const c=Math.cos(rot),s=Math.sin(rot),px=(x-cx)*c+(y-cy)*s,py=-(x-cx)*s+(y-cy)*c;return(Math.hypot(px/rx,py/ry)-1)*Math.min(rx,ry)},
@@ -627,12 +627,12 @@ function asteroidPortrait(b,g,w,h,pk){
  if(!P){const I=INFO[b.n],ax=I&&I.ax?I.ax:null,e=ax?Math.min(.8,1-ax[1]/ax[0]):.15,rx=64,ry=Math.max(18,rx*(1-e)*.75),rot=(hsh(sd,1,2)-.5)*.5,cr=[];for(let q=0;q<9;q++){const a=hsh(sd,q,3)*6.28,d=Math.sqrt(hsh(sd,q,4))*.7;cr.push([80+Math.cos(a)*d*rx*.9,50+Math.sin(a)*d*ry*.9,4+hsh(sd,q,5)*10,.4+hsh(sd,q,6)*.6])}
   P={sdf:(x,y)=>sdE(x,y,80,50,rx,ry,rot)+(vnoise(x/14,y/14,sd)-.5)*7,tint:[176,164,148],cr}}
  const L=[-.55,-.5,.68],Ll=Math.hypot(...L),hs=P.rad===0?2.6:3.2,
-  H=(x,y)=>{let hh=hs*Math.sqrt(Math.max(0,-P.sdf(x,y)));for(const c of P.cr){const d=Math.hypot(x-c[0],y-c[1])/c[2];if(d<1)hh-=c[3]*3*(1-d*d);else if(d<1.35)hh+=c[3]*.9*Math.exp(-Math.pow((d-1)/.12,2))}return hh+(fbm(x/4.5,y/4.5,sd)-.5)*(P.rub?3.2:2.0)+(vnoise(x*1.3,y*1.3,sd+5)-.5)*.9},
+  H=(x,y)=>{let hh=hs*Math.sqrt(Math.max(0,-P.sdf(x,y)));for(const c of P.cr){const d=Math.hypot(x-c[0],y-c[1])/c[2];if(d<1)hh-=c[3]*2.2*(1-d*d);else if(d<1.25)hh+=c[3]*.5*Math.exp(-Math.pow((d-1)/.12,2))}return hh},
   tint=b.n=="1I/ʻOumuamua"?P.tint:(INFO[b.n]&&INFO[b.n].col?INFO[b.n].col:P.tint);
  pixPaint(g,w,h,pk,(x,y)=>{const s0=P.sdf(x,y);
-  if(s0>1.2)return P.radar?(()=>{const n=vnoise(x*2.3,y*2.3,sd+9)*.6+hsh(Math.floor(x*2),Math.floor(y*2),sd)*.4;const v=30+60*n;return[v,v,v,255]})():[2,6,10,255];
-  const e=.55/pk,hx=H(x+e,y)-H(x-e,y),hy=H(x,y+e)-H(x,y-e),nx=-hx/(2*e),ny=-hy/(2*e),nl=Math.hypot(nx,ny,1),lam=Math.max(0,(nx*L[0]+ny*L[1]+L[2])/(nl*Ll)),al=.72+.5*fbm(x/3,y/3,sd+2),k=Math.min(1.25,(.1+1.05*lam)*al),edge=Math.max(0,Math.min(1,(1.2-s0)/1.6));
-  if(P.radar){const sp=.55+.9*hsh(Math.floor(x*2),Math.floor(y*2),sd+4),v=Math.min(255,255*k*sp*.95);return[v,v,v,255]}
+  if(s0>1.2)return[2,6,10,255];
+  const e=.55/pk,hx=H(x+e,y)-H(x-e,y),hy=H(x,y+e)-H(x,y-e),nx=-hx/(2*e),ny=-hy/(2*e),nl=Math.hypot(nx,ny,1),lam=Math.max(0,(nx*L[0]+ny*L[1]+L[2])/(nl*Ll)),al=1,k=Math.min(1.25,(.1+1.05*lam)*al),edge=Math.max(0,Math.min(1,(1.2-s0)/1.6));
+  if(P.radar){const v=Math.min(255,185*k);return[v,v,v,255]}
   return[Math.min(255,tint[0]*k*edge+2),Math.min(255,tint[1]*k*edge+6*(1-edge)),Math.min(255,tint[2]*k*edge+10*(1-edge)),255]})}
 function portrait(b,cv,pk=1){const w=160,h=100;cv.width=160*pk;cv.height=100*pk;const g=cv.getContext('2d');g.scale(pk,pk);const sh=shapeOf(b),cx=80,cy=50;g.fillStyle="#02060a";g.fillRect(0,0,w,h);
  if(b.t=="s"){starPortrait(b,g,w,h,pk);return}

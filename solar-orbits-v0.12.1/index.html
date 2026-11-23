@@ -124,7 +124,7 @@ h4.ct{color:var(--ac);margin:14px 0 6px;font-size:14px;font-weight:600}
   <button id="ab" data-i="lib"></button><button id="szb" disabled data-i="size" data-it="sizeTip"></button>
 </div>
 <script>
-const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.12.0";
+const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.12.1";
 // ---------- orbital data (J2000, heliocentric) ----------
 const L=[
 ["Mercury","水星",0.3871,0.2056,7.005,48.331,29.124,217,"p"],["Venus","金星",0.7233,0.0068,3.395,76.680,54.884,245,"p"],["Earth","地球",1.0,0.0167,0,0,102.937,345,"p"],["Mars","火星",1.5237,0.0934,1.850,49.558,286.502,249,"p"],
@@ -244,7 +244,7 @@ EXO.forEach(o=>{let st=o.star?L.find(b=>b.n==o.n):null;
   m.p=[st.p[0]+q[0],st.p[1]+q[1],st.p[2]+q[2]];m.orb=ring(g,st.p);st.kids.push(m);st.ma=Math.max(st.ma,m.a);moons.push(m)});
  SYS.push({st,cam:[Math.atan2(cv[0],cv[1]),Math.acos(cv[2])],dist:3.4*st.ma})});
 // ---------- galactic-plane overlay data: rings at 5/10/15 ly, l=0/90/180/270 spokes, stems from each near star to the plane ----------
-const GST=L.filter(b=>b.near).map(b=>{const h=dot3(b.p,gN);return{h,pts:new Float64Array([b.p[0],b.p[1],b.p[2],b.p[0]-h*gN[0],b.p[1]-h*gN[1],b.p[2]-h*gN[2]])}});
+const GST=L.filter(b=>b.near).map(b=>{const h=dot3(b.p,gN);return{h,b,pts:new Float64Array([b.p[0],b.p[1],b.p[2],b.p[0]-h*gN[0],b.p[1]-h*gN[1],b.p[2]-h*gN[2]])}});
 const GRG=[5,10,15].map(r=>{const a=new Float64Array(1083);for(let k=0;k<=360;k++){const q=k*R,c=Math.cos(q),s=Math.sin(q);for(let j=0;j<3;j++)a[3*k+j]=r*LY*(c*gC[j]+s*gY[j])}return a}),GSP=[gC,gY].map(v=>{const a=new Float64Array(6);for(let j=0;j<3;j++){a[j]=-15*LY*v[j];a[3+j]=15*LY*v[j]}return a});
 // ---------- spacecraft / artificial satellites (type 'v'): heliocentric probes by RA / Dec / distance (approximate, late 2026); Earth and Saturn orbiters by orbit elements ----------
 const unit3=v=>{const l=Math.hypot(...v);return v.map(x=>x/l)},cross3=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
@@ -365,7 +365,7 @@ const SYM={Sun:"☉",Mercury:"☿",Venus:"♀",Earth:"⊕",Moon:"☽",Mars:"♂"
 // ---------- i18n ----------
 const I18N={zh:{
  p_all:"全景",p_inner:"内太阳系",p_earth:"地球 · 月球",p_tno:"外海王星天体",p_prox:"比邻星系统",p_trap:"TRAPPIST-1 系统",p_stars:"近邻恒星",p_craft:"探测器 · 人造卫星",p_mission:"任务回溯",p_exo:"系外行星系统",syNote:"点击飞到该恒星系；轨道面朝向与部分半径为估计值",mrPlay:"播放",mrPause:"暂停",mrFit:"自动取景",mrRate:d=>`${d} 天/秒`,mrVel:v=>`速度 ${v} km/s（相对太阳）`,mrSun:(au,km)=>`距太阳 ${au} AU（${km} km）`,mrEarth:(au,lt)=>`距地球 ${au} AU · 单程光时 ${lt}`,mrNote:"行星位置由 JPL 近似星历按日期计算；探测器轨道是真实飞掠日期之间的两体（Lambert）拟合，飞掠后外推到现在，不是 Horizons 的实测轨道。",evLaunch:"发射",evFlyby:p=>`${p}飞掠`,evPale:"暗淡蓝点",evHelio:"进入星际空间",evNow:"现在",evLost:"最后联系",evArrok:"飞越 Arrokoth",evNepx:"越过海王星轨道",ty_v:"人造卫星 / 探测器",lat:"黄纬",xRef:(n,r)=>`${r}的 ${n} 倍`,refE:"地球",refJ:"木星",refS:"太阳",cmpE:"地球尺度 · 类地天体（白圈 = 地球）",cmpJ:"木星尺度 · 巨行星与小恒星（白圈 = 木星）",cmpS:"太阳尺度 · 恒星（白圈 = 太阳）",gal:"银道面 · 垂线",gc:"银心方向",search:"搜索天体…",width:"线宽",lib:"信息库",size:"尺寸 · HACK",sizeTip:"天体真实尺寸渲染：HACK 占位，待做",eval:"评估",lockOn:n=>`🔒 ${n} · 点击解除`,
- ty_p:"行星",ty_d:"矮行星",ty_a:"小行星",ty_c:"周期彗星",ty_n:"非周期彗星",ty_m:"卫星",ty_s:"恒星",ty_e:"系外行星",szH:"尺寸",sz0:"大",sz1:"中",sz2:"小",sz3:"微",
+ ty_p:"行星",ty_d:"矮行星",ty_a:"小行星",ty_c:"周期彗星",ty_n:"非周期彗星",ty_m:"卫星",ty_s:"恒星",ty_e:"系外行星",szH:"尺寸",spH:"恒星光谱型",spD:"白矮星",spO:"O 型 · 蓝白、极热",spB:"B 型 · 蓝白",spA:"A 型 · 白色",spF:"F 型 · 黄白",spG:"G 型 · 黄色（如太阳）",spK:"K 型 · 橙色",spM:"M 型 · 红矮星",spD_:"",sz0:"大",sz1:"中",sz2:"小",sz3:"微",
  sh0:"球体",sh1:"近似球体",sh2:"椭球体",sh3:"不规则形状体",shNone:"形状未录入",
  dSun:"距太阳",dEarth:"距地球",orbA:"轨道半长轴",per:"周期",yr:"年",day:"天",nonper:"非周期",fly:"飞到这里",detail:"详细资料",radius:"半径",
  ls:"光秒",lm:"光分",lh:"光时",lday:"光日",lyr:"光年",focusAt:"@焦点",
@@ -379,7 +379,7 @@ const I18N={zh:{
  count:(a,b)=>`已收录 ${a} / ${b} 个天体`,massE:"质量",tabGrid:"图鉴",filter:"筛选",lgsType:"按类型",lgsD:"按直径",lgsN:"按名称",diam:"直径",semiAxes:"半轴",xEarth:n=>`地球的 ${n} 倍`,evTitle:"评估与改进",evMine:"我的评价（哪里不好 / 想要的功能）",evGen:"生成可复制报告",evPh:"例如：某条数据不对、标签太挤、想看真实日期……"},
 en:{
  p_all:"Overview",p_inner:"Inner system",p_earth:"Earth · Moon",p_tno:"Trans-Neptunian",p_prox:"Proxima system",p_trap:"TRAPPIST-1 system",p_stars:"Nearby stars",p_craft:"Spacecraft",p_mission:"Mission replay",p_exo:"Exoplanet systems",syNote:"Tap to fly to a system; orbit orientations and some radii are estimates",mrPlay:"Play",mrPause:"Pause",mrFit:"Auto-frame",mrRate:d=>`${d} d/s`,mrVel:v=>`Speed ${v} km/s (relative to the Sun)`,mrSun:(au,km)=>`${au} AU from the Sun (${km} km)`,mrEarth:(au,lt)=>`${au} AU from Earth · one-way light time ${lt}`,mrNote:"Planet positions are computed from JPL approximate ephemerides for the date; the spacecraft path is a two-body (Lambert) fit between the real flyby dates, extrapolated to today. It is not a Horizons trajectory.",evLaunch:"Launch",evFlyby:p=>`${p} flyby`,evPale:"Pale Blue Dot",evHelio:"Interstellar space",evNow:"Today",evLost:"Last contact",evArrok:"Arrokoth flyby",evNepx:"Crosses Neptune's orbit",ty_v:"Spacecraft",lat:"ecl. lat.",xRef:(n,r)=>`${n}× ${r}`,refE:"Earth",refJ:"Jupiter",refS:"Sun",cmpE:"Earth scale · rocky bodies (white ring = Earth)",cmpJ:"Jupiter scale · giants and small stars (white ring = Jupiter)",cmpS:"Sun scale · stars (white ring = Sun)",gal:"Galactic plane · stems",gc:"Galactic Centre",search:"Search bodies…",width:"Line width",lib:"Library",size:"Size · HACK",sizeTip:"True-size rendering: HACK placeholder, TODO",eval:"Review",lockOn:n=>`🔒 ${n} · click to unlock`,
- ty_p:"Planets",ty_d:"Dwarf planets",ty_a:"Asteroids",ty_c:"Periodic comets",ty_n:"Non-periodic",ty_m:"Moons",ty_s:"Stars",ty_e:"Exoplanets",szH:"Size",sz0:"Large",sz1:"Medium",sz2:"Small",sz3:"Tiny",
+ ty_p:"Planets",ty_d:"Dwarf planets",ty_a:"Asteroids",ty_c:"Periodic comets",ty_n:"Non-periodic",ty_m:"Moons",ty_s:"Stars",ty_e:"Exoplanets",szH:"Size",spH:"Stellar type",spD:"WD",spO:"O · blue, very hot",spB:"B · blue-white",spA:"A · white",spF:"F · yellow-white",spG:"G · yellow (like the Sun)",spK:"K · orange",spM:"M · red dwarf",sz0:"Large",sz1:"Medium",sz2:"Small",sz3:"Tiny",
  sh0:"Sphere",sh1:"Near-sphere",sh2:"Ellipsoid",sh3:"Irregular",shNone:"Shape not recorded",
  dSun:"Sun",dEarth:"Earth",orbA:"Orbit a",per:"P",yr:"yr",day:"d",nonper:"non-periodic",fly:"Fly to",detail:"Details",radius:"Radius",
  ls:"light-s",lm:"light-min",lh:"light-h",lday:"light-days",lyr:"light-yr",focusAt:"@focus",
@@ -399,7 +399,7 @@ const TYPES=["p","d","a","c","n","m","s","e","v"];
 const CO={p:["#7dfc7d","#59f259"],d:["#55f0f0","#3fe0b0"],a:["#c9a86a","#d9b87a"],c:["#ff9a55","#ffae6e"],n:["#ff7ad9","#ff9be6"],m:["#f5e83a","#f0e040"],s:["#ffe9a8","#fff2c6"],e:["#8ab4ff","#a9c8ff"],v:["#b79cff","#cdb9ff"]};
 const LW={p:.9,d:.8,a:.7,c:.7,n:.7,s:.7,m:.7,e:.8,v:.9};
 const cv=document.getElementById('c'),ctx=cv.getContext('2d'),cap=document.getElementById('cap'),bg=document.createElement('canvas');
-let W,H,dpr,F,hits=[],t0=performance.now(),vaz=0,vth=0,gw=1,selO=null,ovw=true,lock=null,show={p:1,d:1,a:1,c:1,n:1,m:1,s:1,e:1,v:1},showS=[1,1,1,1],dms=0,npts=0,placed=[],fl=null,fph=0,libSel=null;
+let W,H,dpr,F,hits=[],t0=performance.now(),vaz=0,vth=0,gw=1,selO=null,ovw=true,lock=null,show={p:1,d:1,a:1,c:1,n:1,m:1,s:1,e:1,v:1},showS=[1,1,1,1],showC={O:1,B:1,A:1,F:1,G:1,K:1,M:1,D:1},dms=0,npts=0,placed=[],fl=null,fph=0,libSel=null;
 let T=[20,0,0],D=175,az=0,th=.14,tT=T.slice(),tD=D,taz=0,tth=.14,dirty=true;
 const FOV=35*R,DMIN=4e-5,DMAX=1.2e7,CULL=60;
 function size(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;F=Math.min(W,H)/2/Math.tan(FOV/2);
@@ -417,7 +417,7 @@ const MR={on:false,m:null,jd:0,rate:180,playing:false,fit:true,cache:{},saved:nu
 const IM={
  radius(b){const I=INFO[b.n];if(I&&I.ax){const[a,x,c]=I.ax;return{km:Math.cbrt(a*x*c),est:I.ct!="m"}}if(RAD[b.n]!=null)return{km:RAD[b.n],est:true};const d={a:100,c:3,n:1,m:50}[b.t];return d==null?null:{km:d,est:true,dflt:true}},
  size(b){const r=IM.radius(b);if(!r)return b.t=="s"?0:2;return r.km>=1000?0:r.km>=200?1:r.km>=20?2:3},
- visible(b){if(MR.on)return b===sun||b.t=='p'||b.n=='Pluto'||b===MR.craft;return show[b.t]&&showS[IM.size(b)]},
+ visible(b){if(MR.on)return b===sun||b.t=='p'||b.n=='Pluto'||b===MR.craft;return show[b.t]&&showS[IM.size(b)]&&(b.t!='s'||b===sun||showC[spCls(b)])},
  style(b){const s=IM.size(b),sel=b===selO;return{col:sel?"#fff":CO[b.t][0],w:wd(b,LW[b.t]*[1,1,.85,.7][s]),al:sel?1:[1,.8,.55,.35][s],dash:sel?[]:[[],[],[6,5],[2,4]][s]}},
  sym(b){return SYM[b.n]||(b.t=="c"||b.t=="n"?"☄":"")},
  ld(b){return(b.k=="m"?b.km:b.a*AU)/384400}
@@ -432,7 +432,7 @@ function lod(b){const tot=b.orb.length/3-1,sz=b.sz||b.a*(1+b.e),px=sz*F/D;return
 function tail(b){const r=Math.hypot(...b.p);if(r>6)return;const q=P(b.p),s=P([0,0,0]);if(q[2]<D*.05||s[2]<D*.05)return;let dx=q[0]-s[0],dy=q[1]-s[1];const l=Math.hypot(dx,dy)||1,len=Math.min(110,70/(r+.4));dx/=l;dy/=l;const g=ctx.createLinearGradient(q[0],q[1],q[0]+dx*len,q[1]+dy*len);g.addColorStop(0,"rgba(170,215,255,.9)");g.addColorStop(1,"rgba(170,215,255,0)");ctx.strokeStyle=g;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(q[0],q[1]);ctx.lineTo(q[0]+dx*len,q[1]+dy*len);ctx.stroke()}
 function galDraw(lim){ctx.setLineDash([]);ctx.globalAlpha=1;
  GRG.forEach(a=>stroke(a,"rgba(80,120,255,.8)",1,2,lim));GSP.forEach(a=>stroke(a,"rgba(80,120,255,.6)",1,1,lim));
- GST.forEach(q=>{ctx.setLineDash(q.h<0?[1.5,3.5]:[]);stroke(q.pts,q.h<0?"rgba(40,170,190,.9)":"rgba(60,220,240,.9)",1,1,lim)});ctx.setLineDash([]);
+ GST.forEach(q=>{if(!IM.visible(q.b))return;ctx.setLineDash(q.h<0?[1.5,3.5]:[]);stroke(q.pts,q.h<0?"rgba(40,170,190,.9)":"rgba(60,220,240,.9)",1,1,lim)});ctx.setLineDash([]);
  const lp=(v,r,fn)=>{const w=[v[0]*r*LY,v[1]*r*LY,v[2]*r*LY];if(dist2(w)>lim)return;const q=P(w);if(q[2]<D*.05)return;fn(q)},ng=v=>v.map(x=>-x);
  ctx.font='12px "Segoe UI",sans-serif';ctx.fillStyle="#8fb0ff";ctx.textAlign="center";
  [[gC,"0°"],[gY,"90°"],[ng(gC),"180°"],[ng(gY),"270°"]].forEach(([v,s])=>lp(v,16.2,q=>ctx.fillText(s,q[0],q[1]+4)));
@@ -621,10 +621,11 @@ function card(){const c=document.getElementById('card'),b=selO;dirty=true;if(!b)
  document.getElementById('cl').onclick=()=>{selO=null;card()}}
 // ---------- filters (types + size classes) and search ----------
 const flt=document.getElementById('flt');
+const spCls=b=>{const c=b.sp?b.sp[0]:'M';return c=='D'?'D':'OBAFGKM'.includes(c)?c:'M'},SPCC={O:'#9bb0ff',B:'#aabfff',A:'#ffffff',F:'#fff1d0',G:'#ffe34a',K:'#ff9a2e',M:'#ff5a4a',D:'#cfe8ff'};
 function fbuild(){const chip=(on,col,txt,attr)=>`<button ${attr} style="opacity:${on?1:.4};border-color:${col}"><i style="color:${col};font-style:normal">●</i> ${txt}</button>`;
- flt.innerHTML=TYPES.map(k=>chip(show[k],CO[k][0],t('ty_'+k),`data-k="${k}"`)).join('')+`<hr><small class="mu">${t('szH')}</small>`+[0,1,2,3].map(i=>chip(showS[i],"#9ab",t('sz'+i),`data-s="${i}"`)).join('')+`<hr>`+chip(showGal,"#4a6cff",t('gal'),`data-g="1"`);
+ flt.innerHTML=TYPES.map(k=>chip(show[k],CO[k][0],t('ty_'+k),`data-k="${k}"`)).join('')+`<hr><small class="mu">${t('szH')}</small>`+[0,1,2,3].map(i=>chip(showS[i],"#9ab",t('sz'+i),`data-s="${i}"`)).join('')+(show.s?`<hr><small class="mu">${t('spH')}</small>`+Object.keys(SPCC).map(c=>{const n=ALL.filter(b=>b.t=='s'&&b!==sun&&spCls(b)==c).length;return n?chip(showC[c],SPCC[c],`${c=='D'?t('spD'):c} · ${n}`,`data-c="${c}" title="${t('sp'+c)}"`):''}).join(''):'')+`<hr>`+chip(showGal,"#4a6cff",t('gal'),`data-g="1"`);
  const ch=()=>{if(selO&&!IM.visible(selO)){selO=null;card()}fbuild();dirty=true};
- flt.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{show[b.dataset.k]^=1;ch()});flt.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{showS[+b.dataset.s]^=1;ch()});flt.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{showGal^=1;fbuild();dirty=true})}
+ flt.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{show[b.dataset.k]^=1;ch()});flt.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{showC[b.dataset.c]^=1;ch()});flt.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{showS[+b.dataset.s]^=1;ch()});flt.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{showGal^=1;fbuild();dirty=true})}
 const qi=document.getElementById('q'),sg=document.getElementById('sg');
 function findBody(v){v=v.trim().toLowerCase();return ALL.find(b=>b.n.toLowerCase()==v||b.z==v||(b.alias&&b.alias.toLowerCase()==v))||ALL.find(b=>b.n.toLowerCase().startsWith(v)||b.z.startsWith(v))||ALL.find(b=>b.n.toLowerCase().includes(v)||b.z.includes(v))}
 let sgI=-1,sgL=[];

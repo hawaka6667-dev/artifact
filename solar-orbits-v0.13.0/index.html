@@ -40,6 +40,8 @@ input[type=range]{accent-color:var(--ac);vertical-align:middle}
 #top button,#top select{padding:4px 10px;font-size:13px;backdrop-filter:blur(6px)}
 #card{position:fixed;left:10px;bottom:calc(var(--bh,66px) + 10px);display:none;background:var(--pn);backdrop-filter:blur(8px);border:1px solid var(--bd);border-radius:12px;padding:10px 14px;font-size:13px;line-height:1.8;min-width:190px;max-width:270px;z-index:3}
 #card span{opacity:.6;margin-left:4px}
+#pt.wide{display:block;width:100%;height:auto;aspect-ratio:8/5;margin:0 0 6px;border-radius:8px}
+#card button{padding:3px 9px}
 .bd{display:inline-block;padding:0 8px;border-radius:10px;border:1px solid var(--bd);font-size:12px;margin:0 6px 4px 0}
 .mu{opacity:.55}
 .hk{display:inline-block;padding:0 6px;border-radius:6px;background:#5a3a10;color:#ffd48a;font-size:11px;margin-left:4px}
@@ -49,6 +51,7 @@ input[type=range]{accent-color:var(--ac);vertical-align:middle}
 #fltb{padding:4px 10px;font-size:13px;backdrop-filter:blur(6px)}
 #flt{display:flex;flex-direction:column;gap:5px;max-height:calc(100vh - 170px);overflow:auto;scrollbar-width:none}
 #lockb{max-width:44vw;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:760px){#top{flex-wrap:wrap;justify-content:flex-end;max-width:calc(100vw - 96px)}#lockb{order:3;max-width:80vw}}
 #flt button{padding:3px 10px;font-size:13px;text-align:left;backdrop-filter:blur(6px)}
 #flt hr{width:100%;border:0;border-top:1px solid #234;margin:3px 0}
 #ev{position:fixed;right:10px;top:calc(48px + env(safe-area-inset-top,0px));width:min(430px,calc(100vw - 20px));max-height:calc(100vh - 130px);overflow:auto;display:none;background:rgba(8,20,15,.96);border:1px solid var(--bd);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.6;z-index:6;box-sizing:border-box}
@@ -92,6 +95,7 @@ h4.ct{color:var(--ac);margin:14px 0 6px;font-size:14px;font-weight:600}
  #mr{left:8px;width:auto;right:8px;max-height:46vh;overflow:auto}
  #card{left:8px;right:8px;max-width:none;max-height:44vh;overflow:auto;padding:8px 12px;font-size:13px}
  #pt{float:left;width:84px;height:52px;margin:0 10px 4px 0}
+ #pt.wide{float:left;width:50%;max-width:none;margin:0 10px 4px 0}
  #card #ow{width:80px}
  #pgd.sheet{position:fixed;inset:0;z-index:12;background:#04100b;max-height:none;max-width:none;flex:none;padding:calc(12px + env(safe-area-inset-top,0px)) 14px 20px;overflow:auto}
  .gal{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
@@ -117,14 +121,14 @@ h4.ct{color:var(--ac);margin:14px 0 6px;font-size:14px;font-weight:600}
 <div id="card"></div><div id="fltw"><button id="fltb"></button><div id="flt"></div></div><div id="ev"></div><div id="pg"></div>
 <div id="mr"></div><div id="sy"></div>
 <div class="bar">
-  <div class="seg"><button data-p="all" data-i="p_all"></button><button data-p="inner" data-i="p_inner"></button><button data-p="earth" data-i="p_earth"></button><button data-p="tno" data-i="p_tno"></button><button data-p="prox" data-i="p_prox"></button><button data-p="trap" data-i="p_trap"></button><button data-p="exo" data-i="p_exo"></button><button data-p="stars" data-i="p_stars"></button><button data-p="craft" data-i="p_craft"></button><button data-p="mission" data-i="p_mission"></button></div>
+  <div class="seg"><button data-p="all" data-i="p_all"></button><button data-p="inner" data-i="p_inner"></button><button data-p="earth" data-i="p_earth"></button><button data-p="tno" data-i="p_tno"></button><button data-p="exo" data-i="p_exo"></button><button data-p="stars" data-i="p_stars"></button><button data-p="craft" data-i="p_craft"></button><button data-p="mission" data-i="p_mission"></button></div>
   <input id="q" data-ip="search" autocomplete="off" spellcheck="false"><div id="sg" role="listbox"></div>
   <label><span data-i="width"></span> <input id="wsl" type="range" min=".3" max="3" step=".1" value="1" style="width:80px"></label>
   <div class="seg"><button id="zo">−</button><button id="zi">+</button></div>
-  <button id="ab" data-i="lib"></button><button id="szb" disabled data-i="size" data-it="sizeTip"></button>
+  <button id="ab" data-i="lib"></button>
 </div>
 <script>
-const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.12.6";
+const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.13.0";
 // ---------- orbital data (J2000, heliocentric) ----------
 const L=[
 ["Mercury","水星",0.3871,0.2056,7.005,48.331,29.124,217,"p"],["Venus","金星",0.7233,0.0068,3.395,76.680,54.884,245,"p"],["Earth","地球",1.0,0.0167,0,0,102.937,345,"p"],["Mars","火星",1.5237,0.0934,1.850,49.558,286.502,249,"p"],
@@ -577,8 +581,42 @@ function lockUI(){const e=document.getElementById('lockb');e.style.display=lock?
 // ---------- portraits (shape follows the shape class) ----------
 const PV={Mercury:["#a8a8a8","#6e6e6e","rock"],Venus:["#e8cf8a","#c99b4a","cloud"],Earth:["#2f6fd6","#3f9e55","earth"],Mars:["#c9603e","#8a3a22","rock"],Ceres:["#8d8d86","#5f5f5a","rock"],Jupiter:["#dcb892","#b0683a","bands"],Saturn:["#ecd7a2","#c9a86a","bands"],Uranus:["#a6e6e8","#7fcfd6","ice"],Neptune:["#3e66da","#2a46a8","ice"],Pluto:["#d3bca0","#8e6b55","rock"],Haumea:["#e8e8e8","#b0b0b0","rock"],Makemake:["#bb6c4c","#8a4a30","rock"],Quaoar:["#a85c3c","#7a3a22","rock"],Eris:["#ececec","#bdbdbd","rock"],Sedna:["#a33a2a","#6a2218","rock"],Gonggong:["#9a4a3a","#6a2e22","rock"],Orcus:["#8a7a78","#5a4c4a","rock"],Moon:["#b9b9b9","#7c7c7c","rock"],Io:["#e8d35a","#c9722e","rock"],Europa:["#e6dccb","#a56a4a","ice"],Ganymede:["#a39a8c","#6d655a","rock"],Callisto:["#6f6558","#4a4238","rock"],Titan:["#d9a24a","#b57a2a","cloud"],Triton:["#e6d6cc","#b08a8a","ice"],Charon:["#a39a96","#7a5a5a","rock"],Enceladus:["#f4f8ff","#cfd8e6","ice"],Phobos:["#8a7f74","#5f554c","rock"],"TRAPPIST-1 b":["#f0802f","#a33b12","rock"],"TRAPPIST-1 c":["#d9a15a","#8b5a2b","rock"],"TRAPPIST-1 d":["#c9a37a","#7a5a3e","cloud"],"TRAPPIST-1 e":["#b8a79a","#6f5f55","rock"],"TRAPPIST-1 f":["#a89aa0","#5e4a52","ice"],"TRAPPIST-1 g":["#9cc27a","#4f7a3a","cloud"],"TRAPPIST-1 h":["#d0a070","#8a6040","rock"]};
 const DEFV={v:["#cfcfcf","#777","rock"],p:["#8fd68f","#4f9f4f","rock"],d:["#9adcd8","#5fa7a3","rock"],a:["#a89a86","#6f6456","rock"],c:["#7a6a5a","#3a2e26","rock"],n:["#7a6a5a","#3a2e26","rock"],m:["#b8b2a8","#7a746c","rock"],e:["#6f8fd0","#3a4f86","rock"],s:["#fff","#fff","rock"]};
+
+// ---------- star portrait: textured disc to scale with the Sun, mini H-R diagram, spectral strip ----------
+const TBR={O:[50000,30000],B:[30000,10000],A:[10000,7500],F:[7500,6000],G:[6000,5200],K:[5200,3700],M:[3700,2400]};
+function starTemp(b){if(b===sun)return 5772;const m=/^([OBAFGKM])(\d(?:\.\d)?)?/.exec(b.sp||'');if(!m)return null;const r=TBR[m[1]],f=(m[2]?+m[2]:5)/10;return r[0]+(r[1]-r[0])*f}
+function bbRGB(T){const t=T/100,cl=x=>Math.max(0,Math.min(255,Math.round(x)));let r,g,bl;r=t<=66?255:329.7*Math.pow(t-60,-.1332);g=t<=66?99.47*Math.log(t)-161.1:288.1*Math.pow(t-60,-.0755);bl=t>=66?255:t<=19?0:138.5*Math.log(t-10)-305;return[cl(r),cl(g),cl(bl)]}
+function starPortrait(b,g,w,h){
+ const T=starTemp(b),rr=IM.radius(b),R=rr?rr.km/695700:1,L=T?R*R*Math.pow(T/5772,4):null,col=T?bbRGB(T):(b.col?[1,3,5].map(q=>parseInt(b.col.slice(q,q+2),16)):[255,235,170]),css=(c,a=1)=>`rgba(${c[0]},${c[1]},${c[2]},${a})`,mix=(c,k)=>c.map(x=>Math.round(x*k));
+ let sd=0;for(const ch of b.n)sd=(sd*31+ch.charCodeAt(0))>>>0;const rnd=()=>{sd=(sd+0x6D2B79F5)>>>0;let t=sd;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296};
+ const cx=38,cy=40,Rmax=Math.max(R,1),Rp=Math.max(1.6,R/Rmax*30),Rs=Math.max(1.2,1/Rmax*30);
+ // corona
+ const ro=Math.min(37,Rp*1.5+5);let gr=g.createRadialGradient(cx,cy,Rp*.85,cx,cy,ro);gr.addColorStop(0,css(col,.4));gr.addColorStop(1,css(col,0));g.fillStyle=gr;g.beginPath();g.arc(cx,cy,ro,0,7);g.fill();
+ // disc with limb darkening
+ g.save();g.beginPath();g.arc(cx,cy,Rp,0,7);g.clip();
+ gr=g.createRadialGradient(cx,cy,0,cx,cy,Rp);const hot=col.map(x=>Math.min(255,x+40));gr.addColorStop(0,css(hot));gr.addColorStop(.7,css(col));gr.addColorStop(1,css(mix(col,.45)));g.fillStyle=gr;g.fillRect(cx-Rp,cy-Rp,Rp*2,Rp*2);
+ if(Rp>8){const n=T&&T>9500?0:Math.round(Rp*5);for(let i=0;i<n;i++){const a=rnd()*6.283,d=Math.sqrt(rnd())*Rp,x=cx+Math.cos(a)*d,y=cy+Math.sin(a)*d,r=.7+rnd()*(Rp>20?1.6:1);g.fillStyle=rnd()<.5?css(mix(col,.8),.22):css(hot,.14);g.beginPath();g.arc(x,y,r,0,7);g.fill()}
+  const ns=T&&T<6500&&T>2500?1+Math.floor(rnd()*3):0;for(let i=0;i<ns;i++){const a=rnd()*6.283,d=rnd()*Rp*.6;g.fillStyle='rgba(30,10,0,.55)';g.beginPath();g.arc(cx+Math.cos(a)*d,cy+Math.sin(a)*d,Math.max(.9,Rp*.05),0,7);g.fill()}}
+ g.restore();
+ // Sun reference ring
+ if(b!==sun){g.strokeStyle='rgba(255,230,120,.8)';g.lineWidth=.8;g.setLineDash([2,2]);g.beginPath();g.arc(cx,cy,Rs,0,7);g.stroke();g.setLineDash([]);g.fillStyle='rgba(255,230,120,.9)';g.font='6px sans-serif';g.textAlign='left';g.fillText('☉ = Sun',4,8)}
+ g.fillStyle='rgba(220,235,230,.9)';g.font='6.5px sans-serif';g.textAlign='center';g.fillText(`R ${R<10?R.toFixed(R<1?2:1):Math.round(R)} R☉`,cx,78);
+ if(T==null)return;
+ // H-R diagram
+ const X0=86,X1=154,Y0=6,Y1=62,hx=t=>X0+(4.75-Math.log10(t))/(4.75-3.35)*(X1-X0),hy=l=>Y0+(6.2-l)/(6.2+5)*(Y1-Y0);
+ g.strokeStyle='rgba(150,190,180,.35)';g.lineWidth=.5;g.strokeRect(X0,Y0,X1-X0,Y1-Y0);
+ const curve=(pts,c,wd)=>{g.strokeStyle=c;g.lineWidth=wd;g.beginPath();pts.forEach((q,i)=>i?g.lineTo(hx(q[0]),hy(q[1])):g.moveTo(hx(q[0]),hy(q[1])));g.stroke()};
+ curve([[40000,5.5],[20000,3.6],[10000,1.6],[7500,.8],[6000,.1],[5200,-.35],[3700,-1.5],[2800,-3]],'rgba(120,200,255,.55)',3);
+ curve([[5200,1.6],[4300,2.4],[3600,3.1]],'rgba(255,170,90,.45)',3);curve([[18000,5.2],[8000,5.4],[4500,5.2],[3500,5]],'rgba(255,140,120,.35)',3);
+ curve([[22000,-1.6],[12000,-2.6],[7000,-3.6]],'rgba(220,235,255,.45)',3);
+ g.fillStyle='rgba(180,210,200,.8)';g.font='4.6px sans-serif';g.textAlign='left';g.fillText('MS',hx(4300)+0,hy(-1.2)+0);g.fillText('Giants',hx(3900),hy(2.9)-3);g.fillText('WD',hx(14000),hy(-3));g.fillText('L ↑',X0+1,Y0+6);g.textAlign='right';g.fillText('T ←',X1-1,Y1-1.5);
+ const px=hx(Math.min(48000,Math.max(2300,T))),py=hy(Math.max(-5,Math.min(6,Math.log10(L))));g.fillStyle=css(col);g.strokeStyle='#fff';g.lineWidth=.8;g.beginPath();g.arc(px,py,2.6,0,7);g.fill();g.stroke();
+ g.fillStyle='rgba(220,235,230,.95)';g.font='6px sans-serif';g.textAlign='right';g.fillText(`${Math.round(T/10)*10} K · ${L>=100?Math.round(L):L>=1?L.toFixed(1):L.toPrecision(2)} L☉`,X1,70);
+ // spectral strip
+ const cls='OBAFGKM',cur=spCls(b),cw=(152-8)/7;cls.split('').forEach((c,i)=>{const tt=(TBR[c][0]+TBR[c][1])/2,x=8+i*cw;g.fillStyle=css(bbRGB(tt),c==cur?1:.4);g.fillRect(x,82,cw-1,9);g.fillStyle=c==cur?'#000':'rgba(0,0,0,.6)';g.font=(c==cur?'bold ':'')+'6.5px sans-serif';g.textAlign='center';g.fillText(c,x+cw/2-.5,89);if(c==cur){g.strokeStyle='#fff';g.lineWidth=.9;g.strokeRect(x-.2,81.5,cw-.6,10)}});
+ g.fillStyle='rgba(180,210,200,.7)';g.font='4.6px sans-serif';g.textAlign='left';g.fillText('hot 50,000 K',8,96.5);g.textAlign='right';g.fillText('cool 2,400 K',152,96.5)}
 function portrait(b,cv,pk=1){const w=160,h=100;cv.width=160*pk;cv.height=100*pk;const g=cv.getContext('2d');g.scale(pk,pk);const sh=shapeOf(b),cx=80,cy=50;g.fillStyle="#02060a";g.fillRect(0,0,w,h);
- if(b.t=="s"){const hx=b.col||"#ffebaa",c=[1,3,5].map(q=>parseInt(hx.slice(q,q+2),16)).join(","),gr=g.createRadialGradient(cx,cy,2,cx,cy,44);gr.addColorStop(0,`rgba(${c},1)`);gr.addColorStop(.3,`rgba(${c},.6)`);gr.addColorStop(1,`rgba(${c},0)`);g.fillStyle=gr;g.fillRect(0,0,w,h);return}
+ if(b.t=="s"){starPortrait(b,g,w,h);return}
  if(b.t=="v"){const kd=b.n=="JWST"?"hex":(b.n=="Hubble"||b.n=="ISS")?"panel":"dish";g.save();g.translate(cx,cy);g.lineWidth=1.2;
   if(kd=="hex"){const hx=(x,y,r)=>{g.beginPath();for(let q=0;q<6;q++){const a=q*Math.PI/3+Math.PI/6;g.lineTo(x+r*Math.cos(a),y+r*Math.sin(a))}g.closePath();g.fill();g.stroke()};g.fillStyle="#5a6aa8";g.beginPath();g.moveTo(-56,26);g.lineTo(0,40);g.lineTo(56,26);g.lineTo(0,10);g.closePath();g.fill();g.fillStyle="#e8c34a";g.strokeStyle="#7a5a10";const r0=10,dx=r0*1.732;hx(0,-6,r0);for(let q=0;q<6;q++){const a=q*Math.PI/3;hx(dx*Math.cos(a),-6+dx*Math.sin(a),r0)}}
   else if(kd=="panel"){g.fillStyle="#8a8f99";g.fillRect(-10,-9,20,18);g.fillStyle="#2f4fa8";g.strokeStyle="#8fb0ff";for(const sx of[-1,1]){const x0=sx>0?14:-52;g.fillRect(x0,-14,38,28);for(let q=0;q<=4;q++){g.beginPath();g.moveTo(x0+q*9.5,-14);g.lineTo(x0+q*9.5,14);g.stroke()}g.beginPath();g.moveTo(x0,0);g.lineTo(x0+38,0);g.stroke()}}
@@ -614,7 +652,7 @@ const shapeTxt=b=>{const s=shapeOf(b);return s?t('sh'+s.k)+(s.est?"*":""):`<span
 function card(){const c=document.getElementById('card'),b=selO;dirty=true;if(!b){c.style.display='none';try{fltFit()}catch(e){}return}
  const r=IM.radius(b),sy=IM.sym(b),dS=Math.hypot(b.p[0],b.p[1],b.p[2]),dE=Math.hypot(b.p[0]-earth.p[0],b.p[1]-earth.p[1],b.p[2]-earth.p[2]);
  c.style.display='block';
- c.innerHTML=`<canvas id="pt"></canvas><b>${sy?sy+" ":""}${nm(b)}</b><span>${nm2(b)}</span><br><span class="bd" style="margin-left:0">${t('ty_'+b.t)}</span><span class="bd">${t('sz'+IM.size(b))}</span><span class="bd">${shapeTxt(b)}</span>${b.t=='s'&&b.sp?(()=>{const c=spCls(b),col=SPCC[c];return`<span class="bd" style="border-color:${col};color:${col}" title="${spT(c)}">● ${b.sp}</span>`})():''}<br>${t('dSun')} ${fd(dS)} · ${t('dEarth')} ${fd(dE)}<br>${b.t=='s'&&b!==sun?`l ${galLB(b.p)[0].toFixed(1)}° · b ${galLB(b.p)[1].toFixed(1)}°<br>${b.sp?spT(spCls(b))+'<br>':''}`:''}${t('diam')} ${dimTxt(b)} km${r?` · ${xs(b)}`:""}<br>${b.k=='m'?t('orbA'):"a"} ${aTxt(b)} · ${ldTxt(b)}<br>${b.t=="s"&&!b.a?"":`e ${b.e} · `}i ${b.i.toFixed(1)}° · ${t('per')} ${perTxt(b)}<br><input id="ow" type="range" min=".3" max="4" step=".1" value="${b.wm}" style="width:90px"> <button id="fl">${t('fly')}</button> <button id="lb">${t('detail')}</button> ${b===sun?"":`<button id="hd" title="${t('hideTip')}">${t('hide')}</button> `}<button id="cl">✕</button>`;
+ c.innerHTML=`<canvas id="pt"${b.t=='s'?' class="wide"':''}></canvas><b>${sy?sy+" ":""}${nm(b)}</b><span>${nm2(b)}</span><br><span class="bd" style="margin-left:0">${t('ty_'+b.t)}</span>${b.t=='s'?'':`<span class="bd">${t('sz'+IM.size(b))}</span><span class="bd">${shapeTxt(b)}</span>`}${b.t=='s'&&b.sp?(()=>{const c=spCls(b),col=SPCC[c];return`<span class="bd" style="border-color:${col};color:${col}" title="${spT(c)}">● ${b.sp}</span>`})():''}<br>${t('dSun')} ${fd(dS)} · ${t('dEarth')} ${fd(dE)}<br>${b.t=='s'&&b!==sun?`l ${galLB(b.p)[0].toFixed(1)}° · b ${galLB(b.p)[1].toFixed(1)}°<br>${b.sp?spT(spCls(b))+'<br>':''}`:''}${t('diam')} ${dimTxt(b)} km${r?` · ${xs(b)}`:""}<br>${b.t=='s'&&!b.a?'':`${b.k=='m'?t('orbA'):"a"} ${aTxt(b)} · ${ldTxt(b)}<br>${`e ${b.e} · `}i ${b.i.toFixed(1)}° · ${t('per')} ${perTxt(b)}<br>`}<input id="ow" type="range" min=".3" max="4" step=".1" value="${b.wm}" style="width:90px"> <button id="fl">${t('fly')}</button> <button id="lb">${t('detail')}</button> ${b===sun?"":`<button id="hd" title="${t('hideTip')}">${t('hide')}</button> `}<button id="cl">✕</button>`;
  portrait(b,document.getElementById('pt'),2);
  document.getElementById('ow').oninput=e=>{b.wm=+e.target.value;dirty=true};
  document.getElementById('fl').onclick=()=>focus(b);document.getElementById('lb').onclick=()=>{libSel=b;location.hash='library';route()};
@@ -726,7 +764,7 @@ function libRows(){const f=lq.toLowerCase(),s=lsort[0],list=ALL.filter(b=>lf.has
  const tb=document.getElementById('tbd');tb.innerHTML=list.map(b=>{const r=IM.radius(b);return`<tr data-n="${b.n}"><td><canvas class="th"></canvas></td><td>${IM.sym(b)?IM.sym(b)+" ":""}${nm(b)}<br><small class="mu">${nm2(b)}</small></td><td>${t('ty_'+b.t)}<br><small class="mu">${t('sz'+IM.size(b))}</small></td><td>${shapeTxt(b)}</td><td>${dimTxt(b)}${r?`<br><small class="mu">${xs(b)}</small>`:""}</td><td>${aTxt(b).split(" (")[0].replace(" AU","")}</td><td>${ldTxt(b).replace(" LD","")}</td><td>${perTxt(b)}</td></tr>`}).join('');
  [...tb.rows].forEach((tr,i)=>{portrait(list[i],tr.querySelector('canvas'));tr.onclick=()=>libShow(ALL.find(b=>b.n==tr.dataset.n))})}
 function libShow(b){libSel=b;const d=document.getElementById('pgd');if(!d)return;[...document.querySelectorAll('.tb tbody tr,.cell')].forEach(e=>e.classList.toggle('on',e.dataset.n==b.n));
- const I=INFO[b.n]||{},sh=shapeOf(b),r=IM.radius(b),mo=b.k=='m',list=a=>a==null?null:a.length?a.map(x=>"· "+x).join("<br>"):`<span class="mu">${t('none')}</span>`,row=(k,v)=>`<div class="sec"><b>${t(k)}</b><br>${v==null||v===""?`<span class="mu">${t('unrec')}</span>`:v}</div>`;
+ const I=INFO[b.n]||{},sh=shapeOf(b),r=IM.radius(b),mo=b.k=='m',list=a=>a==null?null:a.length?a.map(x=>"· "+x).join("<br>"):`<span class="mu">${t('none')}</span>`,row=(k,v)=>k=='secOrbit'&&b.t=='s'&&!b.a?'':`<div class="sec"><b>${t(k)}</b><br>${v==null||v===""?`<span class="mu">${t('unrec')}</span>`:v}</div>`;
  const shp=sh?`<span class="bd">${t('sh'+sh.k)}${sh.est?t('estTag'):""}</span>${sh.f==null?"":` ${(sh.f*100).toFixed(2)}%`}${sh.eb>.001?` · ${(sh.eb*100).toFixed(1)}%`:""}`:`<span class="bd mu">${t('shNone')}</span>`;
  const rel=(b.par?`<button data-n="${b.par.n}">↑ ${nm(b.par)}</button> `:"")+(b.kids&&b.kids.length?b.kids.map(m=>`<button data-n="${m.n}">${nm(m)}</button>`).join(" "):"");
  const ex=[MASS[b.n]!=null?`${t('massE')} ${fn(MASS[b.n])} M⊕`:"",I.x||""].filter(Boolean).join("<br>");

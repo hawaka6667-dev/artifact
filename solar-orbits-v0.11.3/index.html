@@ -121,7 +121,7 @@ h4.ct{color:var(--ac);margin:14px 0 6px;font-size:14px;font-weight:600}
   <button id="ab" data-i="lib"></button><button id="szb" disabled data-i="size" data-it="sizeTip"></button>
 </div>
 <script>
-const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.11.2";
+const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.11.3";
 // ---------- orbital data (J2000, heliocentric) ----------
 const L=[
 ["Mercury","水星",0.3871,0.2056,7.005,48.331,29.124,217,"p"],["Venus","金星",0.7233,0.0068,3.395,76.680,54.884,245,"p"],["Earth","地球",1.0,0.0167,0,0,102.937,345,"p"],["Mars","火星",1.5237,0.0934,1.850,49.558,286.502,249,"p"],
@@ -166,7 +166,7 @@ const tiltPl=(pl,d)=>{const i=pl.i*R,O=pl.O*R,n=[Math.sin(i)*Math.sin(O),-Math.s
 const moons=S.map((r,k)=>{const par=byN[r[0]],pl=r[0]=="Earth"?{i:5.145,O:125}:PL[r[0]]?(r[1]=='Triton'?tiltPl(plane(...PL[r[0]]),157.35):plane(...PL[r[0]])):{i:0,O:0},ph=!(r[0]=="Earth"||PL[r[0]]);
  const m={n:r[1],z:r[2],a:r[3]/AU,km:r[3],e:r[4],i:pl.i,O:pl.O,w:r[0]=="Earth"?318:0,per:r[5],par,k:'m',t:'m',wm:1,dy:k%2?15:-6,al:MAJ.has(r[1])?.75:MID.has(r[1])?.5:.28,ph};
  if(r[0]=='Pluto'&&!par.bary)par.bary=par.p.slice();const ctr=par.bary||par.p,chr=r[1]=='Charon';if(chr)m.a=m.a/1.12186;/* Pluto–Charon: both orbit the barycentre (outside Pluto); Charon's separation 19591 km = Pluto offset + Charon offset, mass ratio 0.1219 */
- const p=at(m,kep(k*2.39+1.7,m.e));m.p=[ctr[0]+p[0],ctr[1]+p[1],ctr[2]+p[2]];m.orb=ring(m,ctr);if(chr){const f=.12186;par.p[0]=ctr[0]-f*p[0];par.p[1]=ctr[1]-f*p[1];par.p[2]=ctr[2]-f*p[2]}par.kids.push(m);if(r[3]<4e6)par.ma=Math.max(par.ma,m.a);return m});
+ const p=at(m,kep(k*2.39+1.7,m.e));m.p=[ctr[0]+p[0],ctr[1]+p[1],ctr[2]+p[2]];m.orb=ring(m,ctr);if(chr){const f=.12186;par.p[0]=ctr[0]-f*p[0];par.p[1]=ctr[1]-f*p[1];par.p[2]=ctr[2]-f*p[2];par.rr=ring({a:m.a*f,e:m.e,i:m.i,O:m.O,w:(m.w||0)+180},ctr)}par.kids.push(m);if(r[3]<4e6)par.ma=Math.max(par.ma,m.a);return m});
 // ---------- Alpha Centauri / Proxima system (positions from RA/Dec -> ecliptic unit vectors, distances in AU) ----------
 const sun={n:"Sun",z:"太阳",t:'s',k:'b',wm:1,kids:[],ma:0,a:0,e:0,i:0,al:1,p:[0,0,0],orb:new Float64Array(0)};
 const sc=(v,d)=>v.map(x=>x*d);
@@ -415,6 +415,7 @@ function draw(){
  const t1=performance.now(),lim=CULL*D;npts=0;placed=[];ctx.setTransform(dpr,0,0,dpr,0,0);ctx.drawImage(bg,0,0,W,H);hits=[];
  L.forEach(b=>{if(!b.orb.length||!IM.visible(b))return;const st=IM.style(b);ctx.setLineDash(st.dash);ctx.globalAlpha=st.al;stroke(b.orb,st.col,st.w,lod(b),lim);ctx.setLineDash([]);ctx.globalAlpha=1});
  moons.forEach(m=>{m.vis=IM.visible(m)&&m.a*F/D>3.5&&dist2(m.par.p)<lim;if(m.vis){const st=IM.style(m);ctx.setLineDash(st.dash);ctx.globalAlpha=st.al;stroke(m.orb,st.col,st.w,lod(m),lim);ctx.setLineDash([]);ctx.globalAlpha=1}});
+ {const pl=byN.Pluto,ch=byN.Charon;if(pl&&pl.rr&&IM.visible(ch)&&ch.a*F/D>3.5&&dist2(pl.bary)<lim){ctx.setLineDash([3,4]);ctx.globalAlpha=.7;stroke(pl.rr,'rgba(110,235,190,.8)',1,1,lim);ctx.setLineDash([]);ctx.globalAlpha=1;const q=P(pl.bary);if(q[2]>D*.05){ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(q[0]-5,q[1]);ctx.lineTo(q[0]+5,q[1]);ctx.moveTo(q[0],q[1]-5);ctx.lineTo(q[0],q[1]+5);ctx.stroke();ctx.fillStyle='rgba(255,255,255,.85)';ctx.font='11px "Segoe UI",sans-serif';ctx.fillText(loc=='zh'?'冥卫系质心':'Pluto–Charon barycentre',q[0]+8,q[1]+16)}}}
  const s=P([0,0,0]);if(s[2]>D*.05&&dist2([0,0,0])<lim){const gr=ctx.createRadialGradient(s[0],s[1],0,s[0],s[1],150);gr.addColorStop(0,"rgba(255,245,210,.35)");gr.addColorStop(1,"rgba(255,230,170,0)");ctx.fillStyle=gr;ctx.fillRect(s[0]-150,s[1]-150,300,300);ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(s[0],s[1],2.5,0,7);ctx.fill()}
  if(showGal)galDraw(lim);
  if(MR.on&&MR.tr){const tr=MR.tr,c=MR.craft.orb,n=c.length/3;ctx.setLineDash([]);ctx.globalAlpha=1;stroke(tr.fp.subarray(0,c.length),'rgba(60,220,240,.35)',1,2,lim);for(let k=0;k<n;k+=73)stroke([c[3*k],c[3*k+1],c[3*k+2],c[3*k],c[3*k+1],0],'rgba(60,220,240,.55)',1,1,lim);stroke([c[c.length-3],c[c.length-2],c[c.length-1],c[c.length-3],c[c.length-2],0],'rgba(60,220,240,.95)',1,1,lim)}

@@ -124,7 +124,7 @@ h4.ct{color:var(--ac);margin:14px 0 6px;font-size:14px;font-weight:600}
   <button id="ab" data-i="lib"></button><button id="szb" disabled data-i="size" data-it="sizeTip"></button>
 </div>
 <script>
-const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.12.2";
+const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.12.3";
 // ---------- orbital data (J2000, heliocentric) ----------
 const L=[
 ["Mercury","水星",0.3871,0.2056,7.005,48.331,29.124,217,"p"],["Venus","金星",0.7233,0.0068,3.395,76.680,54.884,245,"p"],["Earth","地球",1.0,0.0167,0,0,102.937,345,"p"],["Mars","火星",1.5237,0.0934,1.850,49.558,286.502,249,"p"],
@@ -630,13 +630,13 @@ function fbuild(){const chip=(on,col,txt,attr)=>`<button ${attr} style="opacity:
  const ch=()=>{if(selO&&!IM.visible(selO)){selO=null;card()}fbuild();dirty=true};
  flt.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{show[b.dataset.k]^=1;ch()});fltFit();flt.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{hid.delete(b.dataset.h);hidSave();ch()});flt.querySelectorAll('[data-ha]').forEach(b=>b.onclick=()=>{hid.clear();hidSave();ch()});flt.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{showC[b.dataset.c]^=1;ch()});flt.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{showS[+b.dataset.s]^=1;ch()});flt.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{showGal^=1;fbuild();dirty=true})}
 const qi=document.getElementById('q'),sg=document.getElementById('sg');
-function findBody(v){v=v.trim().toLowerCase();return ALL.find(b=>b.n.toLowerCase()==v||b.z==v||(b.alias&&b.alias.toLowerCase()==v))||ALL.find(b=>b.n.toLowerCase().startsWith(v)||b.z.startsWith(v))||ALL.find(b=>b.n.toLowerCase().includes(v)||b.z.includes(v))}
+function findBody(v){v=v.trim().toLowerCase();const ALL_=ALL.filter(b=>!isHid(b));return ALL_.find(b=>b.n.toLowerCase()==v||b.z==v||(b.alias&&b.alias.toLowerCase()==v))||ALL_.find(b=>b.n.toLowerCase().startsWith(v)||b.z.startsWith(v))||ALL_.find(b=>b.n.toLowerCase().includes(v)||b.z.includes(v))}
 let sgI=-1,sgL=[];
 function sgHide(){sg.style.display='none';sgI=-1;sgL=[]}
 function sgGo(b){sgHide();qi.value='';pick(b);qi.blur()}
 function sgShow(){const v=qi.value.trim().toLowerCase();if(!v){sgHide();return}
  const sc=b=>{const k=[b.n.toLowerCase(),b.z,(b.alias||'').toLowerCase()];return k.some(x=>x==v)?0:k.some(x=>x&&x.startsWith(v))?1:k.some(x=>x&&x.includes(v))?2:9};
- sgL=ALL.map(b=>[sc(b),b]).filter(x=>x[0]<9).sort((a,b)=>a[0]-b[0]||(b[1].t=='p')-(a[1].t=='p')).slice(0,8).map(x=>x[1]);
+ sgL=ALL.filter(b=>!isHid(b)).map(b=>[sc(b),b]).filter(x=>x[0]<9).sort((a,b)=>a[0]-b[0]||(b[1].t=='p')-(a[1].t=='p')).slice(0,8).map(x=>x[1]);
  if(!sgL.length){sg.innerHTML=`<div style="cursor:default"><small>—</small></div>`;}else sg.innerHTML=sgL.map((b,i)=>`<div data-i="${i}" class="${i==sgI?'on':''}"><span>${loc=='zh'?b.z:b.n}</span><small>${loc=='zh'?b.n:b.z}</small></div>`).join('');
  const r=qi.getBoundingClientRect();sg.style.display='block';sg.style.left=Math.max(6,Math.min(r.left,innerWidth-sg.offsetWidth-6))+'px';sg.style.bottom=(innerHeight-r.top+6)+'px';
  sg.querySelectorAll('[data-i]').forEach(d=>d.onmousedown=e=>{e.preventDefault();sgGo(sgL[+d.dataset.i])})}
@@ -708,7 +708,7 @@ function libGrid(){const v=document.getElementById('pgv');
  v.querySelectorAll('[data-f]').forEach(x=>x.onclick=()=>{const k=x.dataset.f;lf.has(k)?lf.delete(k):lf.add(k);libGrid()});
  const s=document.getElementById('lgs');s.value=lgs;s.onchange=()=>{lgs=s.value;libCells()};
  libCells();if(innerWidth>=760||libSel)libShow(libSel||earth)}
-function libCells(){const f=lq.toLowerCase(),list=ALL.filter(b=>lf.has(b.t)&&(!f||b.n.toLowerCase().includes(f)||b.z.includes(f)||t('ty_'+b.t).toLowerCase().includes(f)));
+function libCells(){const f=lq.toLowerCase(),list=ALL.filter(b=>lf.has(b.t)&&!isHid(b)&&(!f||b.n.toLowerCase().includes(f)||b.z.includes(f)||t('ty_'+b.t).toLowerCase().includes(f)));
  if(lgs=='d')list.sort((x,y)=>SORT.r(y)-SORT.r(x));else if(lgs=='n')list.sort((x,y)=>SORT.n(x)<SORT.n(y)?-1:1);else list.sort((x,y)=>(x===sun?-1:TYPES.indexOf(x.t))-(y===sun?-1:TYPES.indexOf(y.t)));
  let h="",last="";list.forEach(b=>{if(lgs=='type'){const g=b===sun?nm(sun):b.k=='m'&&b.par?t('ty_'+b.t)+" · "+nm(b.par):t('ty_'+b.t);if(g!=last){h+=`<h5>${g}</h5>`;last=g}}h+=cellHtml(b)});
  const g=document.getElementById('gal');g.innerHTML=h;g.querySelectorAll('.cell').forEach(c=>{const b=ALL.find(x=>x.n==c.dataset.n);portrait(b,c.querySelector('canvas'),2);c.onclick=()=>libShow(b)})}
@@ -717,7 +717,7 @@ function libTbl(){const v=document.getElementById('pgv');
  v.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{const k=b.dataset.f;lf.has(k)?lf.delete(k):lf.add(k);libTbl()});
  v.querySelectorAll('th[data-s]').forEach(h=>h.onclick=()=>{const k=h.dataset.s;if(k=="img")return;lsort=[k,lsort[0]==k?-lsort[1]:1];libTbl()});
  libRows();if(innerWidth>=760||libSel)libShow(libSel||earth)}
-function libRows(){const f=lq.toLowerCase(),s=lsort[0],list=ALL.filter(b=>lf.has(b.t)&&(!f||b.n.toLowerCase().includes(f)||b.z.includes(f)||t('ty_'+b.t).toLowerCase().includes(f)));
+function libRows(){const f=lq.toLowerCase(),s=lsort[0],list=ALL.filter(b=>lf.has(b.t)&&!isHid(b)&&(!f||b.n.toLowerCase().includes(f)||b.z.includes(f)||t('ty_'+b.t).toLowerCase().includes(f)));
  if(SORT[s])list.sort((x,y)=>{const a=SORT[s](x),b=SORT[s](y);return(a<b?-1:a>b?1:0)*lsort[1]});
  const tb=document.getElementById('tbd');tb.innerHTML=list.map(b=>{const r=IM.radius(b);return`<tr data-n="${b.n}"><td><canvas class="th"></canvas></td><td>${IM.sym(b)?IM.sym(b)+" ":""}${nm(b)}<br><small class="mu">${nm2(b)}</small></td><td>${t('ty_'+b.t)}<br><small class="mu">${t('sz'+IM.size(b))}</small></td><td>${shapeTxt(b)}</td><td>${dimTxt(b)}${r?`<br><small class="mu">${xs(b)}</small>`:""}</td><td>${aTxt(b).split(" (")[0].replace(" AU","")}</td><td>${ldTxt(b).replace(" LD","")}</td><td>${perTxt(b)}</td></tr>`}).join('');
  [...tb.rows].forEach((tr,i)=>{portrait(list[i],tr.querySelector('canvas'));tr.onclick=()=>libShow(ALL.find(b=>b.n==tr.dataset.n))})}

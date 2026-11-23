@@ -124,7 +124,7 @@ h4.ct{color:var(--ac);margin:14px 0 6px;font-size:14px;font-weight:600}
   <button id="ab" data-i="lib"></button><button id="szb" disabled data-i="size" data-it="sizeTip"></button>
 </div>
 <script>
-const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.12.5";
+const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.12.6";
 // ---------- orbital data (J2000, heliocentric) ----------
 const L=[
 ["Mercury","水星",0.3871,0.2056,7.005,48.331,29.124,217,"p"],["Venus","金星",0.7233,0.0068,3.395,76.680,54.884,245,"p"],["Earth","地球",1.0,0.0167,0,0,102.937,345,"p"],["Mars","火星",1.5237,0.0934,1.850,49.558,286.502,249,"p"],
@@ -618,15 +618,19 @@ function card(){const c=document.getElementById('card'),b=selO;dirty=true;if(!b)
  portrait(b,document.getElementById('pt'),2);
  document.getElementById('ow').oninput=e=>{b.wm=+e.target.value;dirty=true};
  document.getElementById('fl').onclick=()=>focus(b);document.getElementById('lb').onclick=()=>{libSel=b;location.hash='library';route()};
- document.getElementById('cl').onclick=()=>{selO=null;card()};fltFit();const hb=document.getElementById('hd');if(hb)hb.onclick=()=>{hid.add(b.n);hidSave();selO=null;lock=null;lockUI();card();fbuild();dirty=true}}
+ document.getElementById('cl').onclick=()=>{selO=null;card()};fltFit();const hb=document.getElementById('hd');if(hb)hb.onclick=()=>{hid.set(b.n,fpOf(b));hidSave();selO=null;lock=null;lockUI();card();fbuild();dirty=true}}
 // ---------- filters (types + size classes) and search ----------
 const flt=document.getElementById('flt');
-const hid=new Set((()=>{try{return JSON.parse(localStorage.getItem('so_hid')||'[]')}catch(e){return[]}})()),isHid=b=>hid.has(b.n)||(b.par&&isHid(b.par)),hidSave=()=>{try{localStorage.setItem('so_hid',JSON.stringify([...hid]))}catch(e){}};
+// hidden bodies: name -> fingerprint of the body's data when it was hidden; a changed fingerprint (the body was updated in a later version) takes it out of hidden automatically
+const hid=new Map((()=>{try{const v=JSON.parse(localStorage.getItem('so_hid')||'[]');return Array.isArray(v)?v.map(n=>[n,null]):Object.entries(v)}catch(e){return[]}})()),
+fpOf=b=>{const str=JSON.stringify([INFO[b.n],RAD[b.n],b.z,b.sp,b.a,b.e,b.i,b.O,b.w,b.per,b.km]);let h=5381;for(let i=0;i<str.length;i++)h=((h<<5)+h+str.charCodeAt(i))|0;return h.toString(36)},
+hidSync=()=>{let ch=0;for(const[n,f]of[...hid]){const b=byN[n];if(!b){continue}const cur=fpOf(b);if(f==null)hid.set(n,cur),ch=1;else if(f!==cur){hid.delete(n);ch=1}}if(ch)hidSave()},
+isHid=b=>hid.has(b.n)||(b.par&&isHid(b.par)),hidSave=()=>{try{localStorage.setItem('so_hid',JSON.stringify(Object.fromEntries(hid)))}catch(e){}};
 const spT=c=>t(c=='D'?'spD2':'sp'+c),spCls=b=>{const c=b.sp?b.sp[0]:'M';return c=='D'?'D':'OBAFGKM'.includes(c)?c:'M'},SPCC={O:'#9bb0ff',B:'#aabfff',A:'#ffffff',F:'#fff1d0',G:'#ffe34a',K:'#ff9a2e',M:'#ff5a4a',D:'#cfe8ff'};
 function fltFit(){const c=document.getElementById('card');if(c.style.display=='none'||!c.style.display){flt.style.maxHeight='';return}const r=flt.getBoundingClientRect();if(!r.height)return;flt.style.maxHeight=Math.max(110,c.getBoundingClientRect().top-r.top-12)+'px'}
 addEventListener('resize',()=>setTimeout(fltFit,50));
 function fbuild(){const chip=(on,col,txt,attr)=>`<button ${attr} style="opacity:${on?1:.4};border-color:${col}"><i style="color:${col};font-style:normal">●</i> ${txt}</button>`;
- flt.innerHTML=TYPES.map(k=>chip(show[k],CO[k][0],t('ty_'+k),`data-k="${k}"`)).join('')+`<hr><small class="mu">${t('szH')}</small>`+[0,1,2,3].map(i=>chip(showS[i],"#9ab",t('sz'+i),`data-s="${i}"`)).join('')+(show.s?`<hr><small class="mu">${t('spH')}</small>`+Object.keys(SPCC).map(c=>{const n=ALL.filter(b=>b.t=='s'&&b!==sun&&spCls(b)==c).length;return n?chip(showC[c],SPCC[c],`${c=='D'?t('spD'):c} · ${n}`,`data-c="${c}" title="${spT(c)}"`):''}).join(''):'')+(hid.size?`<hr><small class="mu">${t('hidH')} (${hid.size})</small>`+[...hid].slice(0,14).map(n=>chip(0,'#9ab','✕ '+(loc=='zh'&&byN[n]?byN[n].z.split('（')[0]:n),`data-h="${n.replace(/"/g,'&quot;')}"`)).join('')+(hid.size>14?`<small class="mu">+${hid.size-14}</small>`:'')+chip(1,'#7dfc7d',t('unhideAll'),'data-ha="1"'):'')+`<hr>`+chip(showGal,"#4a6cff",t('gal'),`data-g="1"`);
+ flt.innerHTML=TYPES.map(k=>chip(show[k],CO[k][0],t('ty_'+k),`data-k="${k}"`)).join('')+`<hr><small class="mu">${t('szH')}</small>`+[0,1,2,3].map(i=>chip(showS[i],"#9ab",t('sz'+i),`data-s="${i}"`)).join('')+(show.s?`<hr><small class="mu">${t('spH')}</small>`+Object.keys(SPCC).map(c=>{const n=ALL.filter(b=>b.t=='s'&&b!==sun&&spCls(b)==c).length;return n?chip(showC[c],SPCC[c],`${c=='D'?t('spD'):c} · ${n}`,`data-c="${c}" title="${spT(c)}"`):''}).join(''):'')+(hid.size?`<hr><small class="mu">${t('hidH')} (${hid.size})</small>`+[...hid.keys()].slice(0,14).map(n=>chip(0,'#9ab','✕ '+(loc=='zh'&&byN[n]?byN[n].z.split('（')[0]:n),`data-h="${n.replace(/"/g,'&quot;')}"`)).join('')+(hid.size>14?`<small class="mu">+${hid.size-14}</small>`:'')+chip(1,'#7dfc7d',t('unhideAll'),'data-ha="1"'):'')+`<hr>`+chip(showGal,"#4a6cff",t('gal'),`data-g="1"`);
  const ch=()=>{if(selO&&!IM.visible(selO)){selO=null;card()}fbuild();dirty=true};
  flt.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{show[b.dataset.k]^=1;ch()});fltFit();flt.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{hid.delete(b.dataset.h);hidSave();ch()});flt.querySelectorAll('[data-ha]').forEach(b=>b.onclick=()=>{hid.clear();hidSave();ch()});flt.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{showC[b.dataset.c]^=1;ch()});flt.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{showS[+b.dataset.s]^=1;ch()});flt.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{showGal^=1;fbuild();dirty=true})}
 const qi=document.getElementById('q'),sg=document.getElementById('sg');
@@ -789,7 +793,7 @@ function evLines(){const m=evData(),pc=x=>Math.round(x/m.n*100)+"%",A="信息库
  [ok(m.dedic/m.n>.5,"🟢","🟡"),`有专属配色的天体 ${m.dedic}/${m.n}，其余使用通用示意图（不代表真实外观）。`,C],
  ["🟢","示意图外形按形状分类绘制：球体 / 近似球体为圆或略扁，椭球体按轴比，不规则体为不规则形，形状未知为虚线圆。",C],
  ["🟡","未绘制：木星环、海王星环、妊神星环、创神星环、表面真实地貌。",C],
- ["🟢","“隐藏”：卡片上的隐藏按钮会把天体（连同其卫星 / 行星）从画面、资料库和搜索中隐去，只记在本浏览器里；天体更新后仍保持隐藏，恢复入口在筛选面板的“已隐藏”。",U],
+ ["🟢","“隐藏”：卡片上的隐藏按钮会把天体（连同其卫星 / 行星）从画面、资料库和搜索中隐去，只记在本浏览器里；天体的数据在新版本里更新后会自动取消隐藏，也可以随时在筛选面板的“已隐藏”里手动恢复。",U],
  ["🟡","新增的 10 个系外行星系统（LHS 1140、GJ 1214、TOI-700、L 98-59、HR 8799、绘架座 β、巴纳德星、天仓五、HD 110067、Kepler-11）：位置由赤经 / 赤纬 / 距离换算，周期、半径取自公开资料整理（未对照原始文献）；未测得半径的行星按估计值绘制；半长轴由周期和恒星质量推算（直接成像的 HR 8799、绘架座 β 用投影半长轴近似）；轨道面朝向只由“与视线的夹角”约束，天球上的方位是任意的；巴纳德星与天仓五的行星仍有争议或为候选。",C],
  ["🟡","TRAPPIST-1 行星的配色参照 NASA 示意图，属艺术想象，并非真实外观。",C],
  ["🟠","HACK：3D 里天体仍是点状，真实 / 放大尺寸渲染未做。",C],
@@ -800,7 +804,7 @@ function evLines(){const m=evData(),pc=x=>Math.round(x/m.n*100)+"%",A="信息库
  ["🟡","颜色是区分类型的唯一方式（小天体另有虚线），色觉障碍用户仍不友好；触屏平移 / 仰视没有操作提示。",U],
  [ok(m.gap==0,"🟢","🟡"),`界面文案已走词典（${m.keys} 项，英文缺 ${m.gap} 项）；信息库与评估面板的正文目前只有中文，英文界面下会回退为中文。`,G],
  ["🟢","符号（☉ ☿ ♀ ⊕ ☽ ♂ ♃ ♄ ⛢ ♆ ♇ ⚳ ⚴ ⚶ ☄）只显示在信息库和信息卡里，不进入 3D 标签；其余矮行星没有通用 Unicode 符号，未启用。",G],
- ["•","推迟项（隐藏）：信息目前偏杂，所以由你把暂时不需要的天体“隐藏”起来先推迟；之后即使这些天体有了更新，也保持隐藏，直到你明确要看或指定某个天体时，再从筛选面板的“已隐藏”里手动取出。",N],
+ ["•","推迟项（隐藏）：信息目前偏杂，所以由你把暂时不需要的天体“隐藏”起来先推迟；一旦某个被隐藏的天体有了更新（它的资料、轨道或半径等数据在新版本里变了），它会自动从“已隐藏”里取出来重新显示；没有更新的则一直保持隐藏。",N],
  ["•","时间轴 + 公转动画 + 真实日期星历（高优先）；真实尺寸 / 放大尺寸开关（高优先，现为 HACK）。",N],
  ["•","条目逐条核实并标注来源与更新日期；信息库支持收藏、对比、随机浏览，评估面板与信息库正文补全英文。",N],
  ["•","小行星带 / 柯伊伯带点云、土星环、黄道盘面网格；更多彗星与已解体彗星。",N],
@@ -822,7 +826,7 @@ setInterval(()=>{if(ev.style.display=='block')evRender()},1000);
 function applyLoc(){document.documentElement.lang=loc;document.querySelectorAll('[data-i]').forEach(e=>e.textContent=t(e.dataset.i));document.querySelectorAll('[data-ip]').forEach(e=>e.placeholder=t(e.dataset.ip));document.querySelectorAll('[data-it]').forEach(e=>e.title=t(e.dataset.it));
  document.getElementById('locsel').value=loc;if(MR.on)mrUI();fbuild();fltUI();card();lockUI();if(pg.style.display=='block')libBuild();if(ev.style.display=='block'){const v=document.getElementById('evt').value;evBuild();document.getElementById('evt').value=v;evRender()}dirty=true;try{localStorage.setItem('sol-loc',loc)}catch(e){}}
 document.getElementById('locsel').onchange=e=>{loc=e.target.value;applyLoc()};
-applyLoc();route();
+hidSync();applyLoc();route();
 preset("all");T=tT.slice();D=tD;dirty=true;
 </script>
 </body>

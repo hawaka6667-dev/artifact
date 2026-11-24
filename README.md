@@ -14,7 +14,7 @@ One folder per artifact, named `<slug>-v<version>`. Each folder holds the page a
 | `globe-painter-v3/` | 上色地球仪 Globe Painter: rotatable, see-through world globe; paint any country with adjustable opacity | 3 | 784.4 KB |
 | `molecule-library-v1/` | 分子知识库 Molecule Library: 3D molecule viewer with bilingual trivia and interactive ball-and-stick models | 1 | 25.4 KB |
 | `solar-orbits-v0.16.1/` | 太阳系轨道 Solar System Orbits: Mission replay (Voyager 1/2, New Horizons, Pioneer 10/11, DART) (任务回溯) inside the page — planets move by JPL approximate ephemerides, craft path = Lambert fit between real flyby dates, with drop-lines to the ecliptic | 0.16.1 | 156 KB |
-| `periodic-table-evolution-v1/` | 周期表演化史 Periodic Table Evolution: 118 elements slide between Mendeleev short form, 18-column long form, 32-column wide form and Janet left-step; 12 history milestones and a year slider | 1 | 33.2 KB |
+| `periodic-table-evolution-v2/` | 周期表演化史 Periodic Table Evolution: 118 elements slide between Mendeleev short form, 18-column long form, 32-column wide form and Janet left-step; 12 history milestones with inline citations, year slider, References section | 2 | 47.5 KB |
 
 ## Rights
 

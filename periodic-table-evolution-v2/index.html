@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0}[hidden]{display:none!important}</style>
+<title>周期表演化史</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout concept: one set of 118 cells that physically slides between historical layouts; controls on top, history cards underneath. */
+:root{
+  --bg:#eef2f5; --surface:#ffffff; --fg:#14202b; --muted:#566574; --faint:#9aa8b4; --line:#d3dce3; --accent:#0b62c4;
+  --s:#e2552f; --p:#1f9a88; --d:#2f64d0; --f:#9a4fd0;
+  --e0:#b7791f; --e1:#7f8f26; --e2:#2f9a5a; --e3:#1f93a6; --e4:#2f64d0; --e5:#8e4fd0;
+  --sans:'IBM Plex Sans','PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans CJK SC',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e141a; --surface:#161e26; --fg:#e6edf3; --muted:#9fb0bf; --faint:#5f7080; --line:#2b3947; --accent:#6aa8ff;
+    --s:#ff8a63; --p:#4fc9b6; --d:#7fa6ff; --f:#c58cf2;
+    --e0:#e3a64b; --e1:#b3c34d; --e2:#55c57f; --e3:#4ec3d6; --e4:#7fa6ff; --e5:#c58cf2;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e141a; --surface:#161e26; --fg:#e6edf3; --muted:#9fb0bf; --faint:#5f7080; --line:#2b3947; --accent:#6aa8ff;
+  --s:#ff8a63; --p:#4fc9b6; --d:#7fa6ff; --f:#c58cf2;
+  --e0:#e3a64b; --e1:#b3c34d; --e2:#55c57f; --e3:#4ec3d6; --e4:#7fa6ff; --e5:#c58cf2;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background:var(--bg); color:var(--fg); font-family:var(--sans); font-size:15px; line-height:1.65;
+  padding-left:max(16px,env(safe-area-inset-left,0px)); padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:28px 64px;
+}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-size:clamp(26px,4.2vw,40px);line-height:1.15;margin:0;font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h2{font-size:18px;margin:0 0 10px;font-weight:600}
+p{margin:0}
+.lede{color:var(--muted);max-width:68ch;margin-top:10px}
+a{color:var(--accent)}
+.lang{
+  position:fixed; z-index:20; top:calc(env(safe-area-inset-top,0px) + 10px); right:max(12px,env(safe-area-inset-right,0px));
+  display:flex; gap:2px; padding:3px; border-radius:8px; background:color-mix(in srgb,var(--surface) 70%,transparent);
+  border:1px solid var(--line); backdrop-filter:blur(6px); opacity:.9;
+}
+.lang button{border:0;background:transparent;color:var(--muted);font:500 13px var(--sans);padding:4px 10px;border-radius:5px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
+button{font-family:inherit}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.controls{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:center}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}
+.ctl > span{font:500 12px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.seg{display:flex;flex-wrap:wrap;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;color:var(--fg);font-size:13px;padding:6px 12px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
+.timebar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.timebar input[type=range]{flex:1 1 260px;min-width:0;accent-color:var(--accent)}
+.yr{font:500 22px var(--mono);min-width:3.6ch;font-variant-numeric:tabular-nums}
+.count{font:12px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.play{border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer}
+
+.stage-scroll{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px}
+.stage{position:relative;transition:width .5s,height .5s}
+.cell{
+  position:absolute;left:0;top:0;width:var(--cs);height:var(--cs);
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid color-mix(in srgb,var(--blk) 60%,var(--surface));
+  background:color-mix(in srgb,var(--blk) 24%,var(--surface));
+  border-radius:3px;cursor:pointer;color:var(--fg);padding:0;
+  transition:transform .8s cubic-bezier(.2,.7,.2,1),opacity .35s,background .35s,border-color .35s;
+}
+.cell i{position:absolute;top:2px;left:3px;font:normal 500 calc(var(--cs)*.21)/1 var(--mono);color:var(--muted)}
+.cell b{font:600 calc(var(--cs)*.4)/1 var(--sans)}
+.cell.off{background:transparent;border:1px dashed var(--line);color:var(--faint)}
+.cell.off i,.cell.off b{color:var(--faint)}
+.cell.ghost{background:transparent;border:1px dashed var(--accent);color:var(--accent)}
+.cell.ghost i{color:var(--accent)}
+.cell.pred{border:2px solid var(--accent)}
+.cell.hl{box-shadow:0 0 0 2px var(--accent);z-index:2}
+.cell.sel{outline:2px solid var(--fg);outline-offset:1px;z-index:3}
+.cell.hide{opacity:0;pointer-events:none}
+.lab{position:absolute;display:flex;align-items:center;justify-content:center;font:500 11px var(--mono);color:var(--muted);animation:fade .5s both;white-space:nowrap}
+.lab.span{border-bottom:1px solid var(--line)}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.caption{color:var(--muted);font-size:13px;margin-top:10px;max-width:80ch}
+.selinfo{font:13px var(--mono);margin-top:6px;min-height:1.6em}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:8px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend em{width:12px;height:12px;border-radius:2px;display:inline-block;font-style:normal;
+  border:1px solid color-mix(in srgb,var(--blk) 60%,var(--surface));background:color-mix(in srgb,var(--blk) 30%,var(--surface))}
+
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+.chip{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:6px;padding:6px 12px;font-size:13px;cursor:pointer;text-align:left;line-height:1.3}
+.chip small{display:block;font:11px var(--mono);color:var(--muted)}
+.chip[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px 20px;margin-top:10px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card .when{font:500 12px var(--mono);color:var(--accent);letter-spacing:.06em}
+.card h3{margin:0;font-size:20px;font-weight:600}
+.card .body{max-width:70ch}
+.card .note{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;max-width:70ch}
+
+.order{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0}
+.order span{font:12px var(--mono);padding:3px 8px;border-radius:3px;border:1px solid color-mix(in srgb,var(--blk) 60%,var(--surface));background:color-mix(in srgb,var(--blk) 22%,var(--surface))}
+.foot{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:6px;max-width:80ch}
+h3{font-size:15px;margin:18px 0 6px;font-weight:600}
+.refs{list-style:none;padding:0;margin:14px 0 0;display:flex;flex-direction:column;gap:12px}
+.refs li{max-width:82ch;padding:6px 10px;border-radius:4px;border-left:2px solid var(--line);transition:background .4s}
+.refs li.flash{background:color-mix(in srgb,var(--accent) 14%,transparent);border-left-color:var(--accent)}
+.refs .use{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.refnotes{max-width:82ch;margin:0;padding-left:1.2em;color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:6px}
+.srcs{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--muted)}
+.srcs a{font:12px var(--mono);padding:1px 7px;border:1px solid var(--line);border-radius:3px;text-decoration:none;color:var(--accent)}
+@media (prefers-reduced-motion:reduce){.cell,.stage,.lab{transition:none;animation:none}}
+</style>
+</head>
+<body>
+
+<div class="lang" role="group" aria-label="Language">
+  <button id="bzh" type="button" aria-pressed="true">中文</button>
+  <button id="ben" type="button" aria-pressed="false">EN</button>
+</div>
+
+<div class="wrap">
+  <header>
+    <h1 data-i="title"></h1>
+    <p class="lede" data-i="sub"></p>
+  </header>
+
+  <section>
+    <div class="controls">
+      <div class="ctl"><span data-i="layout"></span>
+        <div class="seg" id="segLayout"></div></div>
+      <div class="ctl"><span data-i="color"></span>
+        <div class="seg" id="segMode"></div></div>
+    </div>
+    <div class="timebar" style="margin-top:14px">
+      <button class="play" id="play" type="button"></button>
+      <span class="yr" id="yr"></span>
+      <input id="slider" type="range" min="1700" max="2016" step="1" value="2016" aria-label="Year">
+      <span class="count" id="count"></span>
+    </div>
+    <div class="stage-scroll" id="scroll" style="margin-top:14px"><div class="stage" id="stage"></div></div>
+    <div class="legend" id="legend"></div>
+    <p class="caption" id="caption"></p>
+    <p class="selinfo" id="selinfo"></p>
+  </section>
+
+  <section>
+    <h2 data-i="timeline"></h2>
+    <div class="chips" id="chips"></div>
+    <article class="card" id="card"></article>
+  </section>
+
+  <section>
+    <h2 data-i="whyH"></h2>
+    <p data-i="whyP" style="max-width:70ch"></p>
+    <div class="order" id="order"></div>
+    <p class="caption" data-i="whyNote"></p>
+  </section>
+
+  <section id="references">
+    <h2 data-i="refH"></h2>
+    <p class="caption" data-i="refLede"></p>
+    <ul class="refs" id="refList"></ul>
+    <h3 data-i="refDiscH"></h3>
+    <ul class="refnotes" id="refDisc"></ul>
+    <h3 data-i="refLimH"></h3>
+    <p class="caption" data-i="refLim"></p>
+    <p class="caption" data-i="further"></p>
+  </section>
+
+  <footer class="foot">
+    <p data-i="foot1"></p>
+    <p><a href="https://www.youtube.com/watch?v=ztpPty3WSiY" target="_blank" rel="noopener" data-i="foot2"></a></p>
+  </footer>
+</div>
+
+<script>
+/*PURE-START*/
+const RAW = `H,Hydrogen,氢,1766
+He,Helium,氦,1895
+Li,Lithium,锂,1817
+Be,Beryllium,铍,1798
+B,Boron,硼,1808
+C,Carbon,碳,0
+N,Nitrogen,氮,1772
+O,Oxygen,氧,1774
+F,Fluorine,氟,1886
+Ne,Neon,氖,1898
+Na,Sodium,钠,1807
+Mg,Magnesium,镁,1808
+Al,Aluminium,铝,1825
+Si,Silicon,硅,1824
+P,Phosphorus,磷,1669
+S,Sulfur,硫,0
+Cl,Chlorine,氯,1774
+Ar,Argon,氩,1894
+K,Potassium,钾,1807
+Ca,Calcium,钙,1808
+Sc,Scandium,钪,1879
+Ti,Titanium,钛,1791
+V,Vanadium,钒,1801
+Cr,Chromium,铬,1797
+Mn,Manganese,锰,1774
+Fe,Iron,铁,0
+Co,Cobalt,钴,1735
+Ni,Nickel,镍,1751
+Cu,Copper,铜,0
+Zn,Zinc,锌,1746
+Ga,Gallium,镓,1875
+Ge,Germanium,锗,1886
+As,Arsenic,砷,1250
+Se,Selenium,硒,1817
+Br,Bromine,溴,1826
+Kr,Krypton,氪,1898
+Rb,Rubidium,铷,1861
+Sr,Strontium,锶,1790
+Y,Yttrium,钇,1794
+Zr,Zirconium,锆,1789
+Nb,Niobium,铌,1801
+Mo,Molybdenum,钼,1778
+Tc,Technetium,锝,1937
+Ru,Ruthenium,钌,1844
+Rh,Rhodium,铑,1803
+Pd,Palladium,钯,1803
+Ag,Silver,银,0
+Cd,Cadmium,镉,1817
+In,Indium,铟,1863
+Sn,Tin,锡,0
+Sb,Antimony,锑,0
+Te,Tellurium,碲,1782
+I,Iodine,碘,1811
+Xe,Xenon,氙,1898
+Cs,Caesium,铯,1860
+Ba,Barium,钡,1808
+La,Lanthanum,镧,1839
+Ce,Cerium,铈,1803
+Pr,Praseodymium,镨,1885
+Nd,Neodymium,钕,1885
+Pm,Promethium,钷,1945
+Sm,Samarium,钐,1879
+Eu,Europium,铕,1901
+Gd,Gadolinium,钆,1880
+Tb,Terbium,铽,1843
+Dy,Dysprosium,镝,1886
+Ho,Holmium,钬,1878
+Er,Erbium,铒,1843
+Tm,Thulium,铥,1879
+Yb,Ytterbium,镱,1878
+Lu,Lutetium,镥,1907
+Hf,Hafnium,铪,1923
+Ta,Tantalum,钽,1802
+W,Tungsten,钨,1783
+Re,Rhenium,铼,1925
+Os,Osmium,锇,1803
+Ir,Iridium,铱,1803
+Pt,Platinum,铂,1735
+Au,Gold,金,0
+Hg,Mercury,汞,0
+Tl,Thallium,铊,1861
+Pb,Lead,铅,0
+Bi,Bismuth,铋,1753
+Po,Polonium,钋,1898
+At,Astatine,砹,1940
+Rn,Radon,氡,1900
+Fr,Francium,钫,1939
+Ra,Radium,镭,1898
+Ac,Actinium,锕,1899
+Th,Thorium,钍,1829
+Pa,Protactinium,镤,1913
+U,Uranium,铀,1789
+Np,Neptunium,镎,1940
+Pu,Plutonium,钚,1940
+Am,Americium,镅,1944
+Cm,Curium,锔,1944
+Bk,Berkelium,锫,1949
+Cf,Californium,锎,1950
+Es,Einsteinium,锿,1952
+Fm,Fermium,镄,1952
+Md,Mendelevium,钔,1955
+No,Nobelium,锘,1958
+Lr,Lawrencium,铹,1961
+Rf,Rutherfordium,,1964
+Db,Dubnium,,1970
+Sg,Seaborgium,,1974
+Bh,Bohrium,,1981
+Hs,Hassium,,1984
+Mt,Meitnerium,,1982
+Ds,Darmstadtium,,1994
+Rg,Roentgenium,,1994
+Cn,Copernicium,,1996
+Nh,Nihonium,,2004
+Fl,Flerovium,,1998
+Mc,Moscovium,,2003
+Lv,Livermorium,,2000
+Ts,Tennessine,,2010
+Og,Oganesson,,2002`;
+const EL = RAW.trim().split('\n').map((l,i)=>{const [s,en,zh,y]=l.split(',');return {z:i+1,s,en,zh:zh||en,y:+y};});
+
+/* Idealised Madelung filling order: every layout is a different folding of this one sequence. */
+const SEQ=[[1,'s'],[2,'s'],[2,'p'],[3,'s'],[3,'p'],[4,'s'],[3,'d'],[4,'p'],[5,'s'],[4,'d'],[5,'p'],[6,'s'],[4,'f'],[5,'d'],[6,'p'],[7,'s'],[5,'f'],[6,'d'],[7,'p']];
+const CAP={s:2,p:6,d:10,f:14}, LV={s:0,p:1,d:2,f:3};
+(function(){let k=0;SEQ.forEach(([n,b])=>{for(let i=0;i<CAP[b];i++){const e=EL[k++];e.n=n;e.b=b;e.i=i;e.per=n+(b==='d'?1:b==='f'?2:0);e.row8=n+LV[b]-1;}});})();
+
+const MEND={1:[0,0],3:[1,0],4:[1,1],5:[1,2],6:[1,3],7:[1,4],8:[1,5],9:[1,6],
+ 11:[2,0],12:[2,1],13:[2,2],14:[2,3],15:[2,4],16:[2,5],17:[2,6],
+ 19:[3,0],20:[3,1],21:[3,2],22:[3,3],23:[3,4],24:[3,5],25:[3,6],26:[3,7],27:[3,8],28:[3,9],
+ 29:[4,0],30:[4,1],31:[4,2],32:[4,3],33:[4,4],34:[4,5],35:[4,6],
+ 37:[5,0],38:[5,1],39:[5,2],40:[5,3],41:[5,4],42:[5,5],43:[5,6],44:[5,7],45:[5,8],46:[5,9],
+ 47:[6,0],48:[6,1],49:[6,2],50:[6,3],51:[6,4],52:[6,5],53:[6,6],
+ 55:[7,0],56:[7,1],57:[7,2],58:[7,3],
+ 68:[9,2],73:[9,4],74:[9,5],76:[9,7],77:[9,8],78:[9,9],
+ 79:[10,0],80:[10,1],81:[10,2],82:[10,3],83:[10,4],
+ 90:[11,3],92:[11,5]};
+const GAP={21:['eka-boron','类硼'],31:['eka-aluminium','类铝'],32:['eka-silicon','类硅'],43:['eka-manganese','类锰']};
+const DIM={mend:{cols:10,rows:12},long:{cols:18,rows:10},wide:{cols:32,rows:7},janet:{cols:32,rows:8}};
+function POS(k,e){
+  if(k==='mend') return MEND[e.z]||null;
+  if(k==='long'){
+    if(e.z===2) return [0,17];
+    if(e.b==='s') return [e.per-1,e.i];
+    if(e.b==='p') return [e.per-1,12+e.i];
+    if(e.b==='d') return [e.per-1,2+e.i];
+    return [e.per===6?8:9,3+e.i];
+  }
+  if(k==='wide'){
+    if(e.z===2) return [0,31];
+    if(e.b==='s') return [e.per-1,e.i];
+    if(e.b==='f') return [e.per-1,2+e.i];
+    if(e.b==='d') return [e.per-1,16+e.i];
+    return [e.per-1,26+e.i];
+  }
+  const off={s:30,p:24,d:14,f:0}[e.b];
+  return [e.row8,off+e.i];
+}
+function era(y){return y===0?0:y<1800?1:y<1869?2:y<1900?3:y<1945?4:5;}
+/*PURE-END*/
+
+const MS=[
+ {y:1829,layout:null,hl:[3,11,19,20,38,56,17,35,53],r:[2],
+  t:{zh:['1829','德贝莱纳三元素组','德国化学家德贝莱纳把性质相近的元素按三个一组归类，每组中间那个元素的原子量接近另外两个的平均值，例如锂–钠–钾、钙–锶–钡、氯–溴–碘。这是「元素有家族」的最早线索之一。','表格上：还没有表格，只有一组一组的「三胞胎」。'],
+     en:['1829','Döbereiner\'s triads','Johann Döbereiner grouped similar elements in threes, where the middle element\'s atomic weight is close to the average of the other two: Li–Na–K, Ca–Sr–Ba, Cl–Br–I. It was one of the first hints that elements form families.','On the table: no table yet, only separate triads.']}},
+ {y:1862,layout:null,hl:[],r:[2,4],
+  t:{zh:['1862','地球螺旋','法国地质学家德尚库图瓦把元素按原子量标在一个圆柱上，圆柱周长为 16 个单位，于是性质相似的元素上下对齐。发表的论文里漏掉了他的原图，行文又用了很多地质学术语，这个想法几乎没有引起化学家的注意。','表格上：不是格子，是螺旋线，但「竖向对齐 = 家族」已经出现。'],
+     en:['1862','The telluric screw','The French geologist Alexandre-Émile Béguyer de Chancourtois plotted the elements by atomic weight on a cylinder with a circumference of 16 units, so that similar elements lined up above one another. His published paper left out the original diagram and was written in geological terms, so chemists paid it little attention.','On the table: a helix, not a grid, but "aligned vertically = same family" is already there.']}},
+ {y:1866,layout:null,hl:[],r:[2,5],
+  t:{zh:['1863–66','纽兰兹八音律','英国的纽兰兹在 1863–66 年间发表了「八音律」：元素按原子量排队，每隔八个就出现性质相似的元素，像音阶一样。1866 年 3 月 1 日他在伦敦化学会宣读时遭到嘲笑，有人半开玩笑地问他是否试过按字母顺序排；化学会也拒绝发表这篇论文。','表格上：每行七个，惰性气体当时还没有被发现。'],
+     en:['1863–66','Newlands\' law of octaves','John Newlands published his "law of octaves" in 1863–66: ordered by atomic weight, similar elements recur every eighth place, like notes in a musical scale. When he presented it to the Chemical Society in London on 1 March 1866 he was mocked, and one listener asked whether he had tried arranging the elements alphabetically. The Society also declined to publish the paper.','On the table: rows of seven; the noble gases were not yet known.']}},
+ {y:1870,layout:null,hl:[],r:[3,6],
+  t:{zh:['1864–70','迈尔的表与折线图','德国的迈尔在 1864 年的教科书里已经有一张按化合价分族的元素表。1868 年前后他又做出一张与门捷列夫极为相似的表，因出版延误到 1870 年才发表，并配有原子体积随原子量变化的折线图，把「周期性」直接画成了波浪。两人为此发生过优先权之争。','表格上：同一批规律，换成曲线来看。'],
+     en:['1864–70','Meyer\'s table and chart','Lothar Meyer\'s 1864 textbook already contained a table of elements grouped into families by valence. Around 1868 he produced a table strikingly similar to Mendeleev\'s; publication was delayed until 1870, and it came with a line chart of atomic volume against atomic weight that drew the periodicity as a wave. The two men fell into a priority dispute.','On the table: the same pattern, seen as a curve.']}},
+ {y:1871,layout:'mend',hl:[21,31,32,43],r:[2,3,6,7],
+  t:{zh:['1869–71','门捷列夫','门捷列夫在 1869 年 2 月 17 日发现了周期律；他当时生病，3 月 6 日由同事门舒特金在俄罗斯化学会上代为宣读。当时已知 63 种元素。他按原子量排序，但更相信化学性质：必要时调换相邻元素的顺序，并为尚未发现的元素留出空格，预言了类硼、类铝、类硅。镓（1875，类铝）、钪（1879，类硼）、锗（1886，类硅）陆续被发现，与预言相符；类锰要到 1937 年才以锝的形式出现。1871 年的版本有 12 行（Reihen）。','表格上：虚线格是他留下的空位（Sc、Ga、Ge、Tc）。拖动年份，看它们何时被填上。'],
+     en:['1869–71','Mendeleev','Dmitri Mendeleev discovered the periodic system on 17 February 1869. He was ill, so his colleague Nikolai Menshutkin presented it to the Russian Chemical Society on 6 March. Sixty-three elements were known. He sorted by atomic weight but trusted chemical behaviour more: he sometimes swapped neighbouring elements and left gaps for undiscovered ones, predicting eka-boron, eka-aluminium and eka-silicon. Gallium (1875, eka-aluminium), scandium (1879, eka-boron) and germanium (1886, eka-silicon) matched; eka-manganese only appeared in 1937, as technetium. The 1871 version has 12 rows (Reihen).','On the table: dashed boxes are his gaps (Sc, Ga, Ge, Tc). Drag the slider to see when each was filled.']}},
+ {y:1902,layout:'long',hl:[2,10,18,36,54,86],r:[3,6],
+  t:{zh:['1894–1902','惰性气体','瑞利与拉姆齐在 1894 年分离出氩，它不符合当时的周期律；1898 年拉姆齐小组又找到氖、氪、氙，氡在 1900 年出现。它们没有一个是被预言的，化学家们用了约六年才把它们作为新的一列放进表里，位于卤素与碱金属之间。1900 年前后出现了设立「零族」的提议，1902 年门捷列夫正式把它们加进自己的表。','表格上：多出一整列。'],
+     en:['1894–1902','The noble gases','Rayleigh and Ramsay isolated argon in 1894, and it did not fit the periodic law; Ramsay\'s group found neon, krypton and xenon in 1898, and radon followed in 1900. None had been predicted, and it took about six years to fit them in as a new column between the halogens and the alkali metals. Around 1900 a "group 0" was proposed, and in 1902 Mendeleev added the noble gases to his own table.','On the table: a whole new column appears.']}},
+ {y:1905,layout:'wide',hl:[],r:[6],
+  t:{zh:['1905','维尔纳与 32 列形式','瑞士化学家维尔纳在 1905 年把镧系（稀土元素）放进了门捷列夫表里的空档，由此出现了最早的 32 列形式。','表格上：镧系回到主表中间，表格变宽了。今天最常见的 18 列版本，是后来把 f 区拆出去之后的样子。'],
+     en:['1905','Werner and the 32-column form','In 1905 the Swiss chemist Alfred Werner placed the lanthanides (rare earths) in the gap in Mendeleev\'s table, which gave the first appearance of the 32-column form.','On the table: the lanthanides sit inside the main body and the table gets wider. The familiar 18-column version came later, when the f-block was pulled out.']}},
+ {y:1913,layout:'long',hl:[18,19,52,53,43,61,75,72],r:[3,6,10],
+  t:{zh:['1913','莫塞莱与原子序数','莫塞莱在 1913 年发现元素 X 射线谱线的频率与一个整数有关，这个整数就是原子序数。排序的依据由此从原子量换成原子序数：氩排在钾前面，碲/碘的顺序问题也随之解决。他还指出 43、61、75 号三处空位；72 号同样空着，但他漏看了，因为当时有人错误地宣称已经发现了它。','表格上：排序标准改变，空位变得可以精确数出来。'],
+     en:['1913','Moseley and atomic number','In 1913 Henry Moseley found that the frequencies of lines in an element\'s X-ray spectrum depend on a whole number, the atomic number. Atomic number replaced atomic weight as the ordering principle: argon goes before potassium, and the tellurium–iodine problem is resolved. He pointed out gaps at 43, 61 and 75; number 72 was empty too, but he missed it because its discovery had been wrongly claimed.','On the table: the sorting rule changes, and the gaps can be counted exactly.']}},
+ {y:1923,layout:'long',hl:[72],r:[8,9],
+  t:{zh:['1922–23','玻尔与铪','玻尔的原子理论预言 72 号元素应与锆相近，而不是稀土；当时英法有人声称它是稀土元素。赫维西与科斯特在玻尔的哥本哈根研究所检验，约在 1922 年底得出结论，1923 年公布，元素以哥本哈根的拉丁名命名为铪（Hafnium）。','表格上：电子壳层第一次为 2、8、8、18、18、32、32 这串行长度提供了理由。'],
+     en:['1922–23','Bohr and hafnium','Bohr\'s atomic theory predicted that element 72 should resemble zirconium rather than the rare earths, while claims from England and France said it was a rare earth. Hevesy and Coster tested the question at Bohr\'s institute in Copenhagen, reaching their conclusion around the end of 1922 and publishing in 1923. The element was named hafnium, after the Latin name of Copenhagen.','On the table: electron shells give the row lengths 2, 8, 8, 18, 18, 32, 32 a reason for the first time.']}},
+ {y:1928,layout:'janet',hl:[2,4],r:[12],
+  t:{zh:['1928','让内特的左阶式','法国工程师让内特在 1928 年前后提出了左阶式：每一行对应同一个 n+ℓ 值（与 Madelung 规则一致），亚层从左到右按 f、d、p、s 排列，s 区在最右，氢和氦位于锂和铍的上方。它在法国基本被忽视，约 40 年后才被美国化学家重新提起（Mazurs，1974），近年又因 Scerri 的推广而受到关注。','表格上：没有被拆到底部的两行。拖动年份，看 1928 年时它还有哪些空位。'],
+     en:['1928','Janet\'s left-step table','Around 1928 the French engineer Charles Janet proposed the left-step table: each row corresponds to one value of n+ℓ (consistent with the Madelung rule), subshells run left to right as f, d, p, s so the s-block is on the far right, and hydrogen and helium sit above lithium and beryllium. It was largely ignored in France and resurfaced about 40 years later among American chemists (Mazurs, 1974), and Eric Scerri has recently brought it renewed attention.','On the table: no detached bottom rows. Check the slider at 1928 to see which gaps it still had.']}},
+ {y:1945,layout:'long',hl:[89,90,91,92,93,94,95,96,97,98,99,100,101,102],r:[6,11],
+  t:{zh:['1944–45','西博格与锕系','1944 年 7 月，西博格在一份保密报告里提出把钍、镤、铀移出主表，作为一条独立横行（锕系）的开头：钍（90）到 103 号这 14 个元素与镧系相似。他的团队据此类比，在 1944–45 年间合成并鉴定了 95 号（镅）和 96 号（锔）。这个想法 1945 年提出后被广泛接受，今天标准表底部的两条分离横行由此而来。','表格上：镧系与锕系各自拉成一行，放到主表下面。'],
+     en:['1944–45','Seaborg and the actinides','In July 1944 Glenn Seaborg proposed in a secret report that thorium, protactinium and uranium be moved out of the main body and placed at the start of a separate row, the actinides: the 14 elements from thorium (90) to 103 are analogous to the lanthanides. Using that analogy his team synthesised and identified element 95 (americium) and element 96 (curium) in 1944–45. The idea, put forward in 1945, gained wide acceptance and gave the two detached bottom rows of the standard table.','On the table: lanthanides and actinides each become a row below the main body.']}},
+ {y:2016,layout:'long',hl:[113,115,117,118],r:[13,14],
+  t:{zh:['2016','第七周期排满','国际纯粹与应用化学联合会（IUPAC）理事会于 2016 年 11 月 28 日批准了 113、115、117、118 号元素的名称（Nh、Mc、Ts、Og），第七周期因此排满。第 3 族到底是 Sc–Y–Lu–Lr 还是 Sc–Y–La–Ac，目前仍无定论：2021 年的一份临时报告认为没有客观的办法裁决，只是略偏向 Lu/Lr；本页采用 Lu/Lr。','表格上：右下角补齐，七行全满。'],
+     en:['2016','Period 7 completed','On 28 November 2016 the IUPAC Bureau approved the names of elements 113, 115, 117 and 118 (Nh, Mc, Ts, Og), completing the seventh row. Whether group 3 is Sc–Y–Lu–Lr or Sc–Y–La–Ac remains open: a 2021 provisional report said there is no objective way to decide, while leaning slightly towards Lu/Lr. This page uses Lu/Lr.','On the table: the lower right is filled and all seven rows are complete.']}}
+];
+
+const REFS=[
+ {n:1,title:'Why Does the Periodic Table Have This Strange Shape? Nobody Explained It Like THIS!',by:'The Chemistry Story (YouTube)',url:'https://www.youtube.com/watch?v=ztpPty3WSiY',
+  use:{zh:'本页的出发点。我只核对了标题和频道信息，没有读到字幕，因此页面并不代表这个视频的具体论述。',en:'The starting point of this page. Only the title and channel were checked and no transcript was available, so the page does not claim to follow the video\'s own argument.'}},
+ {n:2,title:'Finding the periodic table',by:'Royal Society of Chemistry, 2019',url:'https://www.rsc.org/news-events/features/2019/jan/finding-the-periodic-table',
+  use:{zh:'德贝莱纳三元素组（1829）、地球螺旋（1862）、纽兰兹 1863–66 年的八音律与 1866 年 3 月 1 日的宣读、门捷列夫 1869 年的发现与留空位。',en:'Döbereiner\'s triads (1829), the telluric screw (1862), Newlands\' octaves in 1863–66 and the 1 March 1866 presentation, and Mendeleev\'s 1869 discovery and gaps.'}},
+ {n:3,title:'The Evolution of the Periodic System',by:'Scientific American',url:'https://www.scientificamerican.com/article/the-evolution-of-the-periodic-system/',
+  use:{zh:'1869 年的表含 63 种元素；迈尔 1868 年的表与 1870 年的发表；惰性气体用了约六年并入；莫塞莱 1913 年的工作与碘/碲问题。',en:'The 63 elements of the 1869 table; Meyer\'s 1868 table and its 1870 publication; the roughly six years it took to fit the noble gases in; Moseley\'s 1913 work and the iodine–tellurium problem.'}},
+ {n:4,title:'Alexandre-Émile Béguyer de Chancourtois',by:'Wikipedia',url:'https://en.wikipedia.org/wiki/Alexandre-%C3%89mile_B%C3%A9guyer_de_Chancourtois',
+  use:{zh:'圆柱周长 16 个单位；论文里漏掉了原图；地质学术语使化学家难以接受。',en:'The 16-unit circumference; the missing diagram in the paper; the geological framing that put chemists off.'}},
+ {n:5,title:'Post on John Newlands and his periodic table',by:'Oxford University Press blog, August 2014',url:'https://blog.oup.com/2014/08/newlands-periodic-table-elements-chemistry/',
+  use:{zh:'在化学会宣读时有人半开玩笑地问他是否试过按字母顺序排；化学会拒绝发表。',en:'The mocking question about alphabetical order at the Chemical Society, and the Society\'s refusal to publish.'}},
+ {n:6,title:'History of the periodic table',by:'Wikipedia',url:'https://en.wikipedia.org/wiki/History_of_the_periodic_table',
+  use:{zh:'迈尔 1864 年的分族表与 1870 年发表的表和折线图；门捷列夫对类硼、类铝、类硅的预言；氩与其余惰性气体、「零族」的提议与 1902 年并入；维尔纳 1905 年的 32 列形式；莫塞莱的氩/钾顺序；西博格 1945 年的锕系。',en:'Meyer\'s 1864 family table and the table and line chart published in 1870; Mendeleev\'s predictions of eka-boron, eka-aluminium and eka-silicon; argon and the other noble gases, the group 0 proposal and its 1902 adoption; Werner\'s 32-column form in 1905; Moseley and the argon/potassium order; Seaborg\'s 1945 actinides.'}},
+ {n:7,title:'Mendeleev\'s predicted elements',by:'Wikipedia',url:'https://en.wikipedia.org/wiki/Mendeleev%27s_predicted_elements',
+  use:{zh:'类硼 = 钪（1879）、类铝 = 镓（1875）、类硅 = 锗（1886）、类锰 = 锝（1937）。',en:'Eka-boron = scandium (1879), eka-aluminium = gallium (1875), eka-silicon = germanium (1886), eka-manganese = technetium (1937).'}},
+ {n:8,title:'Hafnium',by:'Los Alamos National Laboratory, Periodic Table of Elements',url:'https://periodic.lanl.gov/72.shtml',
+  use:{zh:'1923 年由科斯特与赫维西发现；按玻尔理论应与锆相关；用 X 射线光谱在挪威锆石中确认。',en:'Discovered in 1923 by Coster and Hevesy; expected from Bohr\'s theory to be associated with zirconium; identified in Norwegian zircon by X-ray spectroscopy.'}},
+ {n:9,title:'Hafnium (history page)',by:'Niels Bohr Institute, University of Copenhagen',url:'https://nbi.ku.dk/english/www/institute/History/Hafnium',
+  use:{zh:'玻尔的理论把 72 号元素排除在稀土之外；与英法的稀土说法冲突；赫维西与科斯特在哥本哈根检验，约 1922 年底确认；命名为铪。',en:'Bohr\'s theory placed element 72 outside the rare earths, against the claims from England and France; Hevesy and Coster tested it in Copenhagen around the end of 1922; the name hafnium.'}},
+ {n:10,title:'Henry Moseley',by:'Encyclopaedia Britannica',url:'https://www.britannica.com/biography/Henry-Moseley',
+  use:{zh:'1913 年的莫塞莱定律；1914 年得出原子序数等于核电荷；43、61、75 号空位，以及他漏看了 72 号。',en:'Moseley\'s law (1913); the 1914 conclusion that atomic number equals nuclear charge; the gaps at 43, 61 and 75, and his missing 72.'}},
+ {n:11,title:'Source of the actinide concept',by:'Los Alamos National Laboratory, Actinide Research Quarterly',url:'https://www.lanl.gov/media/publications/actinide-research-quarterly/0521-source-of-the-actinide-concept',
+  use:{zh:'1944 年 7 月的保密报告；把钍、镤、铀作为独立横行的开头；90–103 号与镧系类比；95 号与 96 号的合成。',en:'The July 1944 secret report; thorium, protactinium and uranium placed at the start of a separate row; elements 90–103 as an analogue of the lanthanides; the synthesis of elements 95 and 96.'}},
+ {n:12,title:'Charles Janet',by:'Wikipedia',url:'https://en.wikipedia.org/wiki/Charles_Janet',
+  use:{zh:'1928 年前后的左阶式；每行对应一个 n+ℓ；氢、氦的位置；在法国被忽视，Mazurs 1974 年重提，Scerri 近年推广。',en:'The left-step table of around 1928; one n+ℓ per row; where hydrogen and helium sit; ignored in France, revived by Mazurs in 1974 and promoted by Scerri recently.'}},
+ {n:13,title:'IUPAC Announces the Names of the Elements 113, 115, 117, and 118',by:'IUPAC, 30 November 2016',url:'https://iupac.org/iupac-announces-the-names-of-the-elements-113-115-117-and-118/',
+  use:{zh:'理事会 2016 年 11 月 28 日批准名称；第七行排满。',en:'The Bureau approved the names on 28 November 2016; the seventh row is complete.'}},
+ {n:14,title:'Provisional Report on Discussions on Group 3 of the Periodic Table',by:'E. Scerri, Chemistry International 43(1), 31–34 (2021)',url:'https://www.degruyterbrill.com/document/doi/10.1515/ci-2021-0115/html?lang=en',
+  use:{zh:'没有客观办法在 Sc–Y–La–Ac 与 Sc–Y–Lu–Lr 之间裁决，只是略偏向后者；报告为临时性质。',en:'No objective means to choose between Sc–Y–La–Ac and Sc–Y–Lu–Lr, with a tentative lean towards the latter; the report is provisional.'}}
+];
+
+const I18N={
+ zh:{title:'周期表演化史',
+  sub:'同一批 118 个元素，在不同年代被折成不同的形状。点下方的历史节点，或拖动年份，看表格怎样长成今天的样子。',
+  layout:'版式',color:'着色',timeline:'历史节点',
+  lay:{mend:'门捷列夫短式',long:'18 列长式',wide:'32 列宽式',janet:'让内特左阶式'},
+  mode:{block:'按轨道区块',era:'按发现年代'},
+  cap:{mend:'门捷列夫 1871 年样式的简化重绘：8 族、12 行，只显示他当时排进表里的元素，虚线是他留的空位。',
+       long:'18 列长式：今天最常见的样子。f 区被单独拉出来放在表下方。',
+       wide:'32 列宽式：f 区放回原位，没有被拆出去的两行，只是太宽，不方便印在纸上。',
+       janet:'让内特左阶式：每一行对应 n+l 相同的一组亚层，行长成对出现 2、2、8、8、18、18、32、32。'},
+  play:'▶ 播放',pause:'❚❚ 暂停',known:'已发现',ant:'古代',
+  blocks:{s:'s 区（2 列）',p:'p 区（6 列）',d:'d 区（10 列）',f:'f 区（14 列）'},
+  eras:['古代','1799 前','1800–68','1869–99','1900–44','1945 起'],
+  pick:'点击元素格查看详情',per:'第 {n} 周期',bl:'{b} 区',disc:'发现',
+  whyH:'为什么是这个形状',
+  whyP:'表格的宽度来自亚层能容纳的电子数：s 有 2 个、p 有 6 个、d 有 10 个、f 有 14 个。电子按下面这个顺序填充（Madelung 规则）。把这一条序列一行一行折起来，就是周期表；不同版本的区别，只是怎么折。',
+  whyNote:'这里用的是理想化的填充顺序，铬、铜等少数元素实际有例外。第 3 族按 Sc–Y–Lu–Lr 处理。',
+  foot1:'页面内容依据视频主题与「参考与引用」中列出的公开来源整理，不是视频逐字稿。',
+  refH:'参考与引用',
+  refLede:'下面是页面里各个说法所依据的来源，每个历史节点卡片末尾用 [编号] 标出对应条目。我只引用了亲自打开并读过的页面。',
+  srcLabel:'来源',
+  refDiscH:'来源之间的出入',
+  refDisc:['纽兰兹宣读的年份：RSC 记为 1866 年 3 月 1 日，OUP 博客则说发生在他 1864 年文章的「次年」，也就是 1865 年。本页采用 1866 年。','迈尔 1864 年那张表的元素数：不同来源有 28 和 44 两种说法，所以页面里不写具体数字。','铪：LANL 把发现记在 1923 年，NBI 的页面说验证约在 1922 年底。页面写「约 1922 年底验证、1923 年公布」，年份表取 1923。','锔：LANL 的文章把 96 号元素记在 1945 年，通行说法常记作 1944 年。年份表取 1944，最多相差一年。'],
+  refLimH:'这一页的局限',
+  refLim:'元素发现年份表（118 个）没有逐个对照单一来源，取自教科书里的通行说法，个别有争议（如 102–105 号）；滑块旁的「已发现」数量按这张表统计，因此和历史上的计数（例如 1869 年的 63 种）不一致。门捷列夫 1871 年样式是本页的简化重绘，其余几种版式的位置由理想化的 Madelung 填充顺序计算得出，都不是历史原图。标注为 Wikipedia 的条目是二手综述，适合入门核对，重要结论建议回到原始文献。',
+  further:'延伸阅读（未用于具体论断）：Eric Scerri, The Periodic Table: Its Story and Its Significance, 2nd ed., Oxford University Press, 2020.',
+  foot2:'相关视频：Why Does the Periodic Table Have This Strange Shape?（The Chemistry Story）'},
+ en:{title:'Periodic Table Evolution',
+  sub:'The same 118 elements, folded into different shapes over time. Pick a milestone below or drag the year to watch the table grow into today\'s form.',
+  layout:'Layout',color:'Colour',timeline:'Milestones',
+  lay:{mend:'Mendeleev short form',long:'18-column long form',wide:'32-column wide form',janet:'Janet left-step'},
+  mode:{block:'By block',era:'By discovery era'},
+  cap:{mend:'A simplified redraw of Mendeleev\'s 1871 style: 8 groups, 12 rows, only the elements he placed. Dashed boxes are the gaps he left.',
+       long:'The 18-column long form, the one in most textbooks. The f-block is pulled out and placed below.',
+       wide:'The 32-column wide form: the f-block stays in place, with no detached rows. It is simply too wide for most pages.',
+       janet:'Janet\'s left-step table: each row groups subshells with the same n+l, so row lengths come in pairs: 2, 2, 8, 8, 18, 18, 32, 32.'},
+  play:'▶ Play',pause:'❚❚ Pause',known:'Discovered',ant:'Antiquity',
+  blocks:{s:'s-block (2 columns)',p:'p-block (6)',d:'d-block (10)',f:'f-block (14)'},
+  eras:['Antiquity','Before 1800','1800–68','1869–99','1900–44','1945 on'],
+  pick:'Click a cell for details',per:'Period {n}',bl:'{b}-block',disc:'discovered',
+  whyH:'Why this shape',
+  whyP:'The widths come from how many electrons each subshell holds: 2 for s, 6 for p, 10 for d, 14 for f. Electrons fill in the order below (the Madelung rule). Fold that single sequence into rows and you get a periodic table; the versions differ only in where they fold.',
+  whyNote:'This uses the idealised filling order; a few elements such as Cr and Cu are real exceptions. Group 3 is treated as Sc–Y–Lu–Lr.',
+  foot1:'Built from the video\'s topic and the public sources listed under References, not from a transcript.',
+  refH:'References',
+  refLede:'These are the sources behind the claims on this page; each milestone card ends with [number] markers pointing to the entries below. I only cite pages I actually opened and read.',
+  srcLabel:'Sources',
+  refDiscH:'Where sources disagree',
+  refDisc:['Date of Newlands\' presentation: the RSC gives 1 March 1866, while the OUP blog places it in the year after his 1864 articles, which would be 1865. This page uses 1866.','Number of elements in Meyer\'s 1864 table: sources say 28 and 44, so the page gives no number.','Hafnium: LANL records the discovery in 1923, while the NBI page says the check was made around the end of 1922. The page says "confirmed around the end of 1922, published 1923" and the year table uses 1923.','Curium: the LANL article places element 96 in 1945, while the usual account often says 1944. The year table uses 1944, at most a year off.'],
+  refLimH:'Limits of this page',
+  refLim:'The discovery-year table for all 118 elements was not checked entry by entry against a single source; it follows common textbook accounts, and a few entries (around elements 102–105) are disputed. The "Discovered" count next to the slider is computed from that table, so it can differ from historical tallies such as the 63 elements known in 1869. The Mendeleev 1871 layout is a simplified redraw, and the other layouts are computed from the idealised Madelung filling order; none of them is a historical original. Entries marked Wikipedia are secondary overviews, fine for a first check, but important claims should be traced back to the original literature.',
+  further:'Further reading (not used for specific claims): Eric Scerri, The Periodic Table: Its Story and Its Significance, 2nd ed., Oxford University Press, 2020.',
+  foot2:'Related video: Why Does the Periodic Table Have This Strange Shape? (The Chemistry Story)'}
+};
+
+const $=s=>document.querySelector(s);
+const state={lang:(navigator.language||'').toLowerCase().startsWith('zh')?'zh':'en',layout:'long',mode:'block',year:2016,hl:new Set([113,115,117,118]),m:MS.length-1,sel:null};
+const MINY=1700,MAXY=2016,LG=40,TG=26;
+const stage=$('#stage'),scroll=$('#scroll'),slider=$('#slider');
+let pitch=44,timer=null;
+
+const cells=EL.map(e=>{
+  const c=document.createElement('button');c.type='button';c.className='cell';
+  c.innerHTML='<i>'+e.z+'</i><b>'+e.s+'</b>';
+  c.addEventListener('click',()=>{state.sel=e.z;showSel();paint();});
+  stage.appendChild(c);return c;
+});
+const last=new Array(EL.length).fill(null);
+
+function T(){return I18N[state.lang];}
+function yl(e){return e.y===0?T().ant:String(e.y);}
+
+function build(){
+  const t=T();
+  document.documentElement.lang=state.lang==='zh'?'zh-CN':'en';
+  document.querySelectorAll('[data-i]').forEach(n=>{n.textContent=t[n.dataset.i];});
+  $('#bzh').setAttribute('aria-pressed',state.lang==='zh');$('#ben').setAttribute('aria-pressed',state.lang==='en');
+  const sl=$('#segLayout');sl.innerHTML='';
+  Object.keys(t.lay).forEach(k=>{const b=document.createElement('button');b.type='button';b.textContent=t.lay[k];b.setAttribute('aria-pressed',state.layout===k);b.onclick=()=>{state.layout=k;build();relayout();paint();};sl.appendChild(b);});
+  const sm=$('#segMode');sm.innerHTML='';
+  Object.keys(t.mode).forEach(k=>{const b=document.createElement('button');b.type='button';b.textContent=t.mode[k];b.setAttribute('aria-pressed',state.mode===k);b.onclick=()=>{state.mode=k;build();paint();};sm.appendChild(b);});
+  $('#caption').textContent=t.cap[state.layout];
+  $('#play').textContent=timer?t.pause:t.play;
+  const lg=$('#legend');lg.innerHTML='';
+  if(state.mode==='block'){['s','p','d','f'].forEach(b=>{lg.insertAdjacentHTML('beforeend','<span><em style="--blk:var(--'+b+')"></em>'+t.blocks[b]+'</span>');});}
+  else{t.eras.forEach((n,i)=>{lg.insertAdjacentHTML('beforeend','<span><em style="--blk:var(--e'+i+')"></em>'+n+'</span>');});}
+  const ch=$('#chips');ch.innerHTML='';
+  MS.forEach((m,i)=>{const b=document.createElement('button');b.type='button';b.className='chip';const tt=m.t[state.lang];
+    b.innerHTML='<small>'+tt[0]+'</small>'+tt[1];b.setAttribute('aria-pressed',state.m===i);b.onclick=()=>pickMilestone(i);ch.appendChild(b);});
+  card();renderRefs();
+  cells.forEach((c,i)=>{const e=EL[i];c.title=(state.lang==='zh'?e.zh+' ':'')+e.en+' · Z='+e.z+' · '+yl(e);});
+  showSel();updYear();
+}
+function card(){
+  const el=$('#card');if(state.m<0){el.innerHTML='';return;}
+  const m=MS[state.m],tt=m.t[state.lang];
+  el.innerHTML='<div class="when"></div><h3></h3><p class="body"></p><p class="note"></p><p class="srcs"></p>';
+  el.children[0].textContent=tt[0];el.children[1].textContent=tt[1];el.children[2].textContent=tt[2];el.children[3].textContent=tt[3];
+  const sr=el.children[4];sr.append(T().srcLabel+' ');
+  m.r.forEach(n=>{const a=document.createElement('a');a.href='#ref-'+n;a.dataset.ref=n;a.textContent='['+n+']';sr.appendChild(a);});
+}
+function renderRefs(){
+  const t=T(),ul=$('#refList');ul.innerHTML='';
+  REFS.forEach(r=>{
+    const li=document.createElement('li');li.id='ref-'+r.n;
+    const a=document.createElement('a');a.href=r.url;a.target='_blank';a.rel='noopener';a.textContent=r.title;
+    li.append('['+r.n+'] ',a,' — '+r.by);
+    const u=document.createElement('span');u.className='use';u.textContent=r.use[state.lang];li.appendChild(u);
+    ul.appendChild(li);
+  });
+  const d=$('#refDisc');d.innerHTML='';
+  t.refDisc.forEach(x=>{const li=document.createElement('li');li.textContent=x;d.appendChild(li);});
+}
+$('#card').addEventListener('click',ev=>{
+  const a=ev.target.closest('a[data-ref]');if(!a)return;
+  ev.preventDefault();
+  const li=document.getElementById('ref-'+a.dataset.ref);if(!li)return;
+  li.scrollIntoView({block:'center'});li.classList.add('flash');setTimeout(()=>li.classList.remove('flash'),1800);
+});
+function showSel(){
+  const t=T(),el=$('#selinfo');
+  if(state.sel==null){el.textContent=t.pick;return;}
+  const e=EL[state.sel-1];
+  el.textContent=(state.lang==='zh'?e.zh+' ':'')+e.en+' ('+e.s+') · Z='+e.z+' · '+t.disc+' '+yl(e)+' · '+t.per.replace('{n}',e.per)+' · '+t.bl.replace('{b}',e.b);
+}
+function updYear(){
+  $('#yr').textContent=state.year;slider.value=state.year;
+  const n=EL.filter(e=>e.y<=state.year).length;
+  $('#count').textContent=T().known+' '+n+' / 118';
+}
+
+function labelsFor(k){
+  const L=[];
+  if(k==='mend'){['I','II','III','IV','V','VI','VII'].forEach((t,c)=>L.push({k:'c',c,s:1,t}));L.push({k:'c',c:7,s:3,t:'VIII',sp:1});for(let r=0;r<12;r++)L.push({k:'r',r,t:String(r+1)});}
+  else if(k==='long'){for(let c=0;c<18;c++)L.push({k:'c',c,s:1,t:String(c+1)});for(let r=0;r<7;r++)L.push({k:'r',r,t:String(r+1)});L.push({k:'r',r:8,t:'57–70'});L.push({k:'r',r:9,t:'89–102'});}
+  else if(k==='wide'){L.push({k:'c',c:0,s:2,t:'s',sp:1},{k:'c',c:2,s:14,t:'f',sp:1},{k:'c',c:16,s:10,t:'d',sp:1},{k:'c',c:26,s:6,t:'p',sp:1});for(let r=0;r<7;r++)L.push({k:'r',r,t:String(r+1)});}
+  else{L.push({k:'c',c:0,s:14,t:'f',sp:1},{k:'c',c:14,s:10,t:'d',sp:1},{k:'c',c:24,s:6,t:'p',sp:1},{k:'c',c:30,s:2,t:'s',sp:1});for(let r=0;r<8;r++)L.push({k:'r',r,t:String(r+1)});}
+  return L;
+}
+function relayout(){
+  const k=state.layout,d=DIM[k];
+  const avail=scroll.clientWidth-20-LG;
+  pitch=Math.max(30,Math.min(46,Math.floor(avail/d.cols)));
+  stage.style.setProperty('--cs',(pitch-3)+'px');
+  stage.style.width=(LG+d.cols*pitch)+'px';stage.style.height=(TG+d.rows*pitch)+'px';
+  stage.querySelectorAll('.lab').forEach(n=>n.remove());
+  labelsFor(k).forEach(l=>{
+    const n=document.createElement('div');n.className='lab'+(l.sp?' span':'');n.textContent=l.t;
+    if(l.k==='c'){n.style.cssText='left:'+(LG+l.c*pitch)+'px;top:0;width:'+(l.s*pitch-3)+'px;height:'+(TG-4)+'px';}
+    else{n.style.cssText='left:0;top:'+(TG+l.r*pitch)+'px;width:'+(LG-6)+'px;height:'+(pitch-3)+'px';}
+    stage.appendChild(n);
+  });
+  cells.forEach((c,i)=>{
+    const p=POS(k,EL[i]);
+    if(p){last[i]=[LG+p[1]*pitch,TG+p[0]*pitch];}
+    const q=last[i]||[LG,TG];
+    c.style.transform='translate('+q[0]+'px,'+q[1]+'px)';
+  });
+}
+function paint(){
+  const k=state.layout;
+  cells.forEach((c,i)=>{
+    const e=EL[i],p=POS(k,e),known=e.y<=state.year,gap=k==='mend'&&GAP[e.z];
+    c.classList.toggle('hide',!p);
+    c.classList.toggle('ghost',!!gap&&!known);
+    c.classList.toggle('pred',!!gap&&known);
+    c.classList.toggle('off',!!p&&!known&&!gap);
+    c.classList.toggle('hl',state.hl.has(e.z));
+    c.classList.toggle('sel',state.sel===e.z);
+    c.querySelector('b').textContent=(gap&&!known)?'?':e.s;
+    c.style.setProperty('--blk',state.mode==='block'?'var(--'+e.b+')':'var(--e'+era(e.y)+')');
+  });
+}
+function stop(){if(timer){clearInterval(timer);timer=null;$('#play').textContent=T().play;}}
+function pickMilestone(i){
+  stop();const m=MS[i];state.m=i;if(m.layout)state.layout=m.layout;
+  state.year=m.y;state.hl=new Set(m.hl);build();relayout();paint();
+}
+$('#play').onclick=()=>{
+  if(timer){stop();return;}
+  if(state.year>=MAXY)state.year=MINY;
+  state.hl=new Set();state.m=-1;
+  timer=setInterval(()=>{state.year=Math.min(MAXY,state.year+2);paint();updYear();if(state.year>=MAXY)stop();},70);
+  build();paint();
+};
+slider.addEventListener('input',()=>{stop();state.year=+slider.value;paint();updYear();});
+$('#bzh').onclick=()=>{state.lang='zh';build();};
+$('#ben').onclick=()=>{state.lang='en';build();};
+let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{relayout();},120);});
+
+build();relayout();paint();
+</script>
+
+</body>
+</html>

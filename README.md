@@ -12,7 +12,7 @@ One folder per artifact, named `<slug>-v<version>`. Each folder holds the page a
 | `maze-lab-v1794460546-92df/` | Maze Lab: 10 generators, 9 solvers, structure metrics | version id `1794460546-92df` | 63.4 KB |
 | `star-globe-v1.8.0/` | 星图球 Star Globe: 3D celestial globe with ecliptic and lunar orbit, bilingual star lookup | 1.8.0 | 81.6 KB |
 | `globe-painter-v3/` | 上色地球仪 Globe Painter: rotatable, see-through world globe; paint any country with adjustable opacity | 3 | 784.4 KB |
-| `molecule-library-v2/` | 分子知识库 Molecule Library: 111 molecules and elements in a 3D glass-style viewer, with bilingual trivia, details panel, drag and zoom | 2 | 68.3 KB |
+| `molecule-library-v3/` | 分子知识库 Molecule Library: 120 molecules and elements in a 3D glass-style viewer, compact library grid, placeholders, and a quality-monitor page | 3 | 88.8 KB |
 | `solar-orbits-v0.16.1/` | 太阳系轨道 Solar System Orbits: Mission replay (Voyager 1/2, New Horizons, Pioneer 10/11, DART) (任务回溯) inside the page — planets move by JPL approximate ephemerides, craft path = Lambert fit between real flyby dates, with drop-lines to the ecliptic | 0.16.1 | 156 KB |
 | `periodic-table-evolution-v2/` | 周期表演化史 Periodic Table Evolution: 118 elements slide between Mendeleev short form, 18-column long form, 32-column wide form and Janet left-step; 12 history milestones with inline citations, year slider, References section | 2 | 47.5 KB |
 

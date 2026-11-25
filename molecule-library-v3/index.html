@@ -59,26 +59,41 @@ button:focus-visible,input:focus-visible,a:focus-visible,.card:focus-visible{out
 .card:hover{border-color:var(--mu)}.card.on{border-color:var(--ac)}
 .card canvas{border-radius:8px;cursor:pointer}
 .card .t{font-size:14.5px;margin-top:8px}.card .f{padding:0 6px}
+.nav{gap:4px 12px;padding:calc(7px + env(safe-area-inset-top,0px)) 14px 7px}.brand{font-size:14.5px}.nav a{padding:3px 10px;font-size:13.5px}.lang button{padding:2px 10px}.ic{width:28px;height:28px}
+#v-library{max-width:1320px;padding:14px 14px 40px}#v-quality{max-width:980px}
+.kh{gap:8px;margin-bottom:10px}.kh input[type=search]{width:200px;padding:5px 12px}.chips{flex-wrap:wrap;gap:5px}.chips button{font-size:12px;padding:3px 11px}
+#grid.c{grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:8px}
+#grid.c .card{padding:5px 5px 8px;border-radius:10px}#grid.c .card canvas{aspect-ratio:1/1;border-radius:7px}
+#grid.c .card .t{font-size:12.5px;margin-top:5px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#grid.c .card .f{display:none}#grid.c .eye{top:8px;right:8px;font-size:10.5px;padding:0 7px;opacity:.7}
+.card.ph{border-style:dashed}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:14px 0}.qc{background:var(--card);border:1px solid var(--ln);border-radius:12px;padding:12px 14px}.qt{font-size:12px;color:var(--mu)}.qv{font-size:24px;font-weight:600;line-height:1.3}.qs{font-size:12px;color:var(--mu);margin-bottom:8px}.bar{height:6px;background:var(--ln);border-radius:3px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ac)}
+#qroot h3{font-size:15px;margin:22px 0 8px;display:flex;align-items:center;gap:12px}.rg{margin:8px 0}.rq{display:inline-block;font-size:12px;padding:1px 9px;border-radius:999px;border:1px solid var(--ln);margin:2px 3px 2px 0}.rq.done{background:var(--card)}.rq.ph{border-style:dashed;color:var(--mu)}.rq.missing{color:#c0553d;border-color:#c0553d}.mu{color:var(--mu);font-size:12.5px}
+.aud{width:100%;border-collapse:collapse;font-size:13px}.aud td{padding:6px 8px;border-top:1px solid var(--ln);vertical-align:top}.aud .an{max-width:240px}
+.lv{display:inline-block;font-size:12px;padding:0 8px;border-radius:999px;border:1px solid currentColor;margin:1px 2px 1px 0}.lv-fail{color:#c0553d}.lv-warn{color:#b88a1d}.lv-info{color:var(--mu)}.lv-ok{color:#5a8f4a}.lv-na{color:var(--mu)}
+.fb{display:grid;gap:8px;max-width:620px}.fb select,.fb textarea,#fbX{font:inherit;font-size:13px;color:inherit;background:var(--card);border:1px solid var(--ln);border-radius:10px;padding:6px 10px}#fbX,.fb textarea{width:100%;box-sizing:border-box}.fbl{padding-left:18px;font-size:13px}.fbl li{margin:6px 0}
+@media(max-width:560px){.brand{display:none}}
 </style>
 </head>
 <body>
 <header class="nav"><b class="brand" data-i="title"></b>
- <nav><a href="#viewer" data-v="viewer" data-i="nv"></a><a href="#library" data-v="library" data-i="nl"></a><a href="#builder" data-v="builder"><span data-i="nb"></span><span class="tag">deferred</span></a></nav>
+ <nav><a href="#viewer" data-v="viewer" data-i="nv"></a><a href="#library" data-v="library" data-i="nl"></a><a href="#builder" data-v="builder"><span data-i="nb"></span><span class="tag">deferred</span></a><a href="#quality" data-v="quality" data-i="nq"></a></nav>
  <div class="right"><div class="lang" role="group" aria-label="Language"><button data-l="zh">中文</button><button data-l="en">English</button></div><button class="ic" id="th">◐</button></div>
 </header>
 <main>
 <section id="v-viewer" class="view on"><p class="sub" data-i="sub"></p>
  <div class="vgrid"><div class="vmain"><div class="stage"><canvas id="cv"></canvas><button class="arr l" id="prev">‹</button><button class="arr r" id="next">›</button><div class="zm"><button id="zi">+</button><button id="zo">−</button><button id="zr">⟲</button><button id="zs">◎</button><button id="zmv">✥</button></div><div id="cap"></div></div>
  <div class="row"><div class="lg" id="lg"></div><span id="pos"></span><button id="hb" class="mini"></button></div><p class="hint" data-i="drag"></p></div><div class="box info" id="info"></div></div></section>
-<section id="v-library" class="view"><div class="kh"><h2><span data-i="nl"></span><small id="cnt"></small></h2><input id="q" type="search"><label class="sw"><input type="checkbox" id="sh"><span data-i="sh"></span></label><div class="chips"><button data-f="all"></button><button data-f="c"></button><button data-f="n"></button><button data-f="el"></button><button data-f="aa"></button><button data-f="vit"></button><button data-f="h"></button></div></div><div id="grid"></div></section>
+<section id="v-library" class="view"><div class="kh"><h2><span data-i="nl"></span><small id="cnt"></small></h2><input id="q" type="search"><label class="sw"><input type="checkbox" id="sh"><span data-i="sh"></span></label><label class="sw"><input type="checkbox" id="cp"><span data-i="cp"></span></label><div class="chips"><button data-f="all"></button><button data-f="c"></button><button data-f="n"></button><button data-f="el"></button><button data-f="aa"></button><button data-f="vit"></button><button data-f="ph"></button><button data-f="h"></button></div></div><div id="grid"></div></section>
 <section id="v-builder" class="view"><div class="box defer"><h2><span data-i="nb"></span><span class="tag">deferred</span></h2><p class="sub" data-i="bd"></p>
  <ul><li data-i="b1"></li><li data-i="b2"></li><li data-i="b3"></li></ul>
  <div class="pal" aria-hidden="true"><i style="background:#e8877b">H</i><i style="background:#e6c35c">C</i><i style="background:#96bf6c">N</i><i style="background:#8fb0e6">O</i></div></div></section>
+<section id="v-quality" class="view"><div id="qroot"></div></section>
 </main>
 <script>
 const EL={H:{c:'#e8877b',r:.26,v:1,z:'氢',e:'Hydrogen'},C:{c:'#e6c35c',r:.38,v:4,z:'碳',e:'Carbon'},N:{c:'#96bf6c',r:.36,v:3,z:'氮',e:'Nitrogen'},O:{c:'#8fb0e6',r:.35,v:2,z:'氧',e:'Oxygen'},P:{c:'#e0975f',r:.42,v:5,z:'磷',e:'Phosphorus'},S:{c:'#c3a6d6',r:.42,v:2,z:'硫',e:'Sulfur'},K:{c:'#d996a8',r:.45,v:1,z:'钾',e:'Potassium'},Cl:{c:'#6fc3b0',r:.42,v:1,z:'氯',e:'Chlorine'}};
-const T={zh:{title:'分子知识库',nv:'3D 浏览',nl:'知识库',nb:'搭建器',sub:'3D 查看分子结构，查阅名称、分子式和趣闻。',drag:'拖动旋转；按住 Shift 拖动、右键拖动、双指拖动或点 ✥ 按钮可以移动模型；滚轮或双指缩放；左右箭头切换分子。',bd:'自己搭建分子并收藏到知识库的功能，已推迟，当前版本不可用。',b1:'放置原子，自由连接单键、双键、三键',b2:'价键填满后自动识别分子',b3:'把搭好的分子收藏进知识库',q:'搜索名称、分子式、趣闻',all:'全部',c:'含碳',n:'无碳',h:'已隐藏',el:'元素',aa:'氨基酸',vit:'维生素',sh:'显示已隐藏的分子',hide:'隐藏',unhide:'取消隐藏',det:'详细信息',fo:'分子式',mm:'摩尔质量',na:'原子数',bn:'键数（单 / 双 / 三）',none:'没有匹配的条目',prev:'上一个',next:'下一个',zin:'放大',zout:'缩小',zrs:'重置视图',zs:'切换玻璃 / 平面质感',zmv:'移动 / 旋转模式',th:'切换明暗'},
-en:{title:'Molecule Library',nv:'3D Viewer',nl:'Library',nb:'Builder',sub:'View molecules in 3D, with names, formulas and trivia.',drag:'Drag to rotate; Shift-drag, right-drag, two-finger drag or the ✥ button moves the model; scroll or pinch to zoom; arrows switch molecules.',bd:'Building your own molecules and saving them to the library is deferred and not available in this version.',b1:'Place atoms and connect them with single, double or triple bonds',b2:'Recognize the molecule once all valences are filled',b3:'Save finished molecules into the library',q:'Search name, formula, trivia',all:'All',c:'Carbon',n:'No carbon',h:'Hidden',el:'Elements',aa:'Amino acids',vit:'Vitamins',sh:'Show hidden molecules',hide:'Hide',unhide:'Unhide',det:'Details',fo:'Formula',mm:'Molar mass',na:'Atoms',bn:'Bonds (1 / 2 / 3)',none:'No matches',prev:'Previous',next:'Next',zin:'Zoom in',zout:'Zoom out',zrs:'Reset view',zs:'Toggle glass / flat look',zmv:'Move / rotate mode',th:'Toggle light or dark'}};
+const T={zh:{title:'分子知识库',nv:'3D 浏览',nl:'知识库',nb:'搭建器',sub:'3D 查看分子结构，查阅名称、分子式和趣闻。',drag:'拖动旋转；按住 Shift 拖动、右键拖动、双指拖动或点 ✥ 按钮可以移动模型；滚轮或双指缩放；左右箭头切换分子。',bd:'自己搭建分子并收藏到知识库的功能，已推迟，当前版本不可用。',b1:'放置原子，自由连接单键、双键、三键',b2:'价键填满后自动识别分子',b3:'把搭好的分子收藏进知识库',q:'搜索名称、分子式、趣闻',all:'全部',c:'含碳',n:'无碳',h:'已隐藏',el:'元素',aa:'氨基酸',vit:'维生素',ph:'占位',nq:'质量监控',cp:'紧凑',sh:'显示已隐藏的分子',hide:'隐藏',unhide:'取消隐藏',det:'详细信息',fo:'分子式',mm:'摩尔质量',na:'原子数',bn:'键数（单 / 双 / 三）',none:'没有匹配的条目',prev:'上一个',next:'下一个',zin:'放大',zout:'缩小',zrs:'重置视图',zs:'切换玻璃 / 平面质感',zmv:'移动 / 旋转模式',th:'切换明暗'},
+en:{title:'Molecule Library',nv:'3D Viewer',nl:'Library',nb:'Builder',sub:'View molecules in 3D, with names, formulas and trivia.',drag:'Drag to rotate; Shift-drag, right-drag, two-finger drag or the ✥ button moves the model; scroll or pinch to zoom; arrows switch molecules.',bd:'Building your own molecules and saving them to the library is deferred and not available in this version.',b1:'Place atoms and connect them with single, double or triple bonds',b2:'Recognize the molecule once all valences are filled',b3:'Save finished molecules into the library',q:'Search name, formula, trivia',all:'All',c:'Carbon',n:'No carbon',h:'Hidden',el:'Elements',aa:'Amino acids',vit:'Vitamins',ph:'Placeholders',nq:'Quality',cp:'Compact',sh:'Show hidden molecules',hide:'Hide',unhide:'Unhide',det:'Details',fo:'Formula',mm:'Molar mass',na:'Atoms',bn:'Bonds (1 / 2 / 3)',none:'No matches',prev:'Previous',next:'Next',zin:'Zoom in',zout:'Zoom out',zrs:'Reset view',zs:'Toggle glass / flat look',zmv:'Move / rotate mode',th:'Toggle light or dark'}};
 const SRC=[
 ['HH','氢气','Hydrogen','氢是宇宙中含量最多的元素。','Hydrogen is the most abundant element in the universe.'],
 ['O','水','Water','地球表面约 71% 被水覆盖。','Water covers about 71% of Earth’s surface.'],
@@ -152,7 +167,7 @@ function lay3({A,B}){
  B.forEach(([a,b,o])=>{if(o>1)B.forEach(([c,d])=>{if([a,b].includes(c)||[a,b].includes(d)){flat.add(c);flat.add(d)}})});
  own.forEach((o,k)=>{if(flat.has(o))flat.add(n+k)});
  const sp=[...B.map(([a,b])=>[a,b,1]),...own.map((o,k)=>[o,n+k,.6])];
- for(let t=0;t<500;t++){const F=P.map(()=>({x:0,y:0,z:0}));
+ for(let t=0,NT=P.length>110?240:500;t<NT;t++){const F=P.map(()=>({x:0,y:0,z:0}));
   for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){if(adj.has(i+','+j))continue;const dx=P[j].x-P[i].x,dy=P[j].y-P[i].y,dz=P[j].z-P[i].z,d=Math.hypot(dx,dy,dz)||.1,f=d>3.5?0:(i>=n||j>=n?.26:.2)/(d*d*d);F[i].x-=dx*f;F[i].y-=dy*f;F[i].z-=dz*f;F[j].x+=dx*f;F[j].y+=dy*f;F[j].z+=dz*f}
   for(const [a,b,L] of sp){const dx=P[b].x-P[a].x,dy=P[b].y-P[a].y,dz=P[b].z-P[a].z,d=Math.hypot(dx,dy,dz)||.1,f=(d-L)*.5/d;F[a].x+=dx*f;F[a].y+=dy*f;F[a].z+=dz*f;F[b].x-=dx*f;F[b].y-=dy*f;F[b].z-=dz*f}
   P.forEach((p,i)=>{F[i].x-=p.x*.015;F[i].y-=p.y*.015;F[i].z-=p.z*.015;if(flat.has(i))F[i].z-=p.z*1.2;p.x+=F[i].x*.4;p.y+=F[i].y*.4;p.z+=F[i].z*.4})}
@@ -264,11 +279,85 @@ OTX.forEach(o=>{SRC.push(o.slice(0,5));XF[o[0]]=[o[5],o[6]]});
 const AAS=new Set(['NCC(=O)O','CC(N)C(=O)O',...AAX.map(a=>a[0])]);
 const VIT=new Set(['OCC(O)C1OC(=O)C(O)=C1O',...OTX.slice(11).map(o=>o[0])]);
 const isEl=m=>new Set(m.g.A).size==1;
-const LIB=SRC.map(([s,z,e,zf,ef])=>{const g=parse(s),x=XF[s]||[[],[]];return{z,e,zf,ef,zfs:[zf,...x[0]],efs:[ef,...x[1]],g,f:FM[s]||formula(g.A),s,...lay3(g)}});
+let compact=true;try{compact=localStorage.getItem('mol-compact')!='0'}catch(e){}
+EL.Na={c:'#b79be0',r:.45,v:1,z:'钠',e:'Sodium'};MASS.Na=22.990;
+FM['[Na]Cl']='NaCl';
+const OXY='NC1CSSCC(NC(=O)C(CC(N)=O)NC(=O)C(CCC(N)=O)NC(=O)C(C(C)CC)NC(=O)C(CC2=CC=C(O)C=C2)NC1=O)C(=O)N3CCCC3C(=O)NC(CC(C)C)C(=O)NCC(N)=O';
+const COAL='CCC1=CC=C2C=C3C=CC=CC3=CC2=C1O';
+const NX=[
+['NCCC1=CNC2=CC=C(O)C=C12','血清素（5-羟色胺）','Serotonin','血清素（5-羟色胺）是一种神经递质，参与情绪、睡眠和食欲的调节；人体里大部分血清素其实在肠道中。','Serotonin is a neurotransmitter involved in mood, sleep and appetite; most of the body’s serotonin is actually in the gut.',['它由色氨酸经两步反应合成，在松果体里还能进一步转化成褪黑素。'],['It is made from tryptophan in two steps, and in the pineal gland it can be converted further into melatonin.']],
+['NCCC1=CC=C(O)C(O)=C1','多巴胺','Dopamine','多巴胺是一种神经递质，与动机、奖赏和运动控制有关；帕金森病与产生多巴胺的神经元逐渐丧失有关。','Dopamine is a neurotransmitter linked to motivation, reward and movement control; Parkinson’s disease involves the gradual loss of dopamine-producing neurons.',['多巴胺是合成去甲肾上腺素和肾上腺素的前体。'],['Dopamine is the precursor from which norepinephrine and adrenaline are made.']],
+['CNCC(O)C1=CC=C(O)C(O)=C1','肾上腺素','Adrenaline (epinephrine)','肾上腺素由肾上腺髓质分泌，让心跳加快、血管收缩，帮助身体应对紧急状况，常被称为“战斗或逃跑”激素。','Adrenaline is released by the adrenal medulla; it speeds the heart and narrows blood vessels to prepare the body for emergencies, the “fight or flight” hormone.',['严重过敏反应（过敏性休克）的急救用药，肾上腺素自动注射笔里装的就是它。','北美称它 epinephrine，英国等地称 adrenaline，两个词都来自“肾上”：拉丁语 ad-renal 和希腊语 epi-nephros。'],['It is the emergency treatment for severe allergic reactions (anaphylaxis), the drug in auto-injector pens.','North America says epinephrine and the UK says adrenaline; both words mean “on the kidney”: Latin ad-renal and Greek epi-nephros.']],
+[OXY,'催产素','Oxytocin','催产素是由 9 个氨基酸组成的肽类激素，由下丘脑合成，能促进分娩时的子宫收缩和哺乳时的泌乳。','Oxytocin is a peptide hormone of nine amino acids made in the hypothalamus; it drives uterine contractions in labour and milk release in nursing.',['它常被称为“拥抱激素”，但它在社交行为中的作用比这个昵称复杂得多。','1953 年迪维尼奥首次人工合成了催产素，是第一个被合成的肽类激素，他因此获得 1955 年诺贝尔化学奖。','两个半胱氨酸之间的二硫键把它连成环状。'],['It is nicknamed the “cuddle hormone”, but its role in social behaviour is far more complicated than that.','In 1953 Vincent du Vigneaud made the first synthetic peptide hormone, oxytocin, and won the 1955 Nobel Prize in Chemistry.','A disulfide bond between two cysteines closes part of the chain into a ring.']],
+['[Na]Cl','氯化钠（食盐）','Sodium chloride (NaCl)','食盐的主要成分；氯化钠晶体里每个钠离子被六个氯离子包围，这里只画一对示意。','The main component of table salt; in a sodium chloride crystal each sodium ion is surrounded by six chloride ions, and only one pair is drawn here as a schematic.',['它是离子化合物，由 Na⁺ 和 Cl⁻ 靠静电结合，图中的“键”只是示意。','海水含盐约 3.5%。'],['It is an ionic compound held together by Na⁺ and Cl⁻; the “bond” drawn is only schematic.','Seawater is about 3.5% salt.']],
+[COAL,'煤炭（示意片段：多环芳烃 + 羟基 + 烷基）','Coal (schematic fragment: polycyclic aromatic + hydroxyl + alkyl)','煤是古代植物经过漫长的地质作用形成的，主要成分是碳，还含有氢、氧、氮、硫等；它是复杂的混合物，没有统一的分子式。','Coal formed from ancient plants over long geological times; it is mostly carbon with hydrogen, oxygen, nitrogen and sulfur, and it is a complex mixture with no single molecular formula.',['按碳含量由低到高，大致分为泥炭、褐煤、烟煤和无烟煤。','煤中的硫燃烧后会生成二氧化硫，是酸雨的来源之一。','煤炭是工业革命的主要能源，今天仍是全球发电的重要来源。','这里只画一个示意片段，3D 形状并非真实构象。'],['By rising carbon content it is roughly graded as peat, lignite, bituminous coal and anthracite.','The sulfur in coal burns to sulfur dioxide, one source of acid rain.','Coal powered the Industrial Revolution and is still a major source of electricity worldwide.','Only a schematic fragment is drawn, and its 3D shape is not a real conformation.']]];
+NX.forEach(o=>{SRC.push(o.slice(0,5));XF[o[0]]=[o[5],o[6]]});
+const PHX=[
+['ph:b12','维生素 B₁₂（钴胺素）','Vitamin B12 (cobalamin)','C<sub>63</sub>H<sub>88</sub>CoN<sub>14</sub>O<sub>14</sub>P',1355.37,['占位条目：结构尚未建模。它约有 180 个原子，中心是被咕啉环包围的钴，涉及配位键，目前的画法还表示不了。','维生素 B₁₂ 是结构最复杂的维生素之一，也是唯一含金属（钴）的维生素。','它只能由某些微生物合成，所以严格素食者需要额外补充；缺乏会引起巨幼细胞贫血等问题。','1955 年多萝西·霍奇金用 X 射线晶体学解出了它的结构，并于 1964 年获得诺贝尔化学奖。'],['Placeholder: structure not modelled yet. It has about 180 atoms with a cobalt atom at the centre of a corrin ring, which involves coordination bonds this model cannot draw yet.','Vitamin B₁₂ is one of the most structurally complex vitamins and the only one containing a metal, cobalt.','Only some microorganisms make it, so strict vegetarians need a supplement; a deficiency can cause megaloblastic anaemia and other problems.','In 1955 Dorothy Hodgkin solved its structure by X-ray crystallography and won the 1964 Nobel Prize in Chemistry.']],
+['ph:b1','维生素 B₁（硫胺素）','Vitamin B1 (thiamine)','C<sub>12</sub>H<sub>17</sub>N<sub>4</sub>OS⁺',265.35,['占位条目：结构尚未建模。它常见的形式带有正电荷（噻唑鎓），目前的画法不支持电荷。','缺乏硫胺素会导致脚气病；它是最早被发现的维生素，这类病曾在以精白米为主食的地区多发。'],['Placeholder: structure not modelled yet. Its usual form carries a positive charge (a thiazolium), which this model does not support.','A lack of thiamine causes beriberi; it was the first vitamin discovered, and the disease was common where polished rice was the staple.']],
+['ph:b9','维生素 B₉（叶酸）','Vitamin B9 (folic acid)','C<sub>19</sub>H<sub>19</sub>N<sub>7</sub>O<sub>6</sub>',441.40,['占位条目：结构尚未建模，计划后续补充。','叶酸对 DNA 合成和细胞分裂很重要；孕早期补充叶酸可以降低胎儿神经管缺陷的风险。'],['Placeholder: structure not modelled yet, planned for later.','Folate is important for DNA synthesis and cell division; folic acid early in pregnancy lowers the risk of neural tube defects.']]];
+PHX.forEach(p=>VIT.add(p[0]));
+const VAL={H:[1],C:[4],N:[3,5],O:[2,4],P:[5],S:[2,6],K:[1],Na:[1],Cl:[1],F:[1],Br:[1]};
+const SCHEM=new Set(['N#CC1=CC=CC=C1N','C1=CC=C2C(=C1)C3=CC(CCCCCCCC)=CC=C3S2',COAL,'[Na]Cl','KON(=O)=O','KC#N','CC1=CN(C2CC(O)C(COP(=O)(O)O)O2)C(=O)NC1=O','O=C1NC(=O)C=CN1C2OC(COP(=O)(O)O)C(O)C2O']);
+const REF={'Hydrogen':2.016,'Water':18.015,'Oxygen':31.998,'Nitrogen':28.014,'Carbon dioxide':44.009,'Ammonia':17.031,'Methane':16.043,'Urea':60.056,'Methanol':32.042,'Ethanol':46.069,'Hydrogen peroxide':34.014,'Sulfuric acid':98.079,'Nitric acid':63.012,'Ozone':47.998,'Benzene':78.114,'Naphthalene':128.174,'Toluene':92.141,'Phenol':94.113,'Propane':44.097,'Cyclohexanone':98.145,'Diethyl ether':74.123,'Glucose':180.156,'Aspirin':180.158,'Adenine':135.13,'Uracil':112.087,'Glycine':75.067,'Alanine':89.094,'Tryptophan':204.228,'Serotonin':176.215,'Dopamine':153.181,'Adrenaline (epinephrine)':183.204,'Oxytocin':1007.19,'Sodium chloride (NaCl)':58.44,'Penicillin G (antibiotic)':334.39,'Vitamin C (ascorbic acid)':176.124,'Trinitrotoluene (TNT)':227.131,'ATP (adenosine triphosphate)':507.18,'Vitamin B7 (biotin)':244.31,'Vitamin B3 (niacin)':123.11,'Vitamin B6 (pyridoxine)':169.18,'Vitamin B5 (pantothenic acid)':219.23,'Vitamin B2 (riboflavin)':376.36,'Glutathione (tripeptide)':307.32,'Aspartame (dipeptide sweetener)':294.31,'Glycylglycine (dipeptide)':132.12};
+const inFlt=m=>flt=='h'?isH(m):vis(m)&&(m.ph?(flt=='all'||flt=='ph'||(flt=='vit'&&VIT.has(m.s))):(flt=='all'||(flt=='el'?isEl(m):flt=='aa'?AAS.has(m.s):flt=='vit'?VIT.has(m.s):flt=='ph'?false:(flt=='c')==m.g.A.includes('C'))));
+function drawPh(x,W,H,dark){const w=W*.56,h=H*.4,l=(W-w)/2,t=(H-h)/2-H*.02;x.setLineDash([6,5]);x.lineWidth=1.5;x.strokeStyle=dark?'rgba(255,255,255,.4)':'rgba(70,80,90,.45)';x.strokeRect(l,t,w,h);x.setLineDash([]);x.fillStyle=dark?'rgba(255,255,255,.6)':'rgba(60,66,72,.6)';x.textAlign='center';x.textBaseline='middle';x.font=`600 ${Math.max(11,W/17)}px system-ui,sans-serif`;x.fillText('placeholder',W/2,t+h/2-W*.025);x.font=`${Math.max(10,W/27)}px system-ui,sans-serif`;x.fillText(lang=='zh'?'结构尚未建模':'not modelled yet',W/2,t+h/2+W*.045)}
+const LIB=SRC.map(([s,z,e,zf,ef])=>{const g=parse(s),x=XF[s]||[[],[]];const o={z,e,zf,ef,zfs:[zf,...x[0]],efs:[ef,...x[1]],g,f:FM[s]||formula(g.A),s};let c;const lz=()=>c||(c=lay3(g));Object.defineProperty(o,'P',{get:()=>lz().P,enumerable:true});Object.defineProperty(o,'ext',{get:()=>lz().ext,enumerable:true});return o});
+PHX.forEach(([s,z,e,f,mass,zl,el])=>LIB.push({z,e,zf:zl[0],ef:el[0],zfs:zl,efs:el,g:{A:[],B:[]},f,s,P:[],ext:1.6,ph:1,mass}));
 const visIdx=()=>LIB.map((m,i)=>i).filter(i=>vis(LIB[i]));
+const REQG=[
+['el','元素','Elements',['Boron','Fluorine','Chlorine','Argon','Potassium','Chromium','Manganese','Cobalt','Gallium','Germanium','Arsenic','Selenium','Bromine','Krypton','Rubidium','Strontium','Yttrium','Zirconium','Cadmium','Indium','Antimony','Tellurium','Xenon','Cesium','Barium','Bismuth','Plutonium']],
+['aa','构成蛋白质的 20 种氨基酸','The 20 proteinogenic amino acids',['Glycine','Alanine','Serine','Valine','Leucine','Isoleucine','Threonine','Cysteine','Methionine','Aspartic acid','Glutamic acid','Asparagine','Glutamine','Lysine','Arginine','Histidine','Phenylalanine','Tyrosine','Tryptophan','Proline']],
+['vit','B 族维生素','B vitamins',['Vitamin B1','Vitamin B2','Vitamin B3','Vitamin B5','Vitamin B6','Vitamin B7','Vitamin B9','Vitamin B12']],
+['hm','激素与神经递质','Hormones and neurotransmitters',['Serotonin','Dopamine','Adrenaline','Oxytocin']],
+['ma','材料与无机物','Materials and inorganics',['Coal','Sodium chloride','Asphalt','Trinitrotoluene']],
+['cl','有机物类别代表','Compound-class examples',['Propane','Propene','Propyne','Diethyl ether','Cyclohexanone','Toluene','Glycylglycine']]];
+function audit(m){
+ const L=(id,lv,zh,en)=>({id,lv,zh,en});
+ if(m.ph)return[L('ph','warn','占位条目：结构尚未建模','Placeholder: structure not modelled yet')];
+ const A=m.g.A,B=m.g.B,n=A.length,res=[],bs=A.map(()=>0);B.forEach(([a,b,o])=>{bs[a]+=o;bs[b]+=o});
+ const seen=new Set([0]),q=[0];while(q.length){const x=q.pop();B.forEach(([a,b])=>{const y=a==x?b:b==x?a:-1;if(y>=0&&!seen.has(y)){seen.add(y);q.push(y)}})}
+ res.push(seen.size==n?L('conn','ok','结构连通','Connected'):L('conn','fail','结构不连通','Disconnected structure'));
+ const bad=n>1?A.filter((e,i)=>VAL[e]&&!VAL[e].includes(bs[i])):[];
+ res.push(bad.length?L('val','fail','价键异常：'+bad.join(','),'Unusual valence: '+bad.join(',')):L('val','ok','价键合理','Valences look right'));
+ if(A.some((e,i)=>(e=='N'&&bs[i]==5)||(e=='O'&&bs[i]==4)))res.push(L('sh','info','使用教科书的示意写法（不标电荷）','Uses textbook shorthand (no charges)'));
+ const ref=REF[m.e],mass=A.reduce((s,e)=>s+MASS[e],0);
+ res.push(ref?(Math.abs(mass-ref)<=Math.max(.08,ref*3e-4)?L('mass','ok','摩尔质量与参考值一致（'+mass.toFixed(2)+'）','Molar mass matches reference ('+mass.toFixed(2)+')'):L('mass','fail','摩尔质量与参考值不符：'+mass.toFixed(2)+' / '+ref,'Molar mass differs from reference: '+mass.toFixed(2)+' vs '+ref)):L('mass','na','没有参考值可对照','No reference value to compare'));
+ res.push(m.zfs.length!=m.efs.length?L('facts','fail','中英文趣闻条数不一致','zh/en fact counts differ'):m.zfs.length>=2?L('facts','ok',m.zfs.length+' 条趣闻，中英文齐全',m.zfs.length+' facts, both languages'):L('facts','warn','只有 1 条趣闻','Only one fact'));
+ if(n==1||SCHEM.has(m.s))res.push(L('sch','info',n==1?'单个原子示意':'示意结构，不是真实的单一分子',n==1?'Single-atom schematic':'Schematic structure, not a real single molecule'));
+ return res}
+let FB=[];try{FB=JSON.parse(localStorage.getItem('mol-fb')||'[]')}catch(e){}
+let qAll=false;
+function qHtml(){
+ const tx=(a,b)=>lang=='zh'?a:b,esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])),pc=(a,b)=>b?Math.round(a/b*100):0;
+ const R=LIB.map((m,i)=>({m,i,res:audit(m)})),n=LIB.length,real=R.filter(r=>!r.m.ph).length,phn=n-real;
+ const failE=R.filter(r=>r.res.some(x=>x.lv=='fail')),warnE=R.filter(r=>!r.res.some(x=>x.lv=='fail')&&r.res.some(x=>x.lv=='warn'));
+ const refd=R.filter(r=>r.res.some(x=>x.id=='mass'&&x.lv!='na')),refOk=refd.filter(r=>r.res.every(x=>x.lv!='fail'));
+ const bi=LIB.filter(m=>m.zfs.length&&m.zfs.length==m.efs.length).length,multi=LIB.filter(m=>m.zfs.length>=2).length;
+ const bar=(p)=>`<div class="bar"><i style="width:${p}%"></i></div>`;
+ const card=(t,v,sub,p)=>`<div class="qc"><div class="qt">${t}</div><div class="qv">${v}</div><div class="qs">${sub}</div>${p==null?'':bar(p)}</div>`;
+ let h=`<h2>${tx('质量监控','Quality monitor')}</h2><p class="sub">${tx('自动检查每个条目的结构、价键、摩尔质量和趣闻，并对照你提出的需求清单。这些检查只能发现内部不一致，不能证明化学事实正确。','Automatic checks of every entry’s structure, valences, molar mass and facts, set against your request list. They catch internal inconsistencies; they cannot prove the chemistry facts correct.')}</p>`;
+ h+=`<div class="qgrid">`+card(tx('条目','Entries'),n,tx(`已建模 ${real} · 占位 ${phn}`,`${real} modelled · ${phn} placeholders`),pc(real,n))
+  +card(tx('检查通过','Checks passed'),pc(n-failE.length,n)+'%',tx(`${failE.length} 项失败 · ${warnE.length} 项提醒`,`${failE.length} failing · ${warnE.length} warnings`),pc(n-failE.length,n))
+  +card(tx('质量对照','Mass vs reference'),`${refOk.length}/${refd.length}`,tx(`${refd.length} 个条目有参考值`,`${refd.length} entries have a reference`),pc(refOk.length,refd.length))
+  +card(tx('趣闻','Facts'),`${multi}/${n}`,tx(`≥2 条 · 中英文齐全 ${bi}/${n}`,`≥2 facts · bilingual ${bi}/${n}`),pc(multi,n))+`</div>`;
+ h+=`<h3>${tx('需求清单','Request checklist')}</h3>`;
+ for(const [g,zh,en,keys] of REQG){let ok=0;const chips=keys.map(k=>{const m=LIB.find(x=>x.e==k||x.e.startsWith(k+' '));const st=!m?'missing':m.ph?'ph':'done';if(st=='done')ok++;return `<span class="rq ${st}" title="${st}">${m?esc(nm(m)):esc(k)}</span>`}).join('');
+  h+=`<div class="rg"><b>${tx(zh,en)}</b> <span class="mu">${ok}/${keys.length}</span><div>${chips}</div></div>`}
+ h+=`<p class="mu rl"><span class="rq done">${tx('已完成','done')}</span> <span class="rq ph">${tx('占位','placeholder')}</span> <span class="rq missing">${tx('缺失','missing')}</span></p>`;
+ const shown=R.filter(r=>qAll||r.res.some(x=>x.lv=='fail'||x.lv=='warn'));
+ h+=`<h3>${tx('逐条审核','Entry audit')} <label class="sw"><input type="checkbox" id="qa"${qAll?' checked':''}><span>${tx('显示全部条目','Show all entries')}</span></label></h3>`;
+ h+=shown.length?`<table class="aud">`+shown.map(r=>`<tr><td class="an">${esc(nm(r.m))}</td><td>${r.res.filter(x=>qAll||x.lv!='ok').map(x=>`<span class="lv lv-${x.lv}">${esc(tx(x.zh,x.en))}</span>`).join(' ')}</td></tr>`).join('')+`</table>`:`<p class="mu">${tx('没有需要处理的条目。','Nothing needs attention.')}</p>`;
+ h+=`<h3>${tx('反馈','Feedback')}</h3><div class="fb"><select id="fbE">${LIB.map((m,i)=>`<option value="${i}">${esc(nm(m))}</option>`).join('')}</select><select id="fbT"><option value="acc">${tx('准确性','Accuracy')}</option><option value="miss">${tx('缺少内容','Missing')}</option><option value="ui">${tx('界面','UI')}</option><option value="other">${tx('其他','Other')}</option></select><textarea id="fbN" rows="2" placeholder="${tx('写下发现的问题或建议','Describe the problem or suggestion')}"></textarea><button id="fbA" class="mini">${tx('添加反馈','Add feedback')}</button></div>`;
+ h+=FB.length?`<ul class="fbl">`+FB.map((f,i)=>`<li><b>${esc(f.e)}</b> <span class="mu">${esc(f.k)} · ${esc(f.t)}</span><br>${esc(f.n)} <button class="mini" data-fd="${i}">${tx('删除','Delete')}</button></li>`).join('')+`</ul><textarea id="fbX" rows="3" readonly>${esc(JSON.stringify(FB))}</textarea>`:`<p class="mu">${tx('还没有反馈。反馈保存在这个浏览器里。','No feedback yet. Feedback is kept in this browser.')}</p>`;
+ return h}
+function renderQ(){const r=$('#qroot');if(!r)return;r.innerHTML=qHtml();
+ $('#qa').onchange=e=>{qAll=e.target.checked;renderQ()};
+ $('#fbA').onclick=()=>{const t=$('#fbN').value.trim();if(!t)return;FB.push({e:LIB[+$('#fbE').value].e,k:$('#fbT').value,t:new Date().toISOString().slice(0,16).replace('T',' '),n:t});try{localStorage.setItem('mol-fb',JSON.stringify(FB))}catch(e){}renderQ()};
+ r.querySelectorAll('[data-fd]').forEach(b=>b.onclick=()=>{FB.splice(+b.dataset.fd,1);try{localStorage.setItem('mol-fb',JSON.stringify(FB))}catch(e){}renderQ()})}
 const PAL={light:{bg:'#ece9de',bond:'#5f5b50',edge:'rgba(70,60,35,.5)',hi:'rgba(255,255,255,.2)',ring:{y:'#efe2b5',g:'#cde4d2',p:'#eccbc6'}},dark:{bg:'#222220',bond:'#b9b5a8',edge:'rgba(0,0,0,.45)',hi:'rgba(255,255,255,.14)',ring:{y:'#4a4326',g:'#2f4a3b',p:'#4f3433'}}};
 const dk=()=>{const t=document.documentElement.dataset.theme;return t?t=='dark':matchMedia('(prefers-color-scheme: dark)').matches};
-const VIEWS=['viewer','library','builder'];let style='glass';try{style=localStorage.getItem('mol-style')||'glass'}catch(e){}
+const VIEWS=['viewer','library','builder','quality'];let style='glass';try{style=localStorage.getItem('mol-style')||'glass'}catch(e){}
 let lang='zh',cur=6,flt='all',q='',ry=.6,rx=.35,drag=null,view='viewer';
 try{lang=localStorage.getItem('mol-lang')||(/^zh/i.test(navigator.language)?'zh':'en');const th=localStorage.getItem('mol-theme');if(th)document.documentElement.dataset.theme=th}catch(e){}
 const $=s=>document.querySelector(s),cv=$('#cv'),reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -307,7 +396,7 @@ function glassItems(x,items,m,U,dark){
 function draw(c,m,ry,rx,cyf,zm=1,pn=[0,0]){
  const[x,W,H]=size(c);if(!W)return;const P=PAL[dk()?'dark':'light'];
  x.clearRect(0,0,W,H);if(style=='glass')glassBg(x,W,H,dk(),c===cv);else{x.fillStyle=P.bg;x.fillRect(0,0,W,H)}
- const bw=Math.max(1.6,W/320),ew=Math.max(1,W/520);
+ if(m.ph){drawPh(x,W,H,dk());return}const bw=Math.max(1.6,W/320),ew=Math.max(1,W/520);
  
  const U=.85*Math.min(W/2,H*Math.min(cyf,1-cyf))/m.ext/1.3*zm*(style=='glass'?1.2:1),cy=H*cyf+pn[1],D=Math.max(6,m.ext*3.2),sy=Math.sin(ry),cyw=Math.cos(ry),sx=Math.sin(rx),cx=Math.cos(rx);
  const Q=m.P.map((p,i)=>{const x1=p.x*cyw+p.z*sy,z1=-p.x*sy+p.z*cyw,y2=p.y*cx-z1*sx,z2=p.y*sx+z1*cx,s=D/(D-z2);return{x:W/2+pn[0]+x1*s*U,y:cy+y2*s*U,z:z2,s,r:EL[m.g.A[i]].r*s*U*(style=='glass'?1.3:1),e:m.g.A[i]}});
@@ -322,24 +411,24 @@ function draw(c,m,ry,rx,cyf,zm=1,pn=[0,0]){
    x.fillStyle='#3a372d';x.font=`600 ${a.r*.9}px system-ui,sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText(a.e,a.x,a.y+a.r*.05)}}}
 function legend(){$('#lg').innerHTML=[...new Set(LIB[cur].g.A)].map(e=>`<span><i style="background:${EL[e].c}">${e}</i>${lang=='zh'?EL[e].z:EL[e].e}</span>`).join('')}
 function info(){const m=LIB[cur],T2=T[lang],A=m.g.A,B=m.g.B,bc=[1,2,3].map(o=>B.filter(b=>b[2]==o).length);
- $('#info').innerHTML=`<h2>${nm(m)}: ${m.f}</h2><dl class="kv"><div><dt>${T2.mm}</dt><dd>${A.reduce((s,e)=>s+MASS[e],0).toFixed(2)} g/mol</dd></div><div><dt>${T2.na}</dt><dd>${A.length}</dd></div><div><dt>${T2.bn}</dt><dd>${bc.join(' / ')}</dd></div></dl><ul class="facts">${(lang=='zh'?m.zfs:m.efs).map(x=>`<li>${x}</li>`).join('')}</ul>`}
+ $('#info').innerHTML=`<h2>${nm(m)}: ${m.f}</h2><dl class="kv"><div><dt>${T2.mm}</dt><dd>${(m.ph?m.mass:A.reduce((s,e)=>s+MASS[e],0)).toFixed(2)} g/mol</dd></div><div><dt>${T2.na}</dt><dd>${m.ph?'—':A.length}</dd></div><div><dt>${T2.bn}</dt><dd>${m.ph?'—':bc.join(' / ')}</dd></div></dl><ul class="facts">${(lang=='zh'?m.zfs:m.efs).map(x=>`<li>${x}</li>`).join('')}</ul>`}
 function caption(){const m=LIB[cur];$('#cap').innerHTML=`<div class="t">${nm(m)}: ${m.f}</div><div class="f clamp">${ft(m)}</div>`;const V=visIdx(),r=V.indexOf(cur);$('#pos').textContent=r<0?T[lang].h:(r+1)+' / '+V.length;$('#hb').textContent=isH(LIB[cur])?T[lang].unhide:T[lang].hide;info();legend()}
 function thumbs(){document.querySelectorAll('#grid canvas').forEach(c=>draw(c,LIB[+c.dataset.k],.55,.3,.5))}
 function grid(){const s=q.trim().toLowerCase();
- const L=LIB.map((m,i)=>[m,i]).filter(([m])=>(flt=='h'?isH(m):vis(m)&&(flt=='all'||(flt=='el'?isEl(m):flt=='aa'?AAS.has(m.s):flt=='vit'?VIT.has(m.s):(flt=='c')==m.g.A.includes('C'))))&&(!s||(m.z+m.e+m.zfs.join()+m.efs.join()+plain(m.f)).toLowerCase().includes(s)));
- $('#grid').innerHTML=L.map(([m,i])=>`<article class="card${i==cur?' on':''}" data-k="${i}" tabindex="0"><button class="eye" data-e="${i}">${isH(m)?T[lang].unhide:T[lang].hide}</button><canvas data-k="${i}"></canvas><div class="t">${nm(m)}: ${m.f}</div><div class="f clamp">${ft(m)}</div></article>`).join('')||`<p class="sub">${T[lang].none}</p>`;
- $('#cnt').textContent=L.length+' / '+(flt=='h'?L.length:visIdx().length);thumbs()}
+ const L=LIB.map((m,i)=>[m,i]).filter(([m])=>inFlt(m)&&(!s||(m.z+m.e+m.zfs.join()+m.efs.join()+plain(m.f)).toLowerCase().includes(s)));
+ $('#grid').innerHTML=L.map(([m,i])=>`<article class="card${i==cur?' on':''}${m.ph?' ph':''}" data-k="${i}" tabindex="0"><button class="eye" data-e="${i}">${isH(m)?T[lang].unhide:T[lang].hide}</button><canvas data-k="${i}"></canvas><div class="t">${nm(m)}: ${m.f}</div><div class="f clamp">${ft(m)}</div></article>`).join('')||`<p class="sub">${T[lang].none}</p>`;
+ $('#grid').className=compact?'c':'';$('#cnt').textContent=L.length+' / '+(flt=='h'?L.length:visIdx().length);thumbs()}
 function applyLang(){const t=T[lang];document.documentElement.lang=lang;document.title=t.title;
  document.querySelectorAll('[data-i]').forEach(e=>e.textContent=t[e.dataset.i]);$('#q').placeholder=t.q;
  $('#prev').setAttribute('aria-label',t.prev);$('#zi').setAttribute('aria-label',t.zin);$('#zo').setAttribute('aria-label',t.zout);$('#zr').setAttribute('aria-label',t.zrs);$('#zs').setAttribute('aria-label',t.zs);$('#zmv').setAttribute('aria-label',t.zmv);$('#next').setAttribute('aria-label',t.next);$('#th').setAttribute('aria-label',t.th);
  document.querySelectorAll('[data-f]').forEach(b=>{b.textContent=t[b.dataset.f];b.setAttribute('aria-pressed',b.dataset.f==flt)});
  document.querySelectorAll('[data-l]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l==lang));
  
- caption();grid()}
+ caption();grid();if(view=='quality')renderQ()}
 function route(){let v=location.hash.slice(1);if(!VIEWS.includes(v))v='viewer';view=v;
  VIEWS.forEach(n=>$('#v-'+n).classList.toggle('on',n==v));
  document.querySelectorAll('[data-v]').forEach(a=>a.dataset.v==v?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
- if(v=='library')thumbs();scrollTo(0,0)}
+ if(v=='library')thumbs();if(v=='quality')renderQ();scrollTo(0,0)}
 function step(d){do{cur=(cur+d+LIB.length)%LIB.length}while(!vis(LIB[cur]));ry=.6;rx=.35;pan=[0,0];caption();document.querySelectorAll('.card').forEach(c=>c.classList.toggle('on',+c.dataset.k==cur))}
 function toggleH(i){const s=LIB[i].s;hidSet.has(s)?hidSet.delete(s):hidSet.add(s);saveH();grid();caption()}
 function pick(k){cur=k;ry=.6;rx=.35;pan=[0,0];caption();document.querySelectorAll('.card').forEach(c=>c.classList.toggle('on',+c.dataset.k==k));location.hash='viewer';route()}
@@ -360,12 +449,12 @@ $('#th').onclick=()=>{const t=dk()?'light':'dark';document.documentElement.datas
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change',thumbs);
 $('#q').oninput=e=>{q=e.target.value;grid()};
 $('#grid').onclick=e=>{const y=e.target.closest('[data-e]');if(y)return toggleH(+y.dataset.e);const c=e.target.closest('[data-k]');if(c)pick(+c.dataset.k)};
-$('#sh').onchange=e=>{showH=e.target.checked;saveH();grid();caption()};$('#hb').onclick=()=>toggleH(cur);
+$('#sh').onchange=e=>{showH=e.target.checked;saveH();grid();caption()};$('#cp').onchange=e=>{compact=e.target.checked;try{localStorage.setItem('mol-compact',compact?'1':'0')}catch(e){}grid()};$('#hb').onclick=()=>toggleH(cur);
 $('#grid').onkeydown=e=>{if(e.key=='Enter'){const c=e.target.closest('[data-k]');if(c)pick(+c.dataset.k)}};
 addEventListener('hashchange',route);
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(thumbs,150)});
 (function loop(){if(view=='viewer'){if(!ptrs.size&&!reduce)ry+=.006;draw(cv,LIB[cur],ry,rx,.44,zm,pan)}requestAnimationFrame(loop)})();
-$('#sh').checked=showH;applyLang();route();
+$('#sh').checked=showH;$('#cp').checked=compact;applyLang();route();
 </script>
 </body>
 </html>

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>分子知识库</title>
+<style>
+:root{box-sizing:border-box;padding-bottom:env(safe-area-inset-bottom,0px);--bg:#e7e4d9;--nav:#dedbd0;--card:#eeebe1;--cv:#ece9de;--tx:#34322b;--mu:#77746a;--ln:#d3cfc2;--ac:#4a473e;--acx:#eeebe1;color-scheme:light}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1c1a;--nav:#242422;--card:#272725;--cv:#222220;--tx:#e2e0d8;--mu:#9a978c;--ln:#3a3a36;--ac:#d8d5ca;--acx:#1c1c1a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1c1c1a;--nav:#242422;--card:#272725;--cv:#222220;--tx:#e2e0d8;--mu:#9a978c;--ln:#3a3a36;--ac:#d8d5ca;--acx:#1c1c1a;color-scheme:dark}
+html{scroll-padding-top:60px}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.6 system-ui,"PingFang SC","Microsoft YaHei",sans-serif}
+.nav{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;padding:calc(10px + env(safe-area-inset-top,0px)) 18px 10px;background:var(--nav);border-bottom:1px solid var(--ln)}
+.brand{font-size:16px;letter-spacing:.02em}
+.nav nav{display:flex;gap:4px;flex:1 1 auto}
+.nav a{color:var(--mu);text-decoration:none;padding:4px 12px;border-radius:999px;font-size:14px;white-space:nowrap}
+.nav a:hover{color:var(--tx)}.nav a[aria-current]{background:var(--ac);color:var(--acx)}
+.right{display:flex;gap:8px;align-items:center;margin-left:auto}
+.lang{display:flex;background:var(--card);border:1px solid var(--ln);border-radius:999px;padding:2px}
+button{font:inherit;color:inherit}
+.lang button,.ic{border:0;background:none;cursor:pointer;border-radius:999px;font-size:13px;padding:3px 12px;color:var(--mu)}
+.lang button[aria-pressed="true"]{background:var(--ac);color:var(--acx)}
+.ic{border:1px solid var(--ln);background:var(--card);width:30px;height:30px;padding:0;font-size:15px}
+.tag{font-size:11px;border:1px dashed currentColor;border-radius:999px;padding:0 7px;margin-left:6px;opacity:.8}
+.view{display:none;max-width:860px;margin:0 auto;padding:22px 18px 56px}.view.on{display:block}
+.sub{margin:0 0 14px;color:var(--mu);font-size:14px}
+.stage{position:relative;border-radius:14px;overflow:hidden;background:var(--cv);border:1px solid var(--ln)}
+canvas{display:block;width:100%;aspect-ratio:4/3;touch-action:none;cursor:grab}
+#cap{position:absolute;left:8%;right:8%;bottom:6%;background:rgba(90,86,70,.16);backdrop-filter:blur(6px);border-radius:6px;padding:9px 14px;text-align:center;pointer-events:none}
+.t{font-size:15.5px}.f{font-size:12.5px;color:var(--mu);margin-top:3px}
+.arr{position:absolute;top:44%;width:36px;height:36px;border-radius:50%;border:1px solid var(--ln);background:var(--card);color:var(--tx);font-size:20px;line-height:1;cursor:pointer;opacity:.85}
+.arr.l{left:10px}.arr.r{right:10px}
+.zm{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:6px}.zm button{width:32px;height:32px;border-radius:50%;border:1px solid var(--ln);background:var(--card);color:var(--tx);font-size:16px;line-height:1;cursor:pointer;opacity:.85}
+.row{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;margin-top:12px;color:var(--mu);font-size:13px}
+.lg{display:flex;flex-wrap:wrap;gap:6px 16px}
+.lg i,.pal i{display:inline-block;width:20px;height:20px;border-radius:50%;border:1px solid rgba(70,60,35,.5);text-align:center;font:600 10.5px/18px system-ui;color:#3a372d;margin-right:6px;vertical-align:middle}
+.hint{margin:6px 0 0;font-size:12.5px;color:var(--mu)}
+.box{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:22px}
+.defer{border-style:dashed;background:transparent}
+h2{font-size:18px;margin:0 0 8px;font-weight:600}
+.defer ul{margin:12px 0;padding-left:20px;color:var(--mu)}
+.pal{display:flex;gap:8px;opacity:.5;margin-top:16px}.pal i{width:28px;height:28px;line-height:26px;font-size:12px;margin:0}
+.kh{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}.kh h2{margin:0 8px 0 0}.kh small{color:var(--mu);font-weight:400;font-size:13px;margin-left:6px}
+input{font:inherit;font-size:13px;color:inherit;background:var(--card);border:1px solid var(--ln);border-radius:999px;padding:6px 14px;width:230px}
+.chips{display:flex;gap:6px}
+.chips button{font-size:13px;background:var(--card);border:1px solid var(--ln);border-radius:999px;padding:4px 14px;cursor:pointer}
+.chips button[aria-pressed="true"]{border-color:var(--ac);background:var(--ac);color:var(--acx)}
+button:focus-visible,input:focus-visible,a:focus-visible,.card:focus-visible{outline:2px solid #6d8fd6;outline-offset:2px}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.info{margin-top:14px;padding:18px 22px}.info h2{font-size:17px;margin:0 0 12px;font-weight:600}.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:0 0 12px}.kv div{min-width:0}.kv dt{font-size:12px;color:var(--mu)}.kv dd{margin:0;font-size:14px}.facts{margin:0;padding-left:20px}.facts li{margin:6px 0}
+#v-viewer{max-width:1180px}.vgrid{display:grid;gap:14px;align-items:start}.vmain{min-width:0}
+@media(min-width:620px){.vgrid{grid-template-columns:minmax(0,1.3fr) minmax(250px,1fr)}.info{position:sticky;top:64px;margin-top:0;max-height:calc(100vh - 90px);overflow:auto}}
+@media(max-width:619px){#v-viewer{padding-top:12px}#v-viewer>.sub{display:none}.vgrid{gap:0}.vmain{display:contents}.stage{order:1;border-radius:14px 14px 0 0;border-bottom:0}.info{order:2;margin-top:0;border-radius:0 0 14px 14px;padding:16px 18px}.row{order:3;margin-top:12px}.hint{order:4;margin:6px 0 0}#cv{aspect-ratio:16/11}#cap{display:none}}
+.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.card .clamp{-webkit-line-clamp:3}
+.sw{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mu);cursor:pointer}.sw input{width:auto;padding:0;margin:0}
+.mini,.eye{font:inherit;font-size:12px;color:var(--mu);background:var(--card);border:1px solid var(--ln);border-radius:999px;padding:2px 10px;cursor:pointer}
+.eye{position:absolute;top:12px;right:12px;opacity:.8;z-index:1}
+.card{position:relative;background:var(--card);border:1.5px solid var(--ln);border-radius:12px;padding:8px 8px 12px;cursor:pointer;text-align:center}
+.card:hover{border-color:var(--mu)}.card.on{border-color:var(--ac)}
+.card canvas{border-radius:8px;cursor:pointer}
+.card .t{font-size:14.5px;margin-top:8px}.card .f{padding:0 6px}
+</style>
+</head>
+<body>
+<header class="nav"><b class="brand" data-i="title"></b>
+ <nav><a href="#viewer" data-v="viewer" data-i="nv"></a><a href="#library" data-v="library" data-i="nl"></a><a href="#builder" data-v="builder"><span data-i="nb"></span><span class="tag">deferred</span></a></nav>
+ <div class="right"><div class="lang" role="group" aria-label="Language"><button data-l="zh">中文</button><button data-l="en">English</button></div><button class="ic" id="th">◐</button></div>
+</header>
+<main>
+<section id="v-viewer" class="view on"><p class="sub" data-i="sub"></p>
+ <div class="vgrid"><div class="vmain"><div class="stage"><canvas id="cv"></canvas><button class="arr l" id="prev">‹</button><button class="arr r" id="next">›</button><div class="zm"><button id="zi">+</button><button id="zo">−</button><button id="zr">⟲</button><button id="zs">◎</button><button id="zmv">✥</button></div><div id="cap"></div></div>
+ <div class="row"><div class="lg" id="lg"></div><span id="pos"></span><button id="hb" class="mini"></button></div><p class="hint" data-i="drag"></p></div><div class="box info" id="info"></div></div></section>
+<section id="v-library" class="view"><div class="kh"><h2><span data-i="nl"></span><small id="cnt"></small></h2><input id="q" type="search"><label class="sw"><input type="checkbox" id="sh"><span data-i="sh"></span></label><div class="chips"><button data-f="all"></button><button data-f="c"></button><button data-f="n"></button><button data-f="el"></button><button data-f="aa"></button><button data-f="vit"></button><button data-f="h"></button></div></div><div id="grid"></div></section>
+<section id="v-builder" class="view"><div class="box defer"><h2><span data-i="nb"></span><span class="tag">deferred</span></h2><p class="sub" data-i="bd"></p>
+ <ul><li data-i="b1"></li><li data-i="b2"></li><li data-i="b3"></li></ul>
+ <div class="pal" aria-hidden="true"><i style="background:#e8877b">H</i><i style="background:#e6c35c">C</i><i style="background:#96bf6c">N</i><i style="background:#8fb0e6">O</i></div></div></section>
+</main>
+<script>
+const EL={H:{c:'#e8877b',r:.26,v:1,z:'氢',e:'Hydrogen'},C:{c:'#e6c35c',r:.38,v:4,z:'碳',e:'Carbon'},N:{c:'#96bf6c',r:.36,v:3,z:'氮',e:'Nitrogen'},O:{c:'#8fb0e6',r:.35,v:2,z:'氧',e:'Oxygen'},P:{c:'#e0975f',r:.42,v:5,z:'磷',e:'Phosphorus'},S:{c:'#c3a6d6',r:.42,v:2,z:'硫',e:'Sulfur'},K:{c:'#d996a8',r:.45,v:1,z:'钾',e:'Potassium'},Cl:{c:'#6fc3b0',r:.42,v:1,z:'氯',e:'Chlorine'}};
+const T={zh:{title:'分子知识库',nv:'3D 浏览',nl:'知识库',nb:'搭建器',sub:'3D 查看分子结构，查阅名称、分子式和趣闻。',drag:'拖动旋转；按住 Shift 拖动、右键拖动、双指拖动或点 ✥ 按钮可以移动模型；滚轮或双指缩放；左右箭头切换分子。',bd:'自己搭建分子并收藏到知识库的功能，已推迟，当前版本不可用。',b1:'放置原子，自由连接单键、双键、三键',b2:'价键填满后自动识别分子',b3:'把搭好的分子收藏进知识库',q:'搜索名称、分子式、趣闻',all:'全部',c:'含碳',n:'无碳',h:'已隐藏',el:'元素',aa:'氨基酸',vit:'维生素',sh:'显示已隐藏的分子',hide:'隐藏',unhide:'取消隐藏',det:'详细信息',fo:'分子式',mm:'摩尔质量',na:'原子数',bn:'键数（单 / 双 / 三）',none:'没有匹配的条目',prev:'上一个',next:'下一个',zin:'放大',zout:'缩小',zrs:'重置视图',zs:'切换玻璃 / 平面质感',zmv:'移动 / 旋转模式',th:'切换明暗'},
+en:{title:'Molecule Library',nv:'3D Viewer',nl:'Library',nb:'Builder',sub:'View molecules in 3D, with names, formulas and trivia.',drag:'Drag to rotate; Shift-drag, right-drag, two-finger drag or the ✥ button moves the model; scroll or pinch to zoom; arrows switch molecules.',bd:'Building your own molecules and saving them to the library is deferred and not available in this version.',b1:'Place atoms and connect them with single, double or triple bonds',b2:'Recognize the molecule once all valences are filled',b3:'Save finished molecules into the library',q:'Search name, formula, trivia',all:'All',c:'Carbon',n:'No carbon',h:'Hidden',el:'Elements',aa:'Amino acids',vit:'Vitamins',sh:'Show hidden molecules',hide:'Hide',unhide:'Unhide',det:'Details',fo:'Formula',mm:'Molar mass',na:'Atoms',bn:'Bonds (1 / 2 / 3)',none:'No matches',prev:'Previous',next:'Next',zin:'Zoom in',zout:'Zoom out',zrs:'Reset view',zs:'Toggle glass / flat look',zmv:'Move / rotate mode',th:'Toggle light or dark'}};
+const SRC=[
+['HH','氢气','Hydrogen','氢是宇宙中含量最多的元素。','Hydrogen is the most abundant element in the universe.'],
+['O','水','Water','地球表面约 71% 被水覆盖。','Water covers about 71% of Earth’s surface.'],
+['O=O','氧气','Oxygen','约占地球大气体积的 21%。','Makes up about 21% of Earth’s atmosphere by volume.'],
+['N#N','氮气','Nitrogen','约占地球大气的 78%，三键让它非常稳定。','About 78% of the atmosphere; its triple bond makes it very stable.'],
+['O=C=O','二氧化碳','Carbon dioxide','18 世纪由约瑟夫·布莱克研究，是最早被确认的气体之一。','Studied by Joseph Black in the 18th century; one of the first gases identified.'],
+['N','氨','Ammonia','哈伯-博施法让人类得以大规模合成氨，用于制造化肥。','The Haber–Bosch process made large-scale ammonia for fertilizer possible.'],
+['C','甲烷','Methane','甲烷是由亚历山德罗·伏特发现的，后来他发明了电池。','Methane was discovered by Alessandro Volta, who later invented the battery.'],
+['CC','乙烷','Ethane','1834 年，人类首次制造出乙烷，当时却将其误认为甲烷。','Ethane was first made in 1834, but was mistaken for methane at the time.'],
+['OCO','甲二醇','Methanediol','天体化学家希望能在遥远的恒星中找到这种物质的身影。','Astrochemists hope to find traces of it around distant stars.'],
+['O1OOO1','四聚氧','Tetraoxygen','四聚氧的存在早在 1924 年就被预测，但直到 2001 年才被切实地发现。','Predicted as early as 1924, but only observed for real in 2001.'],
+['NC(=O)N','尿素','Urea','尿素是第一种在实验室中人工合成的有机化合物。','Urea was the first organic compound synthesized in a laboratory.'],
+['CO','甲醇','Methanol','俗称木精，最初由木材干馏得到。','Known as wood alcohol; first obtained by distilling wood.'],
+['CCO','乙醇','Ethanol','酒精饮料中的醇，也是常用的溶剂和燃料。','The alcohol in drinks, and a common solvent and fuel.'],
+['COC','二甲醚','Dimethyl ether','乙醇的同分异构体：分子式相同，结构却不同。','An isomer of ethanol: same formula, different structure.'],
+['C=C','乙烯','Ethylene','植物激素之一，能催熟水果。','A plant hormone that ripens fruit.'],
+['C#C','乙炔','Acetylene','燃烧时火焰温度极高，常用于焊接和切割。','Burns extremely hot; used for welding and cutting.'],
+['C#N','氢氰酸','Hydrogen cyanide','剧毒，却是研究生命起源时绕不开的小分子。','Highly toxic, yet a key small molecule in origin-of-life research.'],
+['C=O','甲醛','Formaldehyde','福尔马林的主要成分。','The main component of formalin.'],
+['C(=O)O','甲酸','Formic acid','最初由蚂蚁蒸馏得到，故又名蚁酸。','First distilled from ants, hence its Chinese name “ant acid”.'],
+['CC(=O)O','乙酸','Acetic acid','食醋酸味的来源。','What gives vinegar its sourness.'],
+['CC(=O)C','丙酮','Acetone','常见溶剂，也是卸甲油的主要成分。','A common solvent and the main ingredient of nail polish remover.'],
+['C1=CC=CC=C1','苯','Benzene','据说凯库勒梦见蛇咬住自己的尾巴，由此想到了环状结构。','Kekulé reportedly dreamed of a snake biting its tail and pictured the ring.'],
+['OO','过氧化氢','Hydrogen peroxide','水溶液即双氧水，常用作消毒剂和漂白剂。','Its water solution is used as a disinfectant and bleach.'],
+['NN','肼','Hydrazine','常用作火箭燃料。','Used as a rocket fuel.'],
+['OCCO','乙二醇','Ethylene glycol','汽车防冻液的主要成分。','The main ingredient of car antifreeze.'],
+['NCC(=O)O','甘氨酸','Glycine','最简单的氨基酸，已在彗星样品中被发现。','The simplest amino acid, found in comet samples.'],
+['CN','甲胺','Methylamine','最简单的有机胺。','The simplest organic amine.'],
+['CC(=O)OC1=CC=CC=C1C(=O)O','阿司匹林','Aspirin','1897 年，拜耳公司的费利克斯·霍夫曼合成出可供药用的乙酰水杨酸，它的前身水杨酸最早取自柳树皮。','In 1897 Felix Hoffmann at Bayer made a usable form; its precursor, salicylic acid, was first taken from willow bark.'],
+['CC1(C)SC2C(NC(=O)CC3=CC=CC=C3)C(=O)N2C1C(=O)O','青霉素 G（抗生素）','Penicillin G (antibiotic)','1928 年弗莱明发现青霉菌能抑制细菌，青霉素后来成为第一种被广泛使用的抗生素。','Fleming noticed in 1928 that a mould held bacteria back; penicillin became the first widely used antibiotic.'],
+['KON(=O)=O','黑火药（硝酸钾）','Black powder (potassium nitrate)','黑火药由硝酸钾、硫磺和木炭混合而成，是中国古代四大发明之一。这里展示的是其中的氧化剂硝酸钾。','Black powder is a mix of potassium nitrate, sulfur and charcoal, one of China’s Four Great Inventions. Shown here is its oxidizer, potassium nitrate.'],
+['OCC1OC(O)C(O)C(O)C1O','葡萄糖','Glucose','细胞最直接的能量来源，大脑主要依靠它供能。','The most direct fuel for cells; the brain relies mainly on it.'],
+['NC1=NC=NC2=C1N=CN2C3OC(COP(=O)(O)OP(=O)(O)OP(=O)(O)O)C(O)C3O','ATP（三磷酸腺苷）','ATP (adenosine triphosphate)','细胞的“能量货币”，人体每天周转的 ATP 总量大约相当于自身体重。','The cell’s energy currency; the body recycles roughly its own weight in ATP every day.'],
+['OCC(O)C1OC(=O)C(O)=C1O','维生素 C（维他命 C）','Vitamin C (ascorbic acid)','缺乏维生素 C 会引起坏血病，大航海时代曾夺去许多水手的生命。','A lack of it causes scurvy, which killed many sailors in the age of sail.'],
+['OS(=O)(=O)O','硫酸','Sulfuric acid','“化学工业之母”，产量常被用来衡量一个国家的工业水平。','Often called the “king of chemicals”; its output is a rough gauge of a nation’s industry.'],
+['ON(=O)=O','硝酸','Nitric acid','古代炼金术士称它为“强水”，因为它能溶解银。','Alchemists called it aqua fortis, “strong water”, because it dissolves silver.'],
+['Cl','盐酸（氯化氢）','Hydrochloric acid (HCl)','盐酸是氯化氢的水溶液，我们胃液里的酸也是它。','Hydrochloric acid is a water solution of hydrogen chloride, and it is also the acid in your stomach.'],
+['KC#N','氰化物（氰化钾）','Cyanide (potassium cyanide)','剧毒，会阻止细胞利用氧；工业上也用于从矿石中提金。','Highly toxic: it stops cells from using oxygen. Also used industrially to extract gold from ore.'],
+['O=O=O','臭氧','Ozone','臭氧层吸收了阳光中的大部分紫外线，名字来自希腊语中“闻”的意思。','The ozone layer absorbs most of the Sun’s ultraviolet light; the name comes from the Greek word for “to smell”.'],
+['N#CC1=CC=CC=C1N','托林 Tholin（示意片段）','Tholins (schematic fragment)','紫外线或宇宙射线照射甲烷、氮等简单分子后生成的红褐色有机物，1979 年由萨根和卡雷命名，意为“泥泞”。土卫六的橙色雾霾、冥王星的红褐色区域都与它有关。这里只画了含氰基、氨基和苯环的示意片段，真实托林是复杂的混合物。','Reddish-brown organics formed when UV light or cosmic rays act on methane, nitrogen and the like; named by Sagan and Khare in 1979 from the Greek for “muddy”. Linked to Titan’s orange haze and Pluto’s red-brown regions. Only a schematic fragment (nitrile, amine, benzene ring) is drawn; real tholins are complex mixtures.'],
+['C#CC#N','氰基乙炔','Cyanoacetylene','在土卫六的大气和星际云中都被探测到，是生命起源研究关注的前体分子。','Detected in Titan’s atmosphere and in interstellar clouds; a precursor molecule studied in origin-of-life research.'],
+['CC#N','乙腈','Acetonitrile','在土卫六的大气和彗星中都被发现过。','Found in Titan’s atmosphere and in comets.'],
+['C=CC#N','丙烯腈','Acrylonitrile','土卫六大气中检出了丙烯腈，有研究提出它可能形成类似细胞膜的结构。','Detected in Titan’s atmosphere; some studies suggest it could form membrane-like structures.'],
+['NC1=NC=NC2=C1N=CN2','腺嘌呤','Adenine','由五个氢氰酸分子聚合而成，是 DNA 的碱基之一，在陨石中也检出过。','Formally five hydrogen cyanide units joined together; a DNA base that has also been found in meteorites.'],
+['O=C1NC=CC(=O)N1','尿嘧啶','Uracil','RNA 的碱基之一，在默奇森陨石中被检出。','A base of RNA, detected in the Murchison meteorite.'],
+['CC(N)C(=O)O','丙氨酸','Alanine','构成蛋白质的氨基酸之一，在陨石中也检出过。','One of the amino acids in proteins; also found in meteorites.'],
+['C1=CC=C2C=CC=CC2=C1','萘','Naphthalene','最简单的多环芳烃，是旧式卫生球的主要成分；多环芳烃被认为在星际空间中广泛存在。','The simplest polycyclic aromatic hydrocarbon, the main ingredient of old-style mothballs; such molecules are thought to be widespread in space.'],
+['CC1=C(N(=O)=O)C=C(N(=O)=O)C=C1N(=O)=O','三硝基甲苯（TNT）','Trinitrotoluene (TNT)','1863 年由德国化学家尤利乌斯·威尔布兰德首次合成，最初被当作黄色染料。','First made in 1863 by the German chemist Julius Wilbrand, and originally used as a yellow dye.'],
+['CC1=CN(C2CC(O)C(COP(=O)(O)O)O2)C(=O)NC1=O','DNA（片段：胸苷酸 dTMP）','DNA (fragment: thymidine monophosphate, dTMP)','DNA（脱氧核糖核酸）是遗传信息的载体。这里画的是它的一个基本单元——核苷酸，由磷酸、脱氧核糖和碱基（此处为胸腺嘧啶）组成；成千上万个单元连成长链。','DNA (deoxyribonucleic acid) carries genetic information. Drawn here is one building block, a nucleotide made of a phosphate, deoxyribose and a base (thymine); thousands of them join into a long chain.'],
+['O=C1NC(=O)C=CN1C2OC(COP(=O)(O)O)C(O)C2O','RNA（片段：尿苷酸 UMP）','RNA (fragment: uridine monophosphate, UMP)','RNA（核糖核酸）负责把 DNA 的信息转成蛋白质。这里画的是它的一个基本单元，由磷酸、核糖和碱基（此处为尿嘧啶）组成。','RNA (ribonucleic acid) turns the information in DNA into proteins. Drawn here is one building block: a phosphate, ribose and a base (uracil).'],
+['C1=CC=C2C(=C1)C3=CC(CCCCCCCC)=CC=C3S2','沥青（示意片段：含硫芳香核 + 烷基链）','Asphalt / bitumen (schematic fragment: sulfur-containing aromatic core + alkyl chain)','沥青是原油蒸馏后剩下的最重的部分，不是单一分子，而是成千上万种烃类以及含硫、氮、氧的化合物的混合物。这里只画了一个示意片段：含硫的芳香环核心加一条烷基链。','Asphalt (bitumen) is the heaviest residue left after crude oil is distilled. It is not one molecule but a mixture of thousands of hydrocarbons and sulfur-, nitrogen- and oxygen-containing compounds. Only a schematic fragment is drawn: a sulfur-containing aromatic core with an alkyl chain.']];
+function parse(s){const A=[],B=[],st=[],ring={},nh=new Set();let prev=-1,ord=1;
+ for(const tk of s.match(/\[[A-Z][a-z]?\]|[A-Z][a-z]?|[=#()]|\d/g)){
+  const br=tk[0]=='[',ch=br?tk.slice(1,-1):tk;
+  if(EL[ch]){A.push(ch);const k=A.length-1;if(br)nh.add(k);if(prev>=0)B.push([prev,k,ord]);prev=k;ord=1}
+  else if(ch=='=')ord=2;else if(ch=='#')ord=3;
+  else if(ch=='(')st.push(prev);else if(ch==')')prev=st.pop();
+  else if(/\d/.test(ch)){if(ring[ch]!=null){B.push([ring[ch],prev,ord]);delete ring[ch];ord=1}else ring[ch]=prev}}
+ const n=A.length;
+ for(let k=0;k<n;k++){if(nh.has(k))continue;const u=B.filter(b=>b[0]==k||b[1]==k).reduce((s,b)=>s+b[2],0);for(let h=EL[A[k]].v-u;h>0;h--){A.push('H');B.push([k,A.length-1,1])}}
+ return{A,B}}
+function formula(E){const c={};E.forEach(e=>c[e]=(c[e]||0)+1);const ks=Object.keys(c).sort();
+ const o=c.C?['C',...(c.H?['H']:[]),...ks.filter(k=>k!='C'&&k!='H')]:ks;
+ return o.map(k=>k+(c[k]>1?'<sub>'+c[k]+'</sub>':'')).join('')}
+function lay3({A,B}){
+ const n=A.length,VE={H:1,C:4,N:5,O:6,P:5,S:6,K:1,Cl:7,F:7,Br:7,Se:6,Te:6,As:5,Sb:5,Bi:5},bs=A.map(()=>0),own=[];
+ B.forEach(([a,b,o])=>{bs[a]+=o;bs[b]+=o});
+ A.forEach((e,i)=>{if(e=='C'||e=='H'||e=='K')return;const l=Math.round((VE[e]-bs[i])/2);for(let k=0;k<Math.min(l,3);k++)own.push(i)});
+ const P=Array.from({length:n+own.length},()=>({x:Math.random()-.5,y:Math.random()-.5,z:Math.random()-.5})),adj=new Set(B.flatMap(([a,b])=>[a+','+b,b+','+a])),flat=new Set();
+ own.forEach((o,k)=>{adj.add(o+','+(n+k));adj.add((n+k)+','+o)});
+ B.forEach(([a,b,o])=>{if(o>1)B.forEach(([c,d])=>{if([a,b].includes(c)||[a,b].includes(d)){flat.add(c);flat.add(d)}})});
+ own.forEach((o,k)=>{if(flat.has(o))flat.add(n+k)});
+ const sp=[...B.map(([a,b])=>[a,b,1]),...own.map((o,k)=>[o,n+k,.6])];
+ for(let t=0;t<500;t++){const F=P.map(()=>({x:0,y:0,z:0}));
+  for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){if(adj.has(i+','+j))continue;const dx=P[j].x-P[i].x,dy=P[j].y-P[i].y,dz=P[j].z-P[i].z,d=Math.hypot(dx,dy,dz)||.1,f=d>3.5?0:(i>=n||j>=n?.26:.2)/(d*d*d);F[i].x-=dx*f;F[i].y-=dy*f;F[i].z-=dz*f;F[j].x+=dx*f;F[j].y+=dy*f;F[j].z+=dz*f}
+  for(const [a,b,L] of sp){const dx=P[b].x-P[a].x,dy=P[b].y-P[a].y,dz=P[b].z-P[a].z,d=Math.hypot(dx,dy,dz)||.1,f=(d-L)*.5/d;F[a].x+=dx*f;F[a].y+=dy*f;F[a].z+=dz*f;F[b].x-=dx*f;F[b].y-=dy*f;F[b].z-=dz*f}
+  P.forEach((p,i)=>{F[i].x-=p.x*.015;F[i].y-=p.y*.015;F[i].z-=p.z*.015;if(flat.has(i))F[i].z-=p.z*1.2;p.x+=F[i].x*.4;p.y+=F[i].y*.4;p.z+=F[i].z*.4})}
+ const Q=P.slice(0,n),cx=Q.reduce((s,p)=>s+p.x,0)/n,cy=Q.reduce((s,p)=>s+p.y,0)/n,cz=Q.reduce((s,p)=>s+p.z,0)/n;
+ Q.forEach(p=>{p.x-=cx;p.y-=cy;p.z-=cz});
+ return{P:Q,ext:Math.max(1.6,...Q.map((p,i)=>Math.hypot(p.x,p.y,p.z)+EL[A[i]].r))}}
+const ringOf=E=>{const s=new Set(E);return s.has('N')?'g':[...s].every(e=>e=='O'||e=='H')?'p':'y'};
+const FM={'N':'NH<sub>3</sub>','NN':'N<sub>2</sub>H<sub>4</sub>','C#N':'HCN','OS(=O)(=O)O':'H<sub>2</sub>SO<sub>4</sub>','ON(=O)=O':'HNO<sub>3</sub>','Cl':'HCl','KC#N':'KCN','C#CC#N':'HC<sub>3</sub>N','CC#N':'CH<sub>3</sub>CN'};
+const HID=new Set(['CC','O1OOO1','COC','C#C','C(=O)O','CC(=O)O','CC(=O)C','OCCO','CN']);let hidSet=new Set(HID),showH=false;
+try{const a=localStorage.getItem('mol-hid');if(a)hidSet=new Set(JSON.parse(a));showH=localStorage.getItem('mol-showh')=='1'}catch(e){}
+const isH=m=>hidSet.has(m.s),vis=m=>showH||!isH(m);
+const saveH=()=>{try{localStorage.setItem('mol-hid',JSON.stringify([...hidSet]));localStorage.setItem('mol-showh',showH?'1':'0')}catch(e){}};
+const XF={
+'N#CC1=CC=CC=C1N':[['在实验室里，用放电或紫外线照射甲烷和氮气的混合气体，就能得到类似的红褐色固体。','2015 年新视野号飞掠冥王星，拍到了红褐色的地表，不少研究者认为这与托林有关。','托林在水中水解后能产生氨基酸（实验室结果），所以它是研究生命起源的热点。'],['In the lab, sparking or UV-irradiating a mix of methane and nitrogen gives a similar reddish-brown solid.','New Horizons flew past Pluto in 2015 and imaged its red-brown surface, which many researchers link to tholins.','After hydrolysis in water, laboratory tholins yield amino acids, which is why they matter for origin-of-life research.']],
+'NC(=O)N':[['1828 年维勒由氰酸铵合成了尿素，动摇了“有机物只能由生物体产生”的活力论。','尿素是哺乳动物排出多余氮的主要形式，也是最常用的氮肥之一，含氮约 46%。'],['In 1828 Friedrich Wöhler made urea from ammonium cyanate, undermining the idea that organic compounds can only come from living things.','Mammals excrete excess nitrogen mainly as urea, and it is among the most used nitrogen fertilizers, at about 46% nitrogen.']],
+'C':[['甲烷是天然气的主要成分，也是一种强效温室气体。','土卫六的湖泊和河流里流动的是液态甲烷和乙烷，而不是水。'],['Methane is the main component of natural gas and a potent greenhouse gas.','The lakes and rivers on Saturn’s moon Titan hold liquid methane and ethane, not water.']],
+'O':[['水在约 4 °C 时密度最大，所以冰会浮在水面上。','水分子里两个氢氧键的夹角约 104.5°，所以它是弯的，不是直线。'],['Water is densest at about 4 °C, which is why ice floats.','The angle between the two O–H bonds is about 104.5°, so the molecule is bent, not straight.']],
+'NC1=NC=NC2=C1N=CN2C3OC(COP(=O)(O)OP(=O)(O)OP(=O)(O)O)C(O)C3O':[['末端的磷酸基团被水解掉时会释放能量，供肌肉收缩、神经传导等过程使用。','人体内同一时刻的 ATP 只有几十克，所以必须不停地再生。'],['Hydrolyzing the terminal phosphate group releases energy for muscle contraction, nerve signalling and more.','The body holds only tens of grams of ATP at any moment, so it must be regenerated constantly.']],
+'CC(=O)OC1=CC=CC=C1C(=O)O':[['阿司匹林通过抑制环氧合酶（COX）减少前列腺素的生成，从而退热、止痛、抗炎。','小剂量阿司匹林还能抑制血小板聚集，常用于预防血栓；是否服用应遵医嘱。'],['Aspirin inhibits cyclooxygenase (COX), cutting prostaglandin production, which lowers fever and eases pain and inflammation.','Low doses also reduce platelet clumping and are used to prevent clots; whether to take it is a matter for your doctor.']],
+'OCC1OC(O)C(O)C(O)C1O':[['植物通过光合作用，用二氧化碳和水合成葡萄糖。','血液里的葡萄糖浓度就是血糖，由胰岛素等激素调节。','这里画的是环状的吡喃葡萄糖；在溶液里它与开链形式处于平衡，且这个 3D 模型没有表示立体构型。'],['Plants build glucose from carbon dioxide and water by photosynthesis.','The glucose level in blood is blood sugar, regulated by hormones such as insulin.','The ring form (glucopyranose) is drawn here; in solution it is in equilibrium with an open-chain form, and this 3D model does not show stereochemistry.']],
+'CC1(C)SC2C(NC(=O)CC3=CC=CC=C3)C(=O)N2C1C(=O)O':[['它含有一个四元的 β-内酰胺环，能阻断细菌合成细胞壁。','有些细菌会产生 β-内酰胺酶，把这个环切开，从而对青霉素产生耐药。'],['It contains a four-membered β-lactam ring that blocks bacteria from building their cell walls.','Some bacteria make β-lactamase, which cuts that ring open and makes them resistant.']],
+'OCC(O)C1OC(=O)C(O)=C1O':[['人类和少数动物不能自己合成维生素 C，需要从新鲜的水果和蔬菜中获取。','它是一种抗氧化剂，也是合成胶原蛋白所必需的。'],['Humans and a few other animals cannot make vitamin C and must get it from fresh fruit and vegetables.','It is an antioxidant and is needed to make collagen.']],
+'KON(=O)=O':[['硝酸钾提供氧，硫磺和木炭是燃料，混合后燃烧极快并产生大量气体。','常见配比约为硝酸钾 75%、木炭 15%、硫磺 10%。'],['Potassium nitrate supplies oxygen while sulfur and charcoal are the fuel; the mix burns very fast and releases a lot of gas.','A common ratio is about 75% potassium nitrate, 15% charcoal and 10% sulfur.']],
+'C#N':[['苦杏仁等含有的苦杏仁苷在被消化时会释放氢氰酸，所以苦杏仁有毒。','腺嘌呤等碱基被认为可以由氢氰酸聚合生成。'],['Amygdalin in bitter almonds releases hydrogen cyanide when digested, which is why they are poisonous.','Bases such as adenine are thought to be able to form by polymerizing hydrogen cyanide.']],
+'O=O=O':[['臭氧在平流层里吸收紫外线保护我们，在近地面却是一种空气污染物。'],['In the stratosphere ozone shields us from ultraviolet light; near the ground it is an air pollutant.']],
+'NC1=NC=NC2=C1N=CN2':[['它在 ATP、DNA 和 RNA 中都出现。','在 DNA 中它与胸腺嘧啶配对，在 RNA 中与尿嘧啶配对。'],['It appears in ATP, DNA and RNA.','It pairs with thymine in DNA and with uracil in RNA.']],
+'C1=CC=CC=C1':[['苯环上的六个碳共享离域的电子，所以六个碳碳键长度相同，介于单键和双键之间。','苯是已知的致癌物。'],['The six carbons share delocalized electrons, so all six C–C bonds are equal in length, between a single and a double bond.','Benzene is a known carcinogen.']],
+'OS(=O)(=O)O':[['它极易吸水，浓硫酸能把糖脱水变成黑色的碳。','铅酸蓄电池里的电解液就是稀硫酸。'],['It is strongly dehydrating: concentrated sulfuric acid turns sugar into black carbon.','The electrolyte in lead–acid batteries is dilute sulfuric acid.']],
+'ON(=O)=O':[['它是制造化肥和炸药的重要原料；氨经奥斯特瓦尔德法氧化即可得到硝酸。'],['An important raw material for fertilizers and explosives; ammonia is oxidized to nitric acid by the Ostwald process.']],
+'Cl':[['工业上常用盐酸对钢材做酸洗，除去表面的铁锈。'],['Hydrochloric acid is widely used to pickle steel, removing surface rust.']],
+'CC1=C(N(=O)=O)C=C(N(=O)=O)C=C1N(=O)=O':[['它的熔点约 80 °C，可以熔化后浇注成型，又相对稳定、不易误爆，所以成为 20 世纪最主要的军用炸药之一。','爆炸威力常用“TNT 当量”来衡量：1 吨 TNT 当量约等于 4.184 吉焦的能量。','这里的硝基按教科书的示意方式画，没有标电荷。'],['It melts at about 80 °C, so it can be melted and cast, and it is relatively stable and hard to set off by accident, which made it one of the main military explosives of the 20th century.','Explosive yield is measured in “TNT equivalent”: one ton of TNT equivalent is defined as 4.184 gigajoules.','The nitro groups are drawn in the textbook shorthand, without charges.']],
+'CC1=CN(C2CC(O)C(COP(=O)(O)O)O2)C(=O)NC1=O':[['1953 年沃森和克里克提出 DNA 的双螺旋结构，罗莎林德·富兰克林拍到的 X 射线衍射照片提供了关键证据。','DNA 有 A、T、G、C 四种碱基，A 总是与 T 配对，G 总是与 C 配对。','“脱氧”指的是糖的2′ 位上少了一个氧原子（RNA 的核糖在这里有羟基），这让 DNA 更稳定。','人体一个细胞核里的 DNA 全部拉直约有 2 米长。','这里只画了一个核苷酸，没有画出长链和双螺旋，3D 形状是示意，不含立体构型。'],['In 1953 Watson and Crick proposed the double helix, with key evidence from Rosalind Franklin’s X-ray diffraction photographs.','DNA has four bases, A, T, G and C; A always pairs with T, and G always pairs with C.','“Deoxy” means the sugar lacks an oxygen atom at its 2′ position (ribose in RNA has a hydroxyl group there), which makes DNA more stable.','The DNA in the nucleus of one human cell would stretch to about 2 metres if laid out straight.','Only one nucleotide is drawn here, not the long chain or the double helix; the 3D shape is schematic and shows no stereochemistry.']],
+'O=C1NC(=O)C=CN1C2OC(COP(=O)(O)O)C(O)C2O':[['RNA 用尿嘧啶（U）代替了 DNA 里的胸腺嘧啶（T）。','核糖的2′ 位有羟基，使 RNA 比 DNA 更容易降解，它通常以单链形式存在。','有些 RNA 本身就能催化反应，所以“RNA 世界”假说认为，早期生命可能先以 RNA 为中心。','这里只画了一个核苷酸，没有画出长链，3D 形状是示意，不含立体构型。'],['Uracil (U) takes the place of the thymine (T) found in DNA.','The 2′ hydroxyl on ribose makes RNA easier to break down than DNA, and it usually exists as a single strand.','Some RNAs can catalyse reactions themselves, so the “RNA world” hypothesis suggests early life may have centred on RNA first.','Only one nucleotide is drawn here, not the long chain; the 3D shape is schematic and shows no stereochemistry.']],
+'C1=CC=C2C(=C1)C3=CC(CCCCCCCC)=CC=C3S2':[['其中的沅青质（asphaltenes）分子最大、颜色最深，常含多个稠合的芳香环，与沥青的深色和高黏度有关。','大部分沥青用来铺路，也用于屋顶防水。','天然沥青也存在：特立尼达的皮奇湖（Pitch Lake）是世界上最大的天然沥青湖。','英文 asphalt 来自希腊语 asphaltos，意思是“牢固的”；古人用天然沥青黏合砖石、给船防水。','和托林一样，这里的结构只是示意，真实沥青没有统一的分子式；链的 3D 形状也不是真实构象。'],['Asphaltenes, the largest and darkest components, often contain several fused aromatic rings and are linked to bitumen’s dark colour and high viscosity.','Most asphalt is used to pave roads; it is also used to waterproof roofs.','Natural asphalt exists too: Pitch Lake in Trinidad is the largest natural asphalt lake in the world.','The English word comes from the Greek asphaltos, meaning “secure”; ancient peoples used natural bitumen to bond bricks and waterproof boats.','As with tholins, the structure drawn is only schematic: real asphalt has no single molecular formula, and the chain’s 3D shape is not a real conformation.']]};
+const MASS={H:1.008,C:12.011,N:14.007,O:15.999,P:30.974,S:32.06,K:39.098,Cl:35.45};
+const NOTE_ZH={m:'金属和类金属通常以大量原子聚成的晶体形式存在，这里只画一个原子作示意。',g:'稀有气体以单原子形式存在，所以这里画的就是一个原子。',d:'卤素单质以双原子分子的形式存在。'};
+const NOTE_EN={m:'Metals and metalloids normally exist as crystals of vast numbers of atoms; a single atom is drawn here as a schematic.',g:'Noble gases exist as single atoms, so one atom is drawn.',d:'Halogen elements exist as diatomic molecules.'};
+const ELX=[
+['B','硼','Boron',5,10.81,85,'#e0b08c','m','硼是类金属，硼酸可用作温和的消毒剂和杀虫剂，耐热的硼硅玻璃实验器皿里也含硼。','A metalloid. Boric acid is used as a mild antiseptic and insecticide, and heat-resistant borosilicate lab glass contains boron.'],
+['F','氟气（F₂）','Fluorine (F₂)',9,18.998,50,'#a8d8a0','d','氟是电负性最大的元素，氟气反应性极强且有毒；牙膏里的氟化物能帮助预防龋齿。','Fluorine is the most electronegative element, and fluorine gas is extremely reactive and toxic; fluoride in toothpaste helps prevent tooth decay.'],
+['Cl','氯气（Cl₂）','Chlorine (Cl₂)',17,35.45,100,'#6fc3b0','d','氯气是黄绿色的有毒气体，稀释后用于自来水和泳池消毒；1915 年的伊普尔战役中它曾被用作化学武器。','Chlorine is a toxic yellow-green gas, used in dilute form to disinfect tap water and pools; it was used as a chemical weapon at Ypres in 1915.'],
+['Ar','氩','Argon',18,39.948,71,'#9fd3dc','g','氩约占大气体积的 0.93%，是空气中第三多的气体；它几乎不与其他物质反应，常用作焊接的保护气。','Argon makes up about 0.93% of the atmosphere, the third most abundant gas in air; it barely reacts, so it is used as a shielding gas in welding.'],
+['K','钾','Potassium',19,39.098,220,'#d996a8','m','钾是人体必需的电解质，参与神经信号传导；金属钾遇水会剧烈反应。','Potassium is an essential electrolyte involved in nerve signalling; the metal reacts violently with water.'],
+['Cr','铬','Chromium',24,51.996,140,'#8fa6c9','m','不锈钢含 10.5% 以上的铬，表面的氧化铬膜让它不易生锈；镀铬则让表面光亮。','Stainless steel contains more than 10.5% chromium, whose oxide film stops it rusting; chrome plating gives a bright finish.'],
+['Mn','锰','Manganese',25,54.938,140,'#a68fc9','m','锰是炼钢的重要添加剂，能提高钢的强度和韧性；它也是人体需要的微量元素。','Manganese is an important additive in steelmaking, adding strength and toughness; it is also a trace element the body needs.'],
+['Co','钴','Cobalt',27,58.933,135,'#8f9fe0','m','钴是维生素 B₁₂ 的核心金属原子，钴蓝颜料和锂离子电池的正极材料也离不开它。','Cobalt is the central metal atom of vitamin B₁₂; cobalt blue pigment and lithium-ion battery cathodes also depend on it.'],
+['Ga','镓','Gallium',31,69.723,130,'#c49aa0','m','镓的熔点只有约 29.8 °C，放在手心里就会熔化；它也是 LED 和半导体的重要材料。','Gallium melts at only about 29.8 °C, so it melts in your hand; it is also key to LEDs and semiconductors.'],
+['Ge','锗','Germanium',32,72.630,125,'#8fa0a0','m','门捷列夫在 1871 年预言过“类硅”，1886 年发现的锗正是它；锗曾用于最早的晶体管。','Mendeleev predicted “ekasilicon” in 1871, and germanium, found in 1886, matched it; germanium was used in the first transistors.'],
+['As','砷','Arsenic',33,74.922,115,'#b98fd0','m','砷的化合物剧毒，历史上被称为“毒药之王”；砷化镓则是重要的半导体材料。','Arsenic compounds are highly poisonous and were once called the “king of poisons”; gallium arsenide is an important semiconductor.'],
+['Se','硒','Selenium',34,78.971,115,'#d9a05a','m','硒是人体必需的微量元素，名字来自希腊语的“月亮”（selene）。','Selenium is an essential trace element; its name comes from the Greek for “moon”, selene.'],
+['Br','溴（Br₂）','Bromine (Br₂)',35,79.904,115,'#c0735a','d','溴是常温下唯一呈液态的非金属单质，红棕色，气味刺鼻。','Bromine is the only nonmetallic element that is liquid at room temperature: red-brown with a sharp smell.'],
+['Kr','氪','Krypton',36,83.798,88,'#9fd3dc','g','氪的名字来自希腊语“隐藏的”；1960 到 1983 年间，“米”曾以氪-86 的一条谱线来定义。','Its name comes from the Greek for “hidden”; from 1960 to 1983 the metre was defined by a spectral line of krypton-86.'],
+['Rb','铷','Rubidium',37,85.468,235,'#d996a8','m','铷原子钟是常见的高精度原子钟，用于卫星导航和通信等。','Rubidium atomic clocks are common high-precision clocks, used in satellite navigation and communications.'],
+['Sr','锶','Strontium',38,87.62,200,'#8fbf9f','m','锶的化合物燃烧时发出红色火焰，常用来制作红色烟花。','Strontium compounds burn with a red flame and are used in red fireworks.'],
+['Y','钇','Yttrium',39,88.906,180,'#8fc9c4','m','钇是稀土元素之一，掺钇的晶体（YAG）用于激光器，一些红色荧光粉里也有钇。','A rare-earth element; yttrium-doped crystals (YAG) are used in lasers, and some red phosphors contain yttrium.'],
+['Zr','锆','Zirconium',40,91.224,155,'#8fbfbf','m','锆吸收中子很少，所以核反应堆燃料棒的包壳常用锆合金。','Zirconium absorbs few neutrons, so zirconium alloys are widely used as cladding for reactor fuel rods.'],
+['Cd','镉','Cadmium',48,112.414,155,'#d9c06a','m','镉有毒，曾因含镉废水引发日本的“痛痛病”；镍镉电池和部分颜料也含镉。','Cadmium is toxic; cadmium-laden waste caused itai-itai disease in Japan, and nickel–cadmium batteries and some pigments contain it.'],
+['In','铟','Indium',49,114.818,155,'#a07fa0','m','铟锡氧化物（ITO）是透明的导电薄膜，触摸屏和液晶显示器都在用。','Indium tin oxide (ITO) is a transparent conductive film used in touch screens and LCDs.'],
+['Sb','锑','Antimony',51,121.760,145,'#a58fc0','m','锑常用于阻燃剂；古埃及人曾用辉锑矿制作眼影，铅字合金里也有锑。','Antimony is used in flame retardants; ancient Egyptians used stibnite as eye makeup, and type metal contains it.'],
+['Te','碲','Tellurium',52,127.60,140,'#c58a5a','m','碲是地壳里很稀少的元素，碲化镉用于薄膜太阳能电池。','Tellurium is rare in the Earth’s crust; cadmium telluride is used in thin-film solar cells.'],
+['Xe','氙','Xenon',54,131.293,108,'#9fd3dc','g','1962 年人们首次合成了氙的化合物，打破了“稀有气体不会形成化合物”的看法；氙灯常用于电影放映和汽车大灯。','In 1962 the first xenon compound was made, overturning the idea that noble gases form no compounds; xenon lamps are used in cinema projection and car headlights.'],
+['Cs','铯','Cesium',55,132.905,260,'#d996a8','m','铯原子钟是“秒”的定义基础：1 秒是铯-133 原子某一跃迁辐射的 9 192 631 770 个周期。','Caesium clocks underpin the second: one second is 9,192,631,770 periods of a transition radiation of caesium-133.'],
+['Ba','钡','Barium',56,137.327,215,'#7fb59c','m','硫酸钡几乎不溶于水，又不透 X 射线，所以能用作消化道造影的“钡餐”；可溶性钡盐则有毒。','Barium sulfate is almost insoluble and opaque to X-rays, so it serves as the “barium meal” for imaging the gut; soluble barium salts are toxic.'],
+['Bi','铋','Bismuth',83,208.980,160,'#b08fb0','m','铋-209 曾被当作最重的稳定核素，后来发现它其实有极长的半衰期（远超宇宙年龄）；含铋的药物能缓解胃部不适。','Bismuth-209 was long thought the heaviest stable nuclide, but it has an enormous half-life, far longer than the age of the universe; bismuth medicines ease stomach upset.'],
+['Pu','钚','Plutonium',94,244,175,'#6f8fd0','m','钚在 1940 年底至 1941 年初首次由西博格等人在伯克利合成；它是核武器和部分核反应堆的重要材料，所有同位素都有放射性。','Plutonium was first made at Berkeley by Seaborg and colleagues in late 1940 and early 1941; it is a key material in nuclear weapons and some reactors, and all its isotopes are radioactive.']];
+ELX.forEach(([sym,zh,en,Z,mass,pm,col,ty,zf,ef])=>{
+ if(!EL[sym])EL[sym]={c:col,r:+(.28+(pm-50)*.0013).toFixed(2),v:ty=='d'?1:0,z:zh.replace(/（.*）/,''),e:en.replace(/ \(.*\)/,'')};
+ MASS[sym]=mass;const s=ty=='d'?sym+sym:'['+sym+']';SRC.push([s,zh,en,zf,ef]);
+ XF[s]=[['原子序数 '+Z+'。'+(sym=='Pu'?'这里的质量取最稳定同位素钚-244 的质量数。':''),NOTE_ZH[ty]],['Atomic number '+Z+'.'+(sym=='Pu'?' The mass shown is the mass number of the most stable isotope, plutonium-244.':''),NOTE_EN[ty]]]});
+const AAN=['这里画的是不含立体构型的平面结构；天然蛋白质中的氨基酸都是 L 型。','Drawn without stereochemistry; the amino acids in natural proteins are the L form.'];
+const AAX=[
+['NC(CO)C(=O)O','丝氨酸','Serine','1865 年首次从蚕丝蛋白中分离出来，名字来自拉丁语的“丝”（sericum）。','First isolated from silk protein in 1865; its name comes from the Latin word for silk, sericum.'],
+['CC(C)C(N)C(=O)O','缬氨酸','Valine','必需氨基酸。镰状细胞贫血的根源，是血红蛋白里有一个谷氨酸被缬氨酸取代。','An essential amino acid. Sickle-cell disease arises when one glutamic acid in haemoglobin is replaced by valine.'],
+['CC(C)CC(N)C(=O)O','亮氨酸','Leucine','必需氨基酸，名字来自希腊语“白色”，因为最早分离出的是白色晶体。','An essential amino acid; its name comes from the Greek for “white”, after the white crystals first isolated.'],
+['CCC(C)C(N)C(=O)O','异亮氨酸','Isoleucine','必需氨基酸，是亮氨酸的同分异构体：分子式相同，连接方式不同。','An essential amino acid and an isomer of leucine: same formula, different connectivity.'],
+['CC(O)C(N)C(=O)O','苏氨酸','Threonine','必需氨基酸，名字来自苏糖，因为两者结构相似。','An essential amino acid, named after the sugar threose because of their similar structures.'],
+['NC(CS)C(=O)O','半胱氨酸','Cysteine','含巯基（–SH），两个半胱氨酸之间能形成二硫键，帮助蛋白质折叠；头发里的角蛋白富含这种键。','Its thiol (–SH) group lets two cysteines form disulfide bonds that help proteins fold; hair keratin is rich in them.'],
+['CSCCC(N)C(=O)O','甲硫氨酸','Methionine','必需氨基酸，含硫；新合成的蛋白质多以它开头。','An essential, sulfur-containing amino acid; most newly made proteins start with it.'],
+['NC(CC(=O)O)C(=O)O','天冬氨酸','Aspartic acid','名字来自芦笋（asparagus），它最早是由从芦笋汁中得到的天冬酰胺水解得到的。','Named after asparagus; it was first obtained by hydrolysing asparagine, which came from asparagus juice.'],
+['NC(CCC(=O)O)C(=O)O','谷氨酸','Glutamic acid','谷氨酸钠就是味精，带来鲜味；谷氨酸也是大脑里最主要的兴奋性神经递质。','Monosodium glutamate (MSG) is its sodium salt and gives umami; glutamate is also the brain’s main excitatory neurotransmitter.'],
+['NC(CC(N)=O)C(=O)O','天冬酰胺','Asparagine','1806 年从芦笋汁中分离出来，是第一个被发现的氨基酸。','Isolated from asparagus juice in 1806, it was the first amino acid to be discovered.'],
+['NC(CCC(N)=O)C(=O)O','谷氨酰胺','Glutamine','血液中含量最丰富的游离氨基酸。','The most abundant free amino acid in the blood.'],
+['NCCCCC(N)C(=O)O','赖氨酸','Lysine','必需氨基酸，谷物中的含量偏低，所以常靠豆类来补充。','An essential amino acid that is low in cereals, so legumes are a common source.'],
+['NC(CCCNC(N)=N)C(=O)O','精氨酸','Arginine','体内合成一氧化氮的原料之一，一氧化氮能让血管舒张。','A raw material for the body’s nitric oxide, which relaxes blood vessels.'],
+['NC(CC1=CN=CN1)C(=O)O','组氨酸','Histidine','必需氨基酸；它脱掉羧基后就是组胺，参与过敏反应。','An essential amino acid; removing its carboxyl group gives histamine, which is involved in allergic reactions.'],
+['NC(CC1=CC=CC=C1)C(=O)O','苯丙氨酸','Phenylalanine','必需氨基酸；苯丙酮尿症患者无法代谢它，所以含阿斯巴甜的食品要标注。','An essential amino acid; people with phenylketonuria cannot process it, which is why foods with aspartame carry a warning.'],
+['NC(CC1=CC=C(O)C=C1)C(=O)O','酪氨酸','Tyrosine','1846 年从奶酪中分离出来，名字来自希腊语“奶酪”tyros。','Isolated from cheese in 1846; its name comes from the Greek tyros, “cheese”.'],
+['NC(CC1=CNC2=CC=CC=C12)C(=O)O','色氨酸','Tryptophan','必需氨基酸，是血清素和褪黑素的原料。','An essential amino acid and the raw material for serotonin and melatonin.'],
+['OC(=O)C1CCCN1','脯氨酸','Proline','侧链与氨基连成环，是唯一带仲胺的常见氨基酸，会让蛋白质链弯折。','Its side chain loops back onto the amino group, making it the only common amino acid with a secondary amine; it puts kinks in protein chains.']];
+const OTX=[
+['CCC','丙烷','Propane','液化石油气的主要成分之一，常用于野营炉和家用燃气。','A main component of liquefied petroleum gas, used in camping stoves and home gas.',['它属于烷烃：只含碳碳单键，链状烷烃的通式是 CₙH₂ₙ₊₂。'],['An alkane: only single carbon–carbon bonds; the general formula for chain alkanes is CₙH₂ₙ₊₂.']],
+['CC(C)CC(C)(C)C','异辛烷','Isooctane','汽油的“辛烷值”就是以异辛烷为 100 来定义的。','The octane rating of petrol is defined with isooctane as 100.',['它属于烷烃：只含碳碳单键，带有支链。'],['An alkane: only single carbon–carbon bonds, here with branches.']],
+['CC=C','丙烯','Propene','聚丙烯塑料的原料，用于包装、纤维和家电外壳。','The raw material of polypropylene plastic, used in packaging, fibres and appliance housings.',['它属于烯烃：含一个碳碳双键，链状烯烃的通式是 CₙH₂ₙ。'],['An alkene: one carbon–carbon double bond; the general formula for chain alkenes is CₙH₂ₙ.']],
+['CC#C','丙炔','Propyne','丙炔常和丙二烯混合，曾作为焊接用的 MAPP 气体。','Propyne, mixed with propadiene, was used as MAPP gas for welding.',['它属于炔烃：含一个碳碳三键，链状炔烃的通式是 CₙH₂ₙ₋₂。'],['An alkyne: one carbon–carbon triple bond; the general formula for chain alkynes is CₙH₂ₙ₋₂.']],
+['CCOCC','乙醚','Diethyl ether','1846 年莫顿在公开手术中用乙醚做麻醉，开启了现代外科麻醉。','In 1846 William Morton used ether as an anaesthetic in a public operation, opening the era of modern surgical anaesthesia.',['它属于醚：两个烃基通过一个氧原子相连（R–O–R′）。'],['An ether: two hydrocarbon groups joined through one oxygen atom (R–O–R′).']],
+['O=C1CCCCC1','环己酮','Cyclohexanone','主要用来制造尼龙：先转化成己内酰胺，再聚合成尼龙-6。','Mainly used to make nylon: it is converted to caprolactam, which is polymerised into nylon-6.',['它属于酮：羰基（C=O）连在两个碳原子之间。'],['A ketone: a carbonyl group (C=O) bonded between two carbon atoms.']],
+['CC1=CC=CC=C1','甲苯','Toluene','常见的溶剂，也是制造 TNT 的原料。','A common solvent, and the starting material for making TNT.',['它属于芳香烃：含有苯环这样的离域电子体系。'],['An aromatic hydrocarbon: it contains a benzene-like ring with delocalized electrons.']],
+['OC1=CC=CC=C1','苯酚','Phenol','1860 年代李斯特用苯酚（石炭酸）给手术消毒，开创了抗菌外科。','In the 1860s Joseph Lister used phenol (carbolic acid) to disinfect surgery, founding antiseptic surgery.',['它属于芳香烃衍生物：苯环上连着一个羟基。'],['An aromatic compound: a benzene ring carrying a hydroxyl group.']],
+['NCC(=O)NCC(=O)O','甘氨酰甘氨酸（二肽）','Glycylglycine (dipeptide)','最简单的肽之一：两个甘氨酸通过肽键连在一起。','One of the simplest peptides: two glycines joined by a peptide bond.',['肽键是一个氨基酸的羧基与另一个氨基酸的氨基脱水形成的酰胺键；许多氨基酸连起来就成了蛋白质。'],['A peptide bond is the amide bond formed when the carboxyl group of one amino acid joins the amino group of another with loss of water; many amino acids in a chain make a protein.']],
+['COC(=O)C(CC1=CC=CC=C1)NC(=O)C(N)CC(=O)O','阿斯巴甜（二肽甜味剂）','Aspartame (dipeptide sweetener)','由天冬氨酸和苯丙氨酸甲酯构成，甜度约为蔗糖的 200 倍。','Built from aspartic acid and phenylalanine methyl ester, it is about 200 times as sweet as sucrose.',['它含有苯丙氨酸，所以苯丙酮尿症患者需要避免。','它是一个二肽：两个氨基酸通过肽键相连。'],['It contains phenylalanine, so people with phenylketonuria must avoid it.','It is a dipeptide: two amino acids joined by a peptide bond.']],
+['NC(CCC(=O)NC(CS)C(=O)NCC(=O)O)C(=O)O','谷胱甘肽（三肽）','Glutathione (tripeptide)','由谷氨酸、半胱氨酸和甘氨酸组成，是细胞内重要的抗氧化剂。','Made of glutamic acid, cysteine and glycine, it is an important antioxidant inside cells.',['它的第一个肽键由谷氨酸的侧链羧基形成，而不是常规的 α 位。','它是一个三肽：三个氨基酸通过肽键相连。'],['Its first peptide bond uses the side-chain carboxyl of glutamic acid rather than the usual α position.','It is a tripeptide: three amino acids joined by peptide bonds.']],
+['CC1=CC2=C(C=C1C)N(CC(O)C(O)C(O)CO)C3=NC(=O)NC(=O)C3=N2','维生素 B₂（核黄素）','Vitamin B2 (riboflavin)','核黄素是黄色的，维生素片和服用后的尿液会显得很黄就是这个缘故。','Riboflavin is yellow, which is why vitamin pills, and urine after taking them, can look bright yellow.',['它是 FAD、FMN 等辅酶的组成部分，参与细胞的能量代谢。','B 族维生素是一组水溶性维生素，多数是辅酶的组成部分。'],['It is part of the coenzymes FAD and FMN, which take part in cellular energy metabolism.','The B vitamins are a group of water-soluble vitamins, most of which are parts of coenzymes.']],
+['OC(=O)C1=CN=CC=C1','维生素 B₃（烟酸）','Vitamin B3 (niacin)','缺乏烟酸会引起糙皮病，以玉米为主食的地区曾经多发。','A lack of niacin causes pellagra, once common where maize was the staple food.',['烟酸是 NAD⁺ 的原料，NAD⁺ 在能量代谢里不可或缺。','B 族维生素是一组水溶性维生素，多数是辅酶的组成部分。'],['Niacin is the raw material for NAD⁺, which is indispensable in energy metabolism.','The B vitamins are a group of water-soluble vitamins, most of which are parts of coenzymes.']],
+['CC(C)(CO)C(O)C(=O)NCCC(=O)O','维生素 B₅（泛酸）','Vitamin B5 (pantothenic acid)','名字来自希腊语“到处都有”，几乎所有食物里都含有泛酸。','Its name comes from the Greek for “everywhere”, since nearly every food contains pantothenic acid.',['泛酸是辅酶 A 的组成部分。','B 族维生素是一组水溶性维生素，多数是辅酶的组成部分。'],['Pantothenic acid is a component of coenzyme A.','The B vitamins are a group of water-soluble vitamins, most of which are parts of coenzymes.']],
+['CC1=NC=C(CO)C(CO)=C1O','维生素 B₆（吡哆醇）','Vitamin B6 (pyridoxine)','参与氨基酸的代谢，也与血清素等神经递质的合成有关。','It takes part in amino acid metabolism and in making neurotransmitters such as serotonin.',['B 族维生素是一组水溶性维生素，多数是辅酶的组成部分。'],['The B vitamins are a group of water-soluble vitamins, most of which are parts of coenzymes.']],
+['C1C2C(C(S1)CCCCC(=O)O)NC(=O)N2','维生素 B₇（生物素）','Vitamin B7 (biotin)','又称维生素 H；生蛋清里的抗生物素蛋白会紧紧结合它，所以长期大量生吃蛋清可能导致缺乏。','Also called vitamin H; avidin in raw egg white binds it tightly, so eating large amounts of raw egg white over a long time can cause a deficiency.',['B 族维生素是一组水溶性维生素，多数是辅酶的组成部分。'],['The B vitamins are a group of water-soluble vitamins, most of which are parts of coenzymes.']]];
+AAX.forEach(a=>{SRC.push(a);XF[a[0]]=[[AAN[0]],[AAN[1]]]});
+OTX.forEach(o=>{SRC.push(o.slice(0,5));XF[o[0]]=[o[5],o[6]]});
+const AAS=new Set(['NCC(=O)O','CC(N)C(=O)O',...AAX.map(a=>a[0])]);
+const VIT=new Set(['OCC(O)C1OC(=O)C(O)=C1O',...OTX.slice(11).map(o=>o[0])]);
+const isEl=m=>new Set(m.g.A).size==1;
+const LIB=SRC.map(([s,z,e,zf,ef])=>{const g=parse(s),x=XF[s]||[[],[]];return{z,e,zf,ef,zfs:[zf,...x[0]],efs:[ef,...x[1]],g,f:FM[s]||formula(g.A),s,...lay3(g)}});
+const visIdx=()=>LIB.map((m,i)=>i).filter(i=>vis(LIB[i]));
+const PAL={light:{bg:'#ece9de',bond:'#5f5b50',edge:'rgba(70,60,35,.5)',hi:'rgba(255,255,255,.2)',ring:{y:'#efe2b5',g:'#cde4d2',p:'#eccbc6'}},dark:{bg:'#222220',bond:'#b9b5a8',edge:'rgba(0,0,0,.45)',hi:'rgba(255,255,255,.14)',ring:{y:'#4a4326',g:'#2f4a3b',p:'#4f3433'}}};
+const dk=()=>{const t=document.documentElement.dataset.theme;return t?t=='dark':matchMedia('(prefers-color-scheme: dark)').matches};
+const VIEWS=['viewer','library','builder'];let style='glass';try{style=localStorage.getItem('mol-style')||'glass'}catch(e){}
+let lang='zh',cur=6,flt='all',q='',ry=.6,rx=.35,drag=null,view='viewer';
+try{lang=localStorage.getItem('mol-lang')||(/^zh/i.test(navigator.language)?'zh':'en');const th=localStorage.getItem('mol-theme');if(th)document.documentElement.dataset.theme=th}catch(e){}
+const $=s=>document.querySelector(s),cv=$('#cv'),reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const nm=m=>lang=='zh'?m.z:m.e,ft=m=>lang=='zh'?m.zf:m.ef,plain=h=>h.replace(/<\/?sub>/g,'');
+
+function size(c){const d=devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;if(c.width!=Math.round(w*d)||c.height!=Math.round(h*d)){c.width=Math.round(w*d);c.height=Math.round(h*d)}const x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return[x,w,h]}
+const BOK=[[.1,.78,.09],[.9,.2,.07],[.8,.84,.12],[.16,.18,.05],[.52,.93,.04],[.62,.08,.045]];
+function glassBg(x,W,H,dark,main){
+ let g=x.createLinearGradient(0,0,W,H);
+ if(dark){g.addColorStop(0,'#3f4348');g.addColorStop(1,'#1a1c1e')}else{g.addColorStop(0,'#eceeef');g.addColorStop(1,'#b2b8bd')}
+ x.fillStyle=g;x.fillRect(0,0,W,H);
+ g=x.createRadialGradient(W*.3,H*.2,0,W*.3,H*.2,W*.7);g.addColorStop(0,dark?'rgba(255,255,255,.10)':'rgba(255,255,255,.6)');g.addColorStop(1,'rgba(255,255,255,0)');
+ x.fillStyle=g;x.fillRect(0,0,W,H);
+ if(!main)return;const tm=Date.now()/1000;
+ BOK.forEach(([fx,fy,fr],i)=>{const r=fr*W,px=fx*W+Math.sin(tm*.3+i*2)*W*.008,py=fy*H+Math.cos(tm*.25+i)*H*.012;
+  const b=x.createRadialGradient(px-r*.3,py-r*.3,r*.1,px,py,r);
+  b.addColorStop(0,dark?'rgba(255,255,255,.08)':'rgba(255,255,255,.35)');b.addColorStop(.8,dark?'rgba(255,255,255,.04)':'rgba(255,255,255,.1)');b.addColorStop(1,dark?'rgba(255,255,255,.2)':'rgba(255,255,255,.55)');
+  x.beginPath();x.arc(px,py,r,0,7);x.fillStyle=b;x.fill()})}
+const rgbOf=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)).join(',');
+function glassItems(x,items,m,U,dark){
+ for(const it of items){
+  if(it.b){const[a,b,o]=it.b,p=m.Q[a],r=m.Q[b],dx=r.x-p.x,dy=r.y-p.y,l=Math.hypot(dx,dy)||1,ux=dx/l,uy=dy/l,nx=-uy,ny=ux,s=(p.s+r.s)/2,tw=Math.max(2,.17*U*s),sh=(nx*-.7+ny*-.7)>0?1:-1;
+   for(const f of o==1?[0]:o==2?[-.17,.17]:[-.3,0,.3]){const ox=nx*f*U*s,oy=ny*f*U*s,x1=p.x+ux*p.r*.8+ox,y1=p.y+uy*p.r*.8+oy,x2=r.x-ux*r.r*.8+ox,y2=r.y-uy*r.r*.8+oy;
+    x.lineCap='round';
+    for(const [c,w,d] of [[dark?'rgba(255,255,255,.3)':'rgba(70,80,90,.32)',tw,0],[dark?'rgba(255,255,255,.16)':'rgba(255,255,255,.6)',tw*.72,0],['rgba(255,255,255,.92)',tw*.2,sh*tw*.2]]){
+     x.strokeStyle=c;x.lineWidth=w;x.beginPath();x.moveTo(x1+nx*d,y1+ny*d);x.lineTo(x2+nx*d,y2+ny*d);x.stroke()}}}
+  else{const a=it.a,r=a.r,c=rgbOf(EL[a.e].c),k=(.78+.22*Math.max(-1,Math.min(1,a.z/m.ext)))*(r<14?1.8:1);
+   let g=x.createRadialGradient(a.x-r*.25,a.y-r*.3,r*.1,a.x,a.y,r);
+   g.addColorStop(0,`rgba(255,255,255,${.12*k})`);g.addColorStop(.55,`rgba(${c},${.28*k})`);g.addColorStop(.9,`rgba(${c},${.62*k})`);g.addColorStop(1,`rgba(${c},${.9*k})`);
+   x.beginPath();x.arc(a.x,a.y,r,0,7);x.fillStyle=g;x.fill();
+   x.lineWidth=Math.max(1,r*.05);x.strokeStyle=dark?'rgba(255,255,255,.35)':'rgba(255,255,255,.8)';x.stroke();
+   g=x.createRadialGradient(a.x+r*.35,a.y+r*.42,0,a.x+r*.35,a.y+r*.42,r*.6);g.addColorStop(0,'rgba(255,255,255,.5)');g.addColorStop(1,'rgba(255,255,255,0)');
+   x.beginPath();x.arc(a.x,a.y,r*.96,0,7);x.fillStyle=g;x.fill();
+   x.save();x.translate(a.x-r*.36,a.y-r*.43);x.rotate(-.7);x.beginPath();x.ellipse(0,0,r*.3,r*.14,0,0,7);x.fillStyle='rgba(255,255,255,.92)';x.fill();x.restore();
+   x.fillStyle=dark?'rgba(255,255,255,.75)':'rgba(40,45,50,.55)';x.font=`600 ${r*.75}px system-ui,sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText(a.e,a.x,a.y+r*.05)}}}
+function draw(c,m,ry,rx,cyf,zm=1,pn=[0,0]){
+ const[x,W,H]=size(c);if(!W)return;const P=PAL[dk()?'dark':'light'];
+ x.clearRect(0,0,W,H);if(style=='glass')glassBg(x,W,H,dk(),c===cv);else{x.fillStyle=P.bg;x.fillRect(0,0,W,H)}
+ const bw=Math.max(1.6,W/320),ew=Math.max(1,W/520);
+ 
+ const U=.85*Math.min(W/2,H*Math.min(cyf,1-cyf))/m.ext/1.3*zm*(style=='glass'?1.2:1),cy=H*cyf+pn[1],D=Math.max(6,m.ext*3.2),sy=Math.sin(ry),cyw=Math.cos(ry),sx=Math.sin(rx),cx=Math.cos(rx);
+ const Q=m.P.map((p,i)=>{const x1=p.x*cyw+p.z*sy,z1=-p.x*sy+p.z*cyw,y2=p.y*cx-z1*sx,z2=p.y*sx+z1*cx,s=D/(D-z2);return{x:W/2+pn[0]+x1*s*U,y:cy+y2*s*U,z:z2,s,r:EL[m.g.A[i]].r*s*U*(style=='glass'?1.3:1),e:m.g.A[i]}});
+ const items=[...Q.map(a=>({z:a.z,a})),...m.g.B.map(b=>({z:(Q[b[0]].z+Q[b[1]].z)/2,b}))].sort((u,v)=>u.z-v.z);
+ x.lineCap='round';if(style=='glass'){m.Q=Q;glassItems(x,items,m,U,dk());return}
+ for(const it of items){
+  if(it.b){const[a,b,o]=it.b,p=Q[a],r=Q[b],dx=r.x-p.x,dy=r.y-p.y,l=Math.hypot(dx,dy)||1,ux=dx/l,uy=dy/l,off=o==1?[0]:o==2?[-.11,.11]:[-.19,0,.19];
+   x.strokeStyle=P.bond;x.lineWidth=bw;
+   for(const f of off){const ox=-uy*f*U,oy=ux*f*U;x.beginPath();x.moveTo(p.x+ux*p.r*.75+ox,p.y+uy*p.r*.75+oy);x.lineTo(r.x-ux*r.r*.75+ox,r.y-uy*r.r*.75+oy);x.stroke()}}
+  else{const a=it.a;x.beginPath();x.arc(a.x,a.y,a.r,0,7);x.fillStyle=EL[a.e].c;x.fill();x.lineWidth=ew;x.strokeStyle=P.edge;x.stroke();
+   x.beginPath();x.arc(a.x-a.r*.3,a.y-a.r*.32,a.r*.42,0,7);x.fillStyle=P.hi;x.fill();
+   x.fillStyle='#3a372d';x.font=`600 ${a.r*.9}px system-ui,sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText(a.e,a.x,a.y+a.r*.05)}}}
+function legend(){$('#lg').innerHTML=[...new Set(LIB[cur].g.A)].map(e=>`<span><i style="background:${EL[e].c}">${e}</i>${lang=='zh'?EL[e].z:EL[e].e}</span>`).join('')}
+function info(){const m=LIB[cur],T2=T[lang],A=m.g.A,B=m.g.B,bc=[1,2,3].map(o=>B.filter(b=>b[2]==o).length);
+ $('#info').innerHTML=`<h2>${nm(m)}: ${m.f}</h2><dl class="kv"><div><dt>${T2.mm}</dt><dd>${A.reduce((s,e)=>s+MASS[e],0).toFixed(2)} g/mol</dd></div><div><dt>${T2.na}</dt><dd>${A.length}</dd></div><div><dt>${T2.bn}</dt><dd>${bc.join(' / ')}</dd></div></dl><ul class="facts">${(lang=='zh'?m.zfs:m.efs).map(x=>`<li>${x}</li>`).join('')}</ul>`}
+function caption(){const m=LIB[cur];$('#cap').innerHTML=`<div class="t">${nm(m)}: ${m.f}</div><div class="f clamp">${ft(m)}</div>`;const V=visIdx(),r=V.indexOf(cur);$('#pos').textContent=r<0?T[lang].h:(r+1)+' / '+V.length;$('#hb').textContent=isH(LIB[cur])?T[lang].unhide:T[lang].hide;info();legend()}
+function thumbs(){document.querySelectorAll('#grid canvas').forEach(c=>draw(c,LIB[+c.dataset.k],.55,.3,.5))}
+function grid(){const s=q.trim().toLowerCase();
+ const L=LIB.map((m,i)=>[m,i]).filter(([m])=>(flt=='h'?isH(m):vis(m)&&(flt=='all'||(flt=='el'?isEl(m):flt=='aa'?AAS.has(m.s):flt=='vit'?VIT.has(m.s):(flt=='c')==m.g.A.includes('C'))))&&(!s||(m.z+m.e+m.zfs.join()+m.efs.join()+plain(m.f)).toLowerCase().includes(s)));
+ $('#grid').innerHTML=L.map(([m,i])=>`<article class="card${i==cur?' on':''}" data-k="${i}" tabindex="0"><button class="eye" data-e="${i}">${isH(m)?T[lang].unhide:T[lang].hide}</button><canvas data-k="${i}"></canvas><div class="t">${nm(m)}: ${m.f}</div><div class="f clamp">${ft(m)}</div></article>`).join('')||`<p class="sub">${T[lang].none}</p>`;
+ $('#cnt').textContent=L.length+' / '+(flt=='h'?L.length:visIdx().length);thumbs()}
+function applyLang(){const t=T[lang];document.documentElement.lang=lang;document.title=t.title;
+ document.querySelectorAll('[data-i]').forEach(e=>e.textContent=t[e.dataset.i]);$('#q').placeholder=t.q;
+ $('#prev').setAttribute('aria-label',t.prev);$('#zi').setAttribute('aria-label',t.zin);$('#zo').setAttribute('aria-label',t.zout);$('#zr').setAttribute('aria-label',t.zrs);$('#zs').setAttribute('aria-label',t.zs);$('#zmv').setAttribute('aria-label',t.zmv);$('#next').setAttribute('aria-label',t.next);$('#th').setAttribute('aria-label',t.th);
+ document.querySelectorAll('[data-f]').forEach(b=>{b.textContent=t[b.dataset.f];b.setAttribute('aria-pressed',b.dataset.f==flt)});
+ document.querySelectorAll('[data-l]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l==lang));
+ 
+ caption();grid()}
+function route(){let v=location.hash.slice(1);if(!VIEWS.includes(v))v='viewer';view=v;
+ VIEWS.forEach(n=>$('#v-'+n).classList.toggle('on',n==v));
+ document.querySelectorAll('[data-v]').forEach(a=>a.dataset.v==v?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
+ if(v=='library')thumbs();scrollTo(0,0)}
+function step(d){do{cur=(cur+d+LIB.length)%LIB.length}while(!vis(LIB[cur]));ry=.6;rx=.35;pan=[0,0];caption();document.querySelectorAll('.card').forEach(c=>c.classList.toggle('on',+c.dataset.k==cur))}
+function toggleH(i){const s=LIB[i].s;hidSet.has(s)?hidSet.delete(s):hidSet.add(s);saveH();grid();caption()}
+function pick(k){cur=k;ry=.6;rx=.35;pan=[0,0];caption();document.querySelectorAll('.card').forEach(c=>c.classList.toggle('on',+c.dataset.k==k));location.hash='viewer';route()}
+
+const ptrs=new Map();let zm=1,pinch=null,mode='rot',pan=[0,0];const zc=v=>Math.max(.4,Math.min(4,v));
+cv.addEventListener('pointerdown',e=>{ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});cv.setPointerCapture(e.pointerId);cv.style.cursor='grabbing';if(ptrs.size==2){const[a,b]=[...ptrs.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y)||1,z:zm,mx:(a.x+b.x)/2,my:(a.y+b.y)/2};drag=null}else drag={x:e.clientX,y:e.clientY,mv:mode=='move'||e.shiftKey||e.button>0}});
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+$('.stage').addEventListener('wheel',e=>{e.preventDefault();const d=e.deltaY*(e.deltaMode==1?16:e.deltaMode==2?400:1)*(e.ctrlKey?3:1);zm=zc(zm*Math.exp(-d*.002))},{passive:false});
+cv.addEventListener('dblclick',()=>{zm=1;pan=[0,0]});
+cv.addEventListener('pointermove',e=>{if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});if(ptrs.size==2&&pinch){const[a,b]=[...ptrs.values()];zm=zc(pinch.z*Math.hypot(a.x-b.x,a.y-b.y)/pinch.d);const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;pan[0]+=mx-pinch.mx;pan[1]+=my-pinch.my;pinch.mx=mx;pinch.my=my;return}if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(drag.mv){pan[0]+=dx;pan[1]+=dy}else{ry+=dx*.01;rx=Math.max(-1.5,Math.min(1.5,rx+dy*.01))}drag={x:e.clientX,y:e.clientY,mv:drag.mv}});
+const pup=e=>{ptrs.delete(e.pointerId);pinch=null;drag=null;cv.style.cursor='grab'};cv.addEventListener('pointerup',pup);cv.addEventListener('pointercancel',pup);
+$('#zi').onclick=()=>{zm=zc(zm*1.25)};$('#zo').onclick=()=>{zm=zc(zm/1.25)};$('#zr').onclick=()=>{zm=1;rx=.35;pan=[0,0]};$('#zmv').onclick=()=>{mode=mode=='rot'?'move':'rot';$('#zmv').style.background=mode=='move'?'var(--ac)':'';$('#zmv').style.color=mode=='move'?'var(--acx)':''};$('#zs').onclick=()=>{style=style=='glass'?'flat':'glass';try{localStorage.setItem('mol-style',style)}catch(e){}thumbs()};
+$('#prev').onclick=()=>step(-1);$('#next').onclick=()=>step(1);
+addEventListener('keydown',e=>{if(view=='viewer'&&!/INPUT/.test(document.activeElement.tagName)){if(e.key=='ArrowLeft')step(-1);if(e.key=='ArrowRight')step(1)}});
+document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{lang=b.dataset.l;try{localStorage.setItem('mol-lang',lang)}catch(e){}applyLang()});
+document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{flt=b.dataset.f;document.querySelectorAll('[data-f]').forEach(x=>x.setAttribute('aria-pressed',x==b));grid()});
+$('#th').onclick=()=>{const t=dk()?'light':'dark';document.documentElement.dataset.theme=t;try{localStorage.setItem('mol-theme',t)}catch(e){}thumbs()};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',thumbs);
+$('#q').oninput=e=>{q=e.target.value;grid()};
+$('#grid').onclick=e=>{const y=e.target.closest('[data-e]');if(y)return toggleH(+y.dataset.e);const c=e.target.closest('[data-k]');if(c)pick(+c.dataset.k)};
+$('#sh').onchange=e=>{showH=e.target.checked;saveH();grid();caption()};$('#hb').onclick=()=>toggleH(cur);
+$('#grid').onkeydown=e=>{if(e.key=='Enter'){const c=e.target.closest('[data-k]');if(c)pick(+c.dataset.k)}};
+addEventListener('hashchange',route);
+let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(thumbs,150)});
+(function loop(){if(view=='viewer'){if(!ptrs.size&&!reduce)ry+=.006;draw(cv,LIB[cur],ry,rx,.44,zm,pan)}requestAnimationFrame(loop)})();
+$('#sh').checked=showH;applyLang();route();
+</script>
+</body>
+</html>

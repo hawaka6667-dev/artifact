@@ -129,7 +129,7 @@ h4.ct{color:var(--ac);margin:14px 0 6px;font-size:14px;font-weight:600}
   <button id="ab" data-i="lib"></button>
 </div>
 <script>
-const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.17.2";
+const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.17.3";
 // ---------- orbital data (J2000, heliocentric) ----------
 const L=[
 ["Mercury","水星",0.3871,0.2056,7.005,48.331,29.124,217,"p"],["Venus","金星",0.7233,0.0068,3.395,76.680,54.884,245,"p"],["Earth","地球",1.0,0.0167,0,0,102.937,345,"p"],["Mars","火星",1.5237,0.0934,1.850,49.558,286.502,249,"p"],
@@ -268,6 +268,13 @@ const eqPole=eqv(0,90),satPole=eqv(40.59,83.54);
 {const rd=unit3(earth.p),L2=earth.p.map((x,i)=>x+1.5e6/AU*rd[i]),g={a:4.5e5/AU,e:0,i:Math.acos(rd[2])/R,O:Math.atan2(rd[0],-rd[1])/R,w:0},q=at(g,1.1),
  m={n:"JWST",z:"詹姆斯·韦布空间望远镜",alias:"James Webb Space Telescope",a:1.5e6/AU,km:1.5e6,e:0,i:0,O:0,w:0,per:365.25,par:earth,k:'m',t:'v',wm:1,dy:-6,al:.9,ph:false,nk:1};
  m.p=[L2[0]+q[0],L2[1]+q[1],L2[2]+q[2]];m.orb=ring(g,L2);earth.kids.push(m);moons.push(m)}
+// SOHO: halo orbit about the Sun-Earth L1 point, 1.5 million km sunward of Earth (schematic circle)
+{const rd=unit3(earth.p),L1=earth.p.map((x,i)=>x-1.5e6/AU*rd[i]),g={a:3.5e5/AU,e:0,i:Math.acos(rd[2])/R,O:Math.atan2(rd[0],-rd[1])/R,w:0},q=at(g,2.3),
+ m={n:"SOHO",z:"太阳和日球层探测器",alias:"Solar and Heliospheric Observatory",a:1.5e6/AU,km:1.5e6,e:0,i:0,O:0,w:0,per:365.25,par:earth,k:'m',t:'v',wm:1,dy:12,al:.9,ph:false,nk:1};
+ m.p=[L1[0]+q[0],L1[1]+q[1],L1[2]+q[2]];m.orb=ring(g,L1);earth.kids.push(m);moons.push(m)}
+// Gaia: retired 2025-03-27 into a heliocentric orbit trailing Earth (~14-year rendezvous); schematic: a ~1.05 AU, trailing Earth by ~43 deg after ~1.67 yr
+{const th=Math.atan2(earth.p[1],earth.p[0])-.749,r=1.03,n=96,o=new Float64Array((n+1)*3);for(let k=0;k<=n;k++){const f=k/n*2*Math.PI;o[k*3]=r*Math.cos(f);o[k*3+1]=r*Math.sin(f);o[k*3+2]=0}
+ L.push({n:"Gaia",z:"盖亚（Gaia）",alias:"Gaia space observatory",t:'v',k:'b',wm:1,kids:[],ma:0,a:r,e:.04,i:.3,al:.9,esc:1,p:[r*Math.cos(th),r*Math.sin(th),.004],orb:o})}
 L.unshift(sun);const ALL=L.concat(moons);ALL.forEach(b=>{if(!byN[b.n])byN[b.n]=b});
 // ---------- information library ----------
 // ax = semi-axes in km (a>=b>=c); ct 'm' measured / 'e' estimate; cl override: sph|near|ell|irr; P orbital period (yr) for self-check
@@ -371,6 +378,8 @@ DART:{ct:"e",e:"Double Asteroid Redirection Test（双小行星重定向测试�
 "Hubble":{ct:"e",e:"以天文学家埃德温·哈勃（Edwin Hubble）命名。",h:"1946 年莱曼·斯皮策提出空间望远镜构想；1990-04-24 由发现号航天飞机（STS-31）送入轨道；主镜球差在 1993 年第一次维修任务中得到矫正；最后一次航天飞机维修在 2009 年。",p:["埃德温·哈勃","莱曼·斯皮策","南希·格蕾丝·罗曼（NASA 首位天文学主管，被称为“哈勃之母”）"],x:"主镜口径 2.4 米 · 长约 13.2 米 · 轨道高度约 540 km，倾角约 28.5°，周期约 95 分钟 · 升交点与相位为示意"},
 "ISS":{ct:"e",e:"International Space Station（国际空间站）的缩写。",h:"1998-11 曙光号（Zarya）舱发射；2000-11-02 起持续有人驻留；是迄今最大的人造轨道物体。",x:"长约 109 米 · 轨道高度约 400–420 km，倾角 51.6°，周期约 93 分钟 · 升交点与相位为示意"},
 "Cassini":{ct:"e",e:"以天文学家乔瓦尼·卡西尼（土星环“卡西尼缝”的发现者）命名；搭载的惠更斯号以克里斯蒂安·惠更斯命名。",h:"1997-10-15 发射；2004-07-01 进入土星轨道；2005-01-14 惠更斯号在土卫六着陆；2005 年发现土卫二水羽；2017-09-15 受控坠入土星大气。",p:["乔瓦尼·卡西尼","克里斯蒂安·惠更斯"],x:"任务已于 2017 年结束 · 图中是末期“大结局”阶段的轨道示意（周期约 6.5 天，倾角约 63°），不是现在的位置"},
+"SOHO":{ct:"e",e:"SOHO 是 Solar and Heliospheric Observatory（太阳和日球层探测器）的缩写。",h:"1995-12-02 发射；1996 年进入日地 L1 点附近的晕轨道，持续监测太阳；ESA 与 NASA 合作，日冕仪 LASCO 发现了数千颗掠日彗星（2024 年超过 5000 颗），是人类发现彗星最多的“观测者”。",x:"位于日地 L1 点附近的晕轨道，距地球约 150 万公里（向日一侧）；图中的轨道圈和位置只是示意，轨道信息里的“半长轴”表示到地球的距离"},
+"Gaia":{ct:"e",e:"Gaia 原为 Global Astrometric Interferometer for Astrophysics 的缩写；任务后来改用非干涉测量，名字保留，也恰好是希腊神话中的大地女神盖亚。",h:"2013-12-19 发射；2014 年抵达日地 L2 点附近的李萨如轨道；2025-01-15 结束科学观测；2025-03-27 关闭并进入绕日“退役轨道”。它测定了约 20 亿颗恒星的位置与运动，为银河系绘制了三维地图。",x:"已退役、不再工作 · 退役轨道落在地球后方，约每 14 年才回到地球附近，最近约 1000 万公里；图中的轨道与相位是按这些数据推算的示意"},
 "JWST":{ct:"e",e:"以 NASA 第二任局长詹姆斯·韦布（James E. Webb）命名。",h:"2021-12-25 发射；2022-01 抵达日地 L2 点；2022-07-12 公布首批科学图像。",p:["詹姆斯·韦布（NASA 局长，1961–68）","约翰·马瑟（高级项目科学家，2006 年诺贝尔物理学奖）"],x:"主镜口径 6.5 米，由 18 块镀金铍六边形镜片拼成 · 红外波段 · 位于日地 L2 点附近的晕轨道，距地球约 150 万公里；图中的轨道圈只是示意，轨道信息里的“半长轴”表示到地球的距离"}});
 Object.assign(INFO["Proxima Centauri"],{ax:[107300,107300,107300]});Object.assign(INFO["Alpha Centauri A"],{ax:[851100,851100,851100]});
 // mean radii (km) for bodies without axis data; all treated as estimates
@@ -686,7 +695,7 @@ const tlBadge=b=>{const k=TL[b.n];return k?`<span class="bd" style="border-color
 function portrait(b,cv,pk=1){const w=160,h=100;cv.width=160*pk;cv.height=100*pk;const g=cv.getContext('2d');g.scale(pk,pk);const sh=shapeOf(b),cx=80,cy=50;g.fillStyle="#02060a";g.fillRect(0,0,w,h);
  if(b.t=="s"){starPortrait(b,g,w,h,pk);return}
  if(b.t=="a"||AST[b.n]){asteroidPortrait(b,g,w,h,pk);return}
- if(b.t=="v"){const kd=b.n=="JWST"?"hex":(b.n=="Hubble"||b.n=="ISS")?"panel":"dish";g.save();g.translate(cx,cy);g.lineWidth=1.2;
+ if(b.t=="v"){const kd=b.n=="JWST"?"hex":(b.n=="Hubble"||b.n=="ISS"||b.n=="SOHO")?"panel":"dish";g.save();g.translate(cx,cy);g.lineWidth=1.2;
   if(kd=="hex"){const hx=(x,y,r)=>{g.beginPath();for(let q=0;q<6;q++){const a=q*Math.PI/3+Math.PI/6;g.lineTo(x+r*Math.cos(a),y+r*Math.sin(a))}g.closePath();g.fill();g.stroke()};g.fillStyle="#5a6aa8";g.beginPath();g.moveTo(-56,26);g.lineTo(0,40);g.lineTo(56,26);g.lineTo(0,10);g.closePath();g.fill();g.fillStyle="#e8c34a";g.strokeStyle="#7a5a10";const r0=10,dx=r0*1.732;hx(0,-6,r0);for(let q=0;q<6;q++){const a=q*Math.PI/3;hx(dx*Math.cos(a),-6+dx*Math.sin(a),r0)}}
   else if(kd=="panel"){g.fillStyle="#8a8f99";g.fillRect(-10,-9,20,18);g.fillStyle="#2f4fa8";g.strokeStyle="#8fb0ff";for(const sx of[-1,1]){const x0=sx>0?14:-52;g.fillRect(x0,-14,38,28);for(let q=0;q<=4;q++){g.beginPath();g.moveTo(x0+q*9.5,-14);g.lineTo(x0+q*9.5,14);g.stroke()}g.beginPath();g.moveTo(x0,0);g.lineTo(x0+38,0);g.stroke()}}
   else{g.fillStyle="#e6e6e6";g.strokeStyle="#9aa";g.beginPath();g.ellipse(0,-10,26,11,-.35,0,7);g.fill();g.stroke();g.strokeStyle="#bbb";g.beginPath();g.moveTo(0,-8);g.lineTo(6,14);g.stroke();g.fillStyle="#8a8f99";g.fillRect(-4,14,20,12);g.strokeStyle="#aaa";g.beginPath();g.moveTo(16,20);g.lineTo(46,34);g.stroke()}

@@ -16,7 +16,7 @@ One folder per artifact, named `<slug>-v<version>`. Each folder holds the page a
 | `solar-orbits-v0.17.3/` | 太阳系轨道 Solar System Orbits: Mission replay (Voyager 1/2, New Horizons, Pioneer 10/11, DART) (任务回溯) inside the page — planets move by JPL approximate ephemerides, craft path = Lambert fit between real flyby dates, with drop-lines to the ecliptic | 0.16.1 | 156 KB |
 | `periodic-table-evolution-v2/` | 周期表演化史 Periodic Table Evolution: 118 elements slide between Mendeleev short form, 18-column long form, 32-column wide form and Janet left-step; 12 history milestones with inline citations, year slider, References section | 2 | 16.5 KB |
 | `microbe-modeling-stack-v5/` | 微生物建模栈 Microbe Modeling Stack: 32 procedural 3D models (viruses, bacteria, fungus, cells, mosquitoes, fly, mite) stacked by real size on a log scale, live scale bar, zh/EN, self-assessment and model-monitor pages; mosquitoes modeled from a China CDC reference photo | 5 | 107.6 KB |
-| `visible-cap-globe-v3/` | 可见球冠地球 Visible-Cap Globe: draggable 3D Earth; altitude slider shows the visible cap, horizon distance and surface share (h/(2(R+h))), with presets from a person to the Moon, incl. hot-air and stratospheric balloons, plus a custom altitude input | 3 | 18.1 KB |
+| `visible-cap-globe-v4/` | 可见球冠地球 Visible-Cap Globe: draggable 3D Earth; altitude slider shows the visible cap, horizon distance and surface share (h/(2(R+h))), with presets from a person to the Moon, incl. hot-air and stratospheric balloons, plus a custom altitude input and Great Pyramid preset | 4 | 18.2 KB |
 
 ## Rights
 

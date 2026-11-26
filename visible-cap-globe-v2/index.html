@@ -86,7 +86,9 @@ const H_MIN = 0.001, H_MAX = 400000;          // km (1 m … beyond the Moon)
 const PRESETS = [
   { id: 'person',  h: 0.0017 },
   { id: 'tower',   h: 0.828 },
+  { id: 'hotair',  h: 1.0 },
   { id: 'plane',   h: 10.7 },
+  { id: 'balloon', h: 35 },
   { id: 'iss',     h: 408 },
   { id: 'geo',     h: 35786 },
   { id: 'moon',    h: 384400 - R },
@@ -98,14 +100,14 @@ const I18N = {
     title: '可见球冠地球', subtitle: '站得越高，看到的地球表面占比越大 · 拖动旋转，滚轮缩放',
     height: '观察高度', frac: '可见表面占比', horizonDist: '地平线距离', halfAngle: '球冠半角', capArea: '可见面积',
     cone: '视线锥', grid: '经纬网', spin: '自转',
-    person: '人 1.7 m', tower: '哈利法塔', plane: '客机', iss: '空间站', geo: '同步轨道', moon: '月球距离',
+    person: '人 1.7 m', tower: '哈利法塔', hotair: '热气球 1 km', plane: '客机', balloon: '平流层气球', iss: '空间站', geo: '同步轨道', moon: '月球距离',
     km: 'km', m: 'm',
   },
   en: {
     title: 'Visible-Cap Globe', subtitle: 'The higher you go, the larger the share of Earth you can see · drag to rotate, scroll to zoom',
     height: 'Altitude', frac: 'Visible surface', horizonDist: 'Horizon distance', halfAngle: 'Cap half-angle', capArea: 'Visible area',
     cone: 'Sight cone', grid: 'Graticule', spin: 'Auto-spin',
-    person: 'Person 1.7 m', tower: 'Burj Khalifa', plane: 'Airliner', iss: 'ISS', geo: 'Geostationary', moon: 'Moon distance',
+    person: 'Person 1.7 m', tower: 'Burj Khalifa', hotair: 'Hot-air balloon', plane: 'Airliner', balloon: 'Stratospheric balloon', iss: 'ISS', geo: 'Geostationary', moon: 'Moon distance',
     km: 'km', m: 'm',
   },
 };

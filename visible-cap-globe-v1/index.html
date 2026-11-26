@@ -1,0 +1,285 @@
+<title>可见球冠地球</title>
+<style>
+  :root {
+    --bg: #0b1220; --panel: rgba(16,24,40,.82); --line: rgba(255,255,255,.14);
+    --text: #e6edf7; --muted: #9fb0c7; --accent: #ffb454; --accent2: #5ec8ff; color-scheme: dark;
+  }
+  :root[data-theme="light"] {
+    --bg: #eef3fa; --panel: rgba(255,255,255,.88); --line: rgba(0,0,0,.14);
+    --text: #14202e; --muted: #536379; --accent: #c2570a; --accent2: #0a73b3; color-scheme: light;
+  }
+  :root[data-theme="dark"] { --bg: #0b1220; --panel: rgba(16,24,40,.82); --line: rgba(255,255,255,.14); --text: #e6edf7; --muted: #9fb0c7; --accent: #ffb454; --accent2: #5ec8ff; color-scheme: dark; }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #eef3fa; --panel: rgba(255,255,255,.88); --line: rgba(0,0,0,.14);
+      --text: #14202e; --muted: #536379; --accent: #c2570a; --accent2: #0a73b3; color-scheme: light;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; overflow: hidden; }
+  #stage { position: fixed; inset: 0; }
+  canvas#gl { display: block; width: 100%; height: 100%; touch-action: none; }
+  /* language switch: always floating at top */
+  #lang { position: fixed; top: 10px; right: 10px; z-index: 20; display: flex; border: 1px solid var(--line);
+    border-radius: 999px; overflow: hidden; background: var(--panel); backdrop-filter: blur(6px); }
+  #lang button { border: 0; background: transparent; color: var(--muted); padding: 6px 14px; font-size: 13px; cursor: pointer; }
+  #lang button[aria-pressed="true"] { background: var(--accent2); color: #04121c; font-weight: 600; }
+  h1 { position: fixed; top: 10px; left: 16px; margin: 0; font-size: 17px; z-index: 10; max-width: calc(100% - 150px); }
+  h1 { text-shadow: 0 0 6px var(--bg), 0 0 12px var(--bg); }
+  h1 small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; margin-top: 2px; }
+  #panel { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 10; max-width: 560px; margin: 0 auto;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; backdrop-filter: blur(8px); }
+  .row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .big { font-size: 22px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .lbl { color: var(--muted); font-size: 12px; }
+  input[type=range] { width: 100%; margin: 8px 0 4px; accent-color: var(--accent); }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px; }
+  .stats div { background: rgba(127,127,127,.12); border-radius: 8px; padding: 6px 8px; }
+  .stats b { display: block; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chips button { border: 1px solid var(--line); background: transparent; color: var(--text); border-radius: 999px;
+    padding: 4px 10px; font-size: 12px; cursor: pointer; }
+  .chips button:hover { border-color: var(--accent2); }
+  .chips button.on { background: var(--accent2); color: #04121c; border-color: var(--accent2); }
+  #curve { position: fixed; right: 12px; top: 56px; width: 200px; height: 130px; z-index: 5;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+  .tog { display: flex; gap: 12px; margin-top: 8px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+  .tog label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+  @media (max-width: 640px) { #curve { width: 150px; height: 100px; top: 52px; } h1 { font-size: 15px; } .big { font-size: 19px; } }
+</style>
+<div id="stage"><canvas id="gl"></canvas></div>
+
+<div id="lang" role="group" aria-label="language">
+  <button data-l="zh" aria-pressed="true">中文</button>
+  <button data-l="en" aria-pressed="false">EN</button>
+</div>
+
+<h1><span data-i18n="title"></span><small data-i18n="subtitle"></small></h1>
+<canvas id="curve" width="400" height="260"></canvas>
+
+<section id="panel">
+  <div class="row">
+    <div><span class="lbl" data-i18n="height"></span> <span class="big" id="hOut"></span></div>
+    <div><span class="lbl" data-i18n="frac"></span> <span class="big" id="fOut"></span></div>
+  </div>
+  <input id="hSlider" type="range" min="0" max="1000" value="400" aria-label="height">
+  <div class="stats">
+    <div><span class="lbl" data-i18n="horizonDist"></span><b id="dOut"></b></div>
+    <div><span class="lbl" data-i18n="halfAngle"></span><b id="aOut"></b></div>
+    <div><span class="lbl" data-i18n="capArea"></span><b id="sOut"></b></div>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="tog">
+    <label><input type="checkbox" id="tCone" checked><span data-i18n="cone"></span></label>
+    <label><input type="checkbox" id="tGrid" checked><span data-i18n="grid"></span></label>
+    <label><input type="checkbox" id="tSpin"><span data-i18n="spin"></span></label>
+  </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+/* ---------- language-neutral data ---------- */
+const R = 6371;                               // Earth mean radius, km
+const H_MIN = 0.001, H_MAX = 400000;          // km (1 m … beyond the Moon)
+const PRESETS = [
+  { id: 'person',  h: 0.0017 },
+  { id: 'tower',   h: 0.828 },
+  { id: 'plane',   h: 10.7 },
+  { id: 'iss',     h: 408 },
+  { id: 'geo',     h: 35786 },
+  { id: 'moon',    h: 384400 - R },
+];
+
+/* ---------- one dictionary per language ---------- */
+const I18N = {
+  zh: {
+    title: '可见球冠地球', subtitle: '站得越高，看到的地球表面占比越大 · 拖动旋转，滚轮缩放',
+    height: '观察高度', frac: '可见表面占比', horizonDist: '地平线距离', halfAngle: '球冠半角', capArea: '可见面积',
+    cone: '视线锥', grid: '经纬网', spin: '自转',
+    person: '人 1.7 m', tower: '哈利法塔', plane: '客机', iss: '空间站', geo: '同步轨道', moon: '月球距离',
+    km: 'km', m: 'm',
+  },
+  en: {
+    title: 'Visible-Cap Globe', subtitle: 'The higher you go, the larger the share of Earth you can see · drag to rotate, scroll to zoom',
+    height: 'Altitude', frac: 'Visible surface', horizonDist: 'Horizon distance', halfAngle: 'Cap half-angle', capArea: 'Visible area',
+    cone: 'Sight cone', grid: 'Graticule', spin: 'Auto-spin',
+    person: 'Person 1.7 m', tower: 'Burj Khalifa', plane: 'Airliner', iss: 'ISS', geo: 'Geostationary', moon: 'Moon distance',
+    km: 'km', m: 'm',
+  },
+};
+let lang = 'zh';
+const t = k => I18N[lang][k];
+
+/* ---------- geometry maths ---------- */
+// cosθ = R/(R+h); cap fraction = (1-cosθ)/2 = h / (2(R+h)); horizon distance = sqrt(h(2R+h))
+function calc(h) {
+  const cosT = R / (R + h);
+  return { theta: Math.acos(cosT), frac: (1 - cosT) / 2, dist: Math.sqrt(h * (2 * R + h)), area: 4 * Math.PI * R * R * (1 - cosT) / 2 };
+}
+const sliderToH = s => H_MIN * Math.pow(H_MAX / H_MIN, s / 1000);
+const hToSlider = h => 1000 * Math.log(h / H_MIN) / Math.log(H_MAX / H_MIN);
+const fmt = (v, d = 3) => v >= 100 ? v.toLocaleString(lang === 'zh' ? 'zh-CN' : 'en-US', { maximumFractionDigits: 0 })
+  : v.toPrecision(d).replace(/\.?0+$/, m => m.includes('e') ? m : '');
+function fmtLen(km) { return km < 1 ? fmt(km * 1000, 3) + ' ' + t('m') : fmt(km, 4) + ' ' + t('km'); }
+function fmtPct(f) { const p = f * 100; return (p < 0.01 ? p.toExponential(2) : p < 10 ? p.toFixed(3) : p.toFixed(2)) + ' %'; }
+
+/* ---------- three.js scene ---------- */
+const canvas = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const scene = new THREE.Scene();
+function syncBg() { renderer.setClearColor(getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#0b1220'); }
+matchMedia('(prefers-color-scheme: light)').addEventListener('change', syncBg);
+const camera = new THREE.PerspectiveCamera(40, 1, 0.0005, 2000);
+camera.position.set(2.6, 1.6, 3.2);
+const controls = new THREE.OrbitControls(camera, canvas);
+controls.enableDamping = true; controls.dampingFactor = 0.08;
+controls.minDistance = 1.0005; controls.maxDistance = 400;
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+const sun = new THREE.DirectionalLight(0xffffff, 0.9); sun.position.set(5, 3, 4); scene.add(sun);
+
+// Earth: procedural land/ocean texture so the cap has something to sit on
+function earthTexture() {
+  const c = document.createElement('canvas'); c.width = 1024; c.height = 512; const g = c.getContext('2d');
+  const grad = g.createLinearGradient(0, 0, 0, 512); grad.addColorStop(0, '#1b4f86'); grad.addColorStop(.5, '#1f6aa8'); grad.addColorStop(1, '#1b4f86');
+  g.fillStyle = grad; g.fillRect(0, 0, 1024, 512);
+  let s = 7; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  g.fillStyle = '#4f8b4a';
+  for (let i = 0; i < 70; i++) { // blobby continents
+    const x = rnd() * 1024, y = 80 + rnd() * 350, n = 5 + (rnd() * 8 | 0);
+    for (let k = 0; k < n; k++) { g.beginPath(); g.ellipse(x + (rnd() - .5) * 120, y + (rnd() - .5) * 60, 10 + rnd() * 45, 8 + rnd() * 28, rnd() * 3, 0, 7); g.fill(); }
+  }
+  g.fillStyle = '#eef4fa'; g.fillRect(0, 0, 1024, 22); g.fillRect(0, 490, 1024, 22);
+  return new THREE.CanvasTexture(c);
+}
+const earth = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 64), new THREE.MeshPhongMaterial({ map: earthTexture(), shininess: 12 }));
+const globe = new THREE.Group(); globe.rotation.x = 0.95; globe.rotation.z = -0.2; scene.add(globe);
+const spinG = new THREE.Group(); globe.add(spinG); spinG.add(earth);
+
+// graticule
+const grid = new THREE.Group();
+(function () {
+  const mat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.18 });
+  for (let lat = -60; lat <= 60; lat += 30) {
+    const pts = []; const r = Math.cos(lat * Math.PI / 180), y = Math.sin(lat * Math.PI / 180);
+    for (let i = 0; i <= 128; i++) { const a = i / 128 * Math.PI * 2; pts.push(new THREE.Vector3(r * Math.cos(a) * 1.001, y * 1.001, r * Math.sin(a) * 1.001)); }
+    grid.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), mat));
+  }
+  for (let lon = 0; lon < 180; lon += 30) {
+    const pts = []; for (let i = 0; i <= 128; i++) { const a = i / 128 * Math.PI * 2; pts.push(new THREE.Vector3(Math.cos(a) * Math.cos(lon * Math.PI / 180) * 1.001, Math.sin(a) * 1.001, Math.cos(a) * Math.sin(lon * Math.PI / 180) * 1.001)); }
+    grid.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), mat));
+  }
+})();
+spinG.add(grid);
+
+// dynamic parts: cap, rim, cone, observer
+const dyn = new THREE.Group(); scene.add(dyn);
+const capMat = new THREE.MeshBasicMaterial({ color: 0xffb454, transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+const rimMat = new THREE.LineBasicMaterial({ color: 0xffe08a });
+const coneMat = new THREE.LineBasicMaterial({ color: 0x5ec8ff, transparent: true, opacity: 0.55 });
+const obsGeo = new THREE.BufferGeometry(); obsGeo.setAttribute('position', new THREE.Float32BufferAttribute([0, 1, 0], 3));
+const obs = new THREE.Points(obsGeo, new THREE.PointsMaterial({ color: 0xff4d6d, size: 11, sizeAttenuation: false }));
+scene.add(obs);
+let capMesh, rim, cone;
+
+function rebuild(h) {
+  const { theta } = calc(h);
+  const D = 1 + h / R;                       // observer distance from centre (Earth radius = 1)
+  if (capMesh) { dyn.remove(capMesh); capMesh.geometry.dispose(); }
+  if (rim) { dyn.remove(rim); rim.geometry.dispose(); }
+  if (cone) { dyn.remove(cone); cone.geometry.dispose(); }
+  const th = Math.max(theta, 1e-5);
+  capMesh = new THREE.Mesh(new THREE.SphereGeometry(1.0015, 96, 8, 0, Math.PI * 2, 0, th), capMat);
+  dyn.add(capMesh);
+  const rp = [], N = 128, sr = Math.sin(th) * 1.0015, cy = Math.cos(th) * 1.0015;
+  for (let i = 0; i <= N; i++) { const a = i / N * Math.PI * 2; rp.push(new THREE.Vector3(sr * Math.cos(a), cy, sr * Math.sin(a))); }
+  rim = new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(rp), rimMat); dyn.add(rim);
+  const cp = []; for (let i = 0; i < 48; i++) { const a = i / 48 * Math.PI * 2; cp.push(new THREE.Vector3(0, D, 0), new THREE.Vector3(Math.sin(th) * Math.cos(a), Math.cos(th), Math.sin(th) * Math.sin(a))); }
+  cone = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(cp), coneMat);
+  cone.visible = document.getElementById('tCone').checked; dyn.add(cone);
+  obs.position.set(0, D, 0);
+}
+
+/* ---------- UI ---------- */
+const $ = id => document.getElementById(id);
+let curH = 408, activePreset = 'iss';
+
+function update(h, fromSlider) {
+  curH = Math.min(H_MAX, Math.max(H_MIN, h));
+  const r = calc(curH);
+  rebuild(curH);
+  if (!fromSlider) $('hSlider').value = hToSlider(curH);
+  $('hOut').textContent = fmtLen(curH);
+  $('fOut').textContent = fmtPct(r.frac);
+  $('dOut').textContent = fmtLen(r.dist);
+  $('aOut').textContent = (r.theta * 180 / Math.PI).toFixed(r.theta < 0.01 ? 4 : 2) + '°';
+  $('sOut').textContent = fmt(r.area, 4) + ' ' + t('km') + '²';
+  document.querySelectorAll('#chips button').forEach(b => b.classList.toggle('on', b.dataset.id === activePreset));
+  drawCurve();
+}
+function buildChips() {
+  $('chips').innerHTML = '';
+  PRESETS.forEach(p => {
+    const b = document.createElement('button'); b.dataset.id = p.id; b.textContent = t(p.id);
+    b.onclick = () => { activePreset = p.id; update(p.h); frame(); };
+    $('chips').appendChild(b);
+  });
+}
+function applyLang() {
+  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+  document.querySelectorAll('[data-i18n]').forEach(e => e.textContent = t(e.dataset.i18n));
+  document.querySelectorAll('#lang button').forEach(b => b.setAttribute('aria-pressed', b.dataset.l === lang));
+  document.title = t('title'); buildChips(); update(curH, true);
+  try { localStorage.setItem('vcg-lang', lang); } catch (e) {}
+}
+document.querySelectorAll('#lang button').forEach(b => b.onclick = () => { lang = b.dataset.l; applyLang(); });
+$('hSlider').oninput = e => { activePreset = ''; update(sliderToH(+e.target.value), true); };
+$('tCone').onchange = e => { if (cone) cone.visible = e.target.checked; };
+$('tGrid').onchange = e => { grid.visible = e.target.checked; };
+
+// move the camera so the observer and the cap are comfortably in view
+function frame() {
+  const D = 1 + curH / R;
+  const dist = Math.max(4.6, D * 1.35 + 2.4);
+  const dir = new THREE.Vector3(0.5, 0.78, 0.62).normalize();   // look down toward the observer's cap
+  camera.position.copy(dir.multiplyScalar(dist));
+  controls.target.set(0, Math.min(D * 0.35, 1.2) - 0.45, 0); controls.update();
+}
+
+/* curve: fraction vs log-height, marker at current height */
+function drawCurve() {
+  const c = $('curve'), g = c.getContext('2d'), W = c.width, Hh = c.height;
+  const cs = getComputedStyle(document.documentElement);
+  g.clearRect(0, 0, W, Hh);
+  const pad = 26; g.strokeStyle = cs.getPropertyValue('--line'); g.lineWidth = 1; g.strokeRect(pad, 14, W - pad - 10, Hh - 14 - 22);
+  g.strokeStyle = cs.getPropertyValue('--accent2'); g.lineWidth = 2.5; g.beginPath();
+  for (let i = 0; i <= 200; i++) {
+    const s = i / 200 * 1000, f = calc(sliderToH(s)).frac, x = pad + (W - pad - 10) * i / 200, y = 14 + (Hh - 36) * (1 - f / 0.5);
+    i ? g.lineTo(x, y) : g.moveTo(x, y);
+  }
+  g.stroke();
+  const x = pad + (W - pad - 10) * hToSlider(curH) / 1000, y = 14 + (Hh - 36) * (1 - calc(curH).frac / 0.5);
+  g.fillStyle = '#ff4d6d'; g.beginPath(); g.arc(x, y, 6, 0, 7); g.fill();
+  g.fillStyle = cs.getPropertyValue('--muted'); g.font = '20px system-ui'; g.fillText('50%', 0, 24); g.fillText('0', 8, Hh - 26);
+  g.fillText('h (log) →', pad + 4, Hh - 4);
+}
+
+/* ---------- render loop ---------- */
+function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize); resize();
+const spin = $('tSpin');
+(function loop() {
+  requestAnimationFrame(loop);
+  if (spin.checked) { spinG.rotation.y += 0.0015; }
+  // observer + cap are fixed to the world; keep clip planes sane when zoomed near the surface
+  camera.near = Math.max(0.0002, (camera.position.length() - 1) * 0.1);
+  camera.updateProjectionMatrix();
+  controls.update(); renderer.render(scene, camera);
+})();
+
+try { const l = localStorage.getItem('vcg-lang'); if (l === 'en' || l === 'zh') lang = l; } catch (e) {}
+syncBg(); applyLang(); frame();
+</script>

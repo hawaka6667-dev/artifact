@@ -128,7 +128,7 @@ h4.ct{color:var(--ac);margin:14px 0 6px;font-size:14px;font-weight:600}
   <button id="ab" data-i="lib"></button>
 </div>
 <script>
-const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.17.0";
+const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.17.1";
 // ---------- orbital data (J2000, heliocentric) ----------
 const L=[
 ["Mercury","水星",0.3871,0.2056,7.005,48.331,29.124,217,"p"],["Venus","金星",0.7233,0.0068,3.395,76.680,54.884,245,"p"],["Earth","地球",1.0,0.0167,0,0,102.937,345,"p"],["Mars","火星",1.5237,0.0934,1.850,49.558,286.502,249,"p"],
@@ -483,8 +483,8 @@ function lgDraw(){const al=Math.max(0,Math.min(1,(Math.log10(D)-8.3)/.8));if(al<
   ctx.fillStyle='rgba(235,240,250,.92)';ctx.fillText(tx,g.sx,ry+11);placed.push([rx,ry,tw,14])});
  try{ctx.letterSpacing=sp||'0px'}catch(e){}ctx.restore()}
 function lgUI(){const e=document.getElementById('sy'),zh=loc=='zh',asp=Math.max(1,H/W);e.style.display='block';
- const mw=LG[0],an=LG[1],ctr=mw.p.map((x,k)=>(x+an.p[k])/2),dv=an.p.map((x,k)=>x-mw.p[k]),dx=dot3(dv,gC),dy=dot3(dv,gY);let az0=Math.atan2(-dy,dx);if(dx*Math.cos(az0)-dy*Math.sin(az0)>0)az0+=Math.PI;sl=[[zh?'本星系群':'Local Group',ctr,4.7e6*LY*asp],...[0,1,2,3,4].map(i=>[zh?LG[i].z.split(' (')[0]:LG[i].n,LG[i].p,Math.max(3.2*LG[i].R,2e4*LY)*asp])];
- e.innerHTML=`<div class="nt">${zh?'点击飞到该星系；位置来自 McConnachie 2012（近似），盘面朝向为估计值':'Tap to fly to a galaxy; positions after McConnachie 2012 (approximate), disc orientations are estimates'}</div><div class="ev">${sl.map((x,i)=>`<button data-i="${i}">${x[0]}</button>`).join('')}</div>`;
+ const mw=LG[0],an=LG[1],ctr=mw.p.map((x,k)=>(x+an.p[k])/2),dv=an.p.map((x,k)=>x-mw.p[k]),dx=dot3(dv,gC),dy=dot3(dv,gY);let az0=Math.atan2(-dy,dx);if(dx*Math.cos(az0)-dy*Math.sin(az0)>0)az0+=Math.PI;const dk=g=>{const k=g.d/(3261.56*LY);return k>=1000?(k/1000).toFixed(2)+' Mpc':(k>=100?Math.round(k):k.toFixed(1))+' kpc'},sl=[[zh?'本星系群':'Local Group',ctr,4.7e6*LY*asp],...[0,1,2,3,4].map(i=>[zh?LG[i].z.split(' (')[0]:LG[i].n,LG[i].p,Math.max(3.2*LG[i].R,2e4*LY)*asp,dk(LG[i])])];
+ e.innerHTML=`<div class="nt">${zh?'点击飞到该星系；位置来自 McConnachie 2012（近似），盘面朝向为估计值':'Tap to fly to a galaxy; positions after McConnachie 2012 (approximate), disc orientations are estimates'}</div><div class="ev">${sl.map((x,i)=>`<button data-i="${i}">${x[0]}${x[3]?' · '+x[3]:''}</button>`).join('')}</div>`;
  e.querySelectorAll('button').forEach(b=>b.onclick=()=>{const x=sl[+b.dataset.i];setFrame(G3);showGal=0;go(x[1],x[2],az0,.32,x[0].toUpperCase());e.querySelectorAll('button').forEach(c=>c.classList.toggle('on',c===b))})}
 const i0=()=>0;
 function draw(){
@@ -508,9 +508,10 @@ const sup=n=>String(n).replace(/\d/g,d=>"⁰¹²³⁴⁵⁶⁷⁸⁹"[d]).replac
 const fkm=km=>(km<1e6?Math.round(km).toLocaleString():(km/Math.pow(10,Math.floor(Math.log10(km)))).toFixed(1)+"×10"+sup(Math.floor(Math.log10(km))))+" km";
 const fn2=x=>x>=1000?Math.round(x).toLocaleString():String(+x.toPrecision(2));
 // scale bar: primary unit chosen by scale (km -> LD -> AU -> ly), other units shown as equivalents
-function ruler(){const pf=ctx.font,u=D/F,s=130*u,unit=s<.0013?"km":s<.15?"LD":s<5000?"AU":"ly",uA=unit=="km"?1/AU:unit=="LD"?384400/AU:unit=="AU"?1:LY;
+const PCAU=LY*3.26156;
+function ruler(){const pf=ctx.font,u=D/F,s=130*u,unit=s<.0013?"km":s<.15?"LD":s<5000?"AU":s<300*LY?"ly":s<1e3*PCAU?"pc":s<1e6*PCAU?"kpc":"Mpc",uA=unit=="km"?1/AU:unit=="LD"?384400/AU:unit=="AU"?1:unit=="ly"?LY:unit=="pc"?PCAU:unit=="kpc"?PCAU*1e3:PCAU*1e6;
  const n=nice(s/uA),au=n*uA,px=au/u,bh=document.querySelector('.bar').offsetHeight,y=H-bh-34,xr=W-20,xl=xr-px;
- const eq=[];if(unit!="km")eq.push(fkm(au*AU));if(unit!="LD"&&au*AU>=3000&&au*AU/384400<1e5)eq.push(fn2(au*AU/384400)+" LD");if(unit!="AU"&&au>=.001)eq.push(fn2(au)+" AU");if(unit!="ly"&&au>=500)eq.push(fn2(au/LY)+" ly");eq.push(ltxt(au*8.317));
+ const eq=[];if(unit!="km")eq.push(fkm(au*AU));if(unit!="LD"&&au*AU>=3000&&au*AU/384400<1e5)eq.push(fn2(au*AU/384400)+" LD");if(unit=="ly"||unit=="pc")eq.push(fn2(au/(unit=="ly"?PCAU:LY))+(unit=="ly"?" pc":" ly"));if(unit!="AU"&&au>=.001&&au<1e7)eq.push(fn2(au)+" AU");if((unit=="kpc"||unit=="Mpc")&&au>=500)eq.push(fn2(au/LY)+" ly");eq.push(ltxt(au*8.317));
  const main=(unit=="km"?Math.round(n).toLocaleString():fn2(n))+" "+unit,sub="≈ "+eq.join(" · ")+" "+t('focusAt');
  ctx.font='600 13px "Segoe UI",sans-serif';const w1=ctx.measureText(main).width;ctx.font='11px "Segoe UI",sans-serif';const w2=ctx.measureText(sub).width,bw=Math.max(px,w1,w2)+16;
  ctx.fillStyle="rgba(0,0,0,.45)";ctx.fillRect(xr+8-bw,y-30,bw,64);

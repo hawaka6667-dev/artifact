@@ -1,0 +1,7 @@
+{
+  "title": "微生物建模栈",
+  "slug": "microbe-modeling-stack",
+  "version": 5,
+  "url": "https://claude.ai/artifact/2QC2XbVaUJexZyJft2pgAM",
+  "note": "Authoring source (no doctype skeleton; wrap in <!DOCTYPE html><html><head>…</head><body>…</body></html> before publishing). 32 procedural three.js models stacked by size on a log scale, live scale bar, zh/EN locales kept as separate dictionaries, self-assessment page and model-build monitor page. The two mosquitoes (白纹伊蚊 and 淡色库蚊) are modeled from reference/mosquitoes-china-cdc.png. three.js r128 and OrbitControls are loaded from a CDN."
+}

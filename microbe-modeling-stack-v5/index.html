@@ -1,0 +1,1288 @@
+<title>微生物建模栈</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: floating top bar (tabs + language switch) over three pages: models (scale stack + 3D stage), feedback, monitor. Palette from H&E staining: hematoxylin indigo + eosin pink. */
+:root {
+  --bg: #fbf3f6; --panel: #ffffff; --fg: #2a2236; --muted: #6c6180; --line: #ead9e1;
+  --h: #4a3f9e; --e: #d8456b; --sel: #f1e8fa; --on-h: #ffffff;
+  --good: #1f8f5a; --warn: #b7791f; --bad: #c0392b;
+  --stage-a: #f9e6ee; --stage-b: #e9e1f5;
+  --k-virus: #6f5de0; --k-bac: #1f8f80; --k-animal: #d8456b; --k-plant: #4a9a35; --k-fungi: #b8860b; --k-arthro: #8a6244;
+  --display: 'Space Grotesk', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --body: 'Inter', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #130f1f; --panel: #1b1529; --fg: #efe6f3; --muted: #a99bbd; --line: #33284a;
+    --h: #a79bff; --e: #ff7a9c; --sel: #2a2045; --on-h: #130f1f;
+    --good: #5fd39a; --warn: #e8b84a; --bad: #ff7a7a;
+    --stage-a: #2e1c40; --stage-b: #120d22;
+    --k-virus: #a99dff; --k-bac: #5fd3c3; --k-animal: #ff7a9c; --k-plant: #93d67c; --k-fungi: #e8b84a; --k-arthro: #d0a27a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #130f1f; --panel: #1b1529; --fg: #efe6f3; --muted: #a99bbd; --line: #33284a;
+  --h: #a79bff; --e: #ff7a9c; --sel: #2a2045; --on-h: #130f1f;
+  --good: #5fd39a; --warn: #e8b84a; --bad: #ff7a7a;
+  --stage-a: #2e1c40; --stage-b: #120d22;
+  --k-virus: #a99dff; --k-bac: #5fd3c3; --k-animal: #ff7a9c; --k-plant: #93d67c; --k-fungi: #e8b84a; --k-arthro: #d0a27a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.6 var(--body); padding-block: 0 32px; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: var(--bg); z-index: 30; }
+.gut { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+/* floating bar */
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--bg); border-bottom: 1px solid var(--line); }
+.bar-in { max-width: 1200px; margin: 0 auto; padding-block: 10px; display: flex; align-items: center; gap: 12px 20px; flex-wrap: wrap; }
+.brand { display: flex; flex-direction: column; min-width: 0; margin-right: auto; }
+.brand b { font: 700 18px/1.2 var(--display); letter-spacing: -0.01em; }
+.brand span { font-size: 11px; color: var(--muted); }
+.tabs { display: flex; gap: 4px; }
+.tabs a { color: var(--muted); text-decoration: none; font: 500 13px/1 var(--body); padding: 8px 12px; border-radius: 8px; border: 1px solid transparent; }
+.tabs a:hover { color: var(--fg); background: var(--sel); }
+.tabs a[aria-current="page"] { color: var(--fg); border-color: var(--line); background: var(--panel); box-shadow: inset 0 -2px 0 var(--e); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--panel); }
+.seg button { font: 500 12px/1 var(--body); color: var(--fg); background: transparent; border: 0; padding: 8px 12px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--h); color: var(--on-h); }
+.btn { font: 500 12px/1 var(--body); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 8px 12px; cursor: pointer; }
+.btn:hover { background: var(--sel); }
+.btn[aria-pressed="true"] { background: var(--h); color: var(--on-h); border-color: var(--h); }
+.btn:disabled { opacity: .55; cursor: default; }
+.btn.primary { background: var(--h); color: var(--on-h); border-color: var(--h); }
+a:focus-visible, button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-visible { outline: 2px solid var(--e); outline-offset: 2px; }
+
+.wrap { max-width: 1200px; margin: 16px auto 0; display: flex; flex-direction: column; gap: 16px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+.grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; align-items: start; }
+.right { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+/* scale stack */
+.stack { padding: 12px 0 6px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 64px); max-height: calc(100vh - 90px); overflow-y: auto; }
+.stack h2 { font: 500 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 12px 10px; }
+.ruler { position: relative; height: 16px; margin: 0 12px 4px; font: 400 10px/1 var(--mono); color: var(--muted); }
+.ruler span { position: absolute; top: 0; transform: translateX(-50%); white-space: nowrap; }
+.ruler span:first-child { transform: none; }
+.ruler span:last-child { transform: translateX(-100%); }
+#list { list-style: none; margin: 0; padding: 0; }
+.item { width: 100%; text-align: left; border: 0; background: transparent; color: var(--fg); cursor: pointer; padding: 9px 12px 10px; display: grid; gap: 6px; font-family: var(--body); }
+.item:hover { background: var(--sel); }
+.item[aria-current="true"] { background: var(--sel); box-shadow: inset 0 0 0 1.5px var(--h); }
+.item .row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.item .nm { font-weight: 600; font-size: 14px; }
+.item .sz { font: 500 11px/1 var(--mono); color: var(--muted); white-space: nowrap; }
+.track { position: relative; height: 4px; border-radius: 2px; background: var(--line); }
+.pip { position: absolute; top: 50%; width: 10px; height: 10px; border-radius: 50%; transform: translate(-50%, -50%); background: var(--kc); box-shadow: 0 0 0 2px var(--panel); }
+
+/* stage */
+.stage { position: relative; height: clamp(340px, 62vh, 560px); overflow: hidden; background: radial-gradient(ellipse at 50% 42%, var(--stage-a), var(--stage-b) 75%); }
+#gl { position: absolute; inset: 0; cursor: grab; }
+#gl:active { cursor: grabbing; }
+#gl canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.badge { position: absolute; left: 12px; top: 12px; display: flex; flex-direction: column; gap: 2px; pointer-events: none; max-width: 60%; }
+.badge b { font: 700 18px/1.2 var(--display); }
+.badge i { font: 400 12px/1.2 var(--mono); color: var(--muted); font-style: italic; }
+.ctl { position: absolute; right: 12px; bottom: 12px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.hint { position: absolute; left: 12px; bottom: 12px; font: 400 11px/1.3 var(--mono); color: var(--muted); max-width: 40%; pointer-events: none; }
+.scale { position: absolute; left: 50%; bottom: 52px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 3px; pointer-events: none; font: 500 11px/1 var(--mono); color: var(--fg); }
+.scale i { display: block; height: 7px; border: 1.5px solid var(--fg); border-top: 0; min-width: 4px; }
+.nogl { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); padding: 24px; text-align: center; }
+
+/* info */
+.info { padding: 16px; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 20px; }
+.info h3 { font: 700 20px/1.2 var(--display); margin: 0 0 2px; }
+.info .en2 { color: var(--muted); font-size: 13px; margin: 0 0 10px; font-style: italic; }
+.info p { margin: 0 0 10px; max-width: 65ch; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 4px; }
+.stat { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.stat small { display: block; font: 400 10px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.stat strong { font: 500 14px/1.4 var(--mono); font-variant-numeric: tabular-nums; }
+.parts h4, .sec-h { font: 500 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+.parts ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.parts li { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 8px; align-items: baseline; }
+.parts .sw { display: block; width: 12px; height: 12px; border-radius: 3px; background: var(--c); transform: translateY(2px); border: 1px solid rgba(0,0,0,.18); }
+.foot { color: var(--muted); font-size: 12px; margin: 0; max-width: 80ch; }
+
+/* shared page furniture */
+.page { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.page h1 { font: 700 26px/1.2 var(--display); margin: 0; text-wrap: balance; }
+.lead { color: var(--muted); margin: 4px 0 0; max-width: 65ch; }
+.card { padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.cols { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label, .field .lbl { font: 500 12px/1.2 var(--body); color: var(--muted); }
+select, textarea { font: 400 14px/1.5 var(--body); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%; }
+textarea { min-height: 120px; resize: vertical; }
+.row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.stars { display: inline-flex; gap: 2px; }
+.stars button { font-size: 22px; line-height: 1; background: transparent; border: 0; padding: 2px 3px; cursor: pointer; color: var(--line); }
+.stars button[aria-pressed="true"], .stars button.on { color: var(--e); }
+.msg { min-height: 20px; font-size: 13px; color: var(--muted); }
+.msg.ok { color: var(--good); } .msg.err { color: var(--bad); }
+.note { border: 1px dashed var(--line); border-radius: 8px; padding: 12px; color: var(--muted); font-size: 13px; }
+.entry { border-top: 1px solid var(--line); padding-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.entry:first-child { border-top: 0; padding-top: 0; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font: 400 11px/1.3 var(--mono); color: var(--muted); }
+.chip { font: 500 11px/1 var(--mono); border: 1px solid var(--line); border-radius: 99px; padding: 3px 8px; color: var(--fg); }
+.chip.new { border-color: var(--e); color: var(--e); } .chip.done { border-color: var(--good); color: var(--good); }
+.txt { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+
+/* self-assessment */
+.dims { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.dim { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.dim .top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.dim h3 { font: 600 14px/1.3 var(--body); margin: 0; }
+.dim .score { font: 700 24px/1 var(--display); font-variant-numeric: tabular-nums; }
+.meter { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.meter i { display: block; height: 100%; border-radius: 4px; background: var(--mc); }
+.dim p { margin: 0; font-size: 13px; color: var(--muted); }
+.dim.all { border-color: var(--h); }
+ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 8px; }
+.next-item { display: flex; flex-direction: column; gap: 4px; border-top: 1px solid var(--line); padding-top: 10px; }
+.next-item:first-child { border-top: 0; padding-top: 0; }
+.next-item b { font-weight: 600; }
+.next-item span.d { color: var(--muted); font-size: 13px; }
+.pri-high { border-color: var(--e); color: var(--e); } .pri-mid { border-color: var(--warn); color: var(--warn); } .pri-low { color: var(--muted); }
+.dots { letter-spacing: 2px; color: var(--e); white-space: nowrap; }
+.log-item { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 10px; border-top: 1px solid var(--line); padding-top: 10px; }
+.log-item:first-child { border-top: 0; padding-top: 0; }
+.log-item .v { font: 500 12px/1.6 var(--mono); color: var(--muted); }
+.head-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.head-row .sec-h { margin: 0; }
+
+/* monitor */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.tile { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: var(--panel); }
+.tile small { display: block; font: 400 10px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.tile strong { font: 500 22px/1.4 var(--mono); font-variant-numeric: tabular-nums; }
+.bars { display: grid; gap: 6px; }
+.bar-row { display: grid; grid-template-columns: minmax(90px, 160px) minmax(0, 1fr) 36px; gap: 8px; align-items: center; font-size: 13px; }
+.bar-row .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-row .b { height: 10px; border-radius: 3px; background: var(--line); position: relative; }
+.bar-row .b i { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--kc); }
+.bar-row .n { font: 500 12px/1 var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
+.tbl { overflow-x: auto; }
+.tbl table { border-collapse: collapse; width: 100%; font-size: 13px; min-width: 520px; }
+.tbl th { font: 500 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.tbl td { padding: 8px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.health { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.h-item { display: flex; flex-direction: column; gap: 2px; }
+.h-item small { font: 400 10px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.h-item b { font: 500 14px/1.3 var(--mono); }
+.h-item b.ok { color: var(--good); } .h-item b.no { color: var(--bad); }
+
+@media (max-width: 860px) {
+  .grid, .cols { grid-template-columns: minmax(0, 1fr); }
+  .stack { position: static; max-height: none; overflow: visible; }
+  #list { display: flex; overflow-x: auto; }
+  .item { min-width: 168px; flex: 0 0 auto; }
+  .ruler { display: none; }
+  .info { grid-template-columns: minmax(0, 1fr); }
+  .hint { display: none; }
+  .tabs { order: 3; width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<header class="bar">
+  <div class="bar-in gut">
+    <div class="brand"><b data-i18n="ui.app.title"></b><span data-i18n="ui.app.sub"></span></div>
+    <nav class="tabs" data-i18n-aria="ui.nav.label">
+      <a href="#stack" data-route="stack" data-i18n="ui.nav.stack"></a>
+      <a href="#review" data-route="review" data-i18n="ui.nav.review"></a>
+      <a href="#monitor" data-route="monitor" data-i18n="ui.nav.monitor"></a>
+    </nav>
+    <div class="seg" role="group" data-i18n-aria="ui.lang.label">
+      <button type="button" data-lang="zh" aria-pressed="false">中文</button>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap gut">
+  <main class="page" id="page-stack" data-page="stack">
+    <div class="grid">
+      <aside class="stack panel" data-i18n-aria="ui.stack.heading">
+        <h2 data-i18n="ui.stack.heading"></h2>
+        <div class="ruler" aria-hidden="true">
+          <span style="left:0">10 nm</span><span style="left:16.67%">0.1 µm</span><span style="left:33.33%">1 µm</span><span style="left:50%">10 µm</span><span style="left:66.67%">100 µm</span><span style="left:83.33%">1 mm</span><span style="left:100%">10 mm</span>
+        </div>
+        <ul id="list"></ul>
+      </aside>
+      <section class="right">
+        <div class="stage panel" id="stage">
+          <div id="gl"></div>
+          <div class="badge"><b id="b-name"></b><i id="b-sci"></i></div>
+          <div class="scale" id="scale" hidden><i id="scale-bar"></i><span id="scale-txt"></span></div>
+          <div class="hint" data-i18n="ui.stage.hint"></div>
+          <div class="ctl">
+            <button class="btn" id="b-spin" type="button" data-i18n="ui.stage.rotate"></button>
+            <button class="btn" id="b-cut" type="button" aria-pressed="false" data-i18n="ui.stage.cut"></button>
+            <button class="btn" id="b-reset" type="button" data-i18n="ui.stage.reset"></button>
+          </div>
+        </div>
+        <article class="info panel" id="info"></article>
+      </section>
+    </div>
+    <p class="foot" data-i18n="ui.foot"></p>
+  </main>
+
+  <main class="page" id="page-review" data-page="review" hidden>
+    <div><h1 data-i18n="ui.rv.title"></h1><p class="lead" data-i18n="ui.rv.intro"></p><p class="meta" id="rv-meta"></p></div>
+    <div class="dims" id="rv-dims"></div>
+    <div class="cols">
+      <section class="card panel"><h2 class="sec-h" data-i18n="ui.rv.limits_title"></h2><ul class="plain" id="rv-limits"></ul></section>
+      <section class="card panel"><h2 class="sec-h" data-i18n="ui.rv.next_title"></h2><div id="rv-next"></div></section>
+    </div>
+    <section class="card panel"><h2 class="sec-h" data-i18n="ui.rv.spec_title"></h2><div class="tbl" id="rv-spec"></div></section>
+    <section class="card panel"><h2 class="sec-h" data-i18n="ui.rv.log_title"></h2><div id="rv-log"></div></section>
+  </main>
+
+  <main class="page" id="page-monitor" data-page="monitor" hidden>
+    <div><h1 data-i18n="ui.mon.title"></h1><p class="lead" data-i18n="ui.mon.intro"></p></div>
+    <section class="card panel"><h2 class="sec-h" data-i18n="ui.mon.runtime"></h2><div class="health" id="mon-health"></div></section>
+    <section class="card panel">
+      <div class="head-row"><h2 class="sec-h" data-i18n="ui.mon.models"></h2><button class="btn" id="mon-run" type="button"></button></div>
+      <p class="msg" id="mon-sum" role="status"></p>
+      <div class="tbl" id="mon-table"></div>
+    </section>
+    <section class="card panel"><h2 class="sec-h" data-i18n="ui.mon.cover"></h2><div class="bars" id="mon-cover"></div></section>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+/* ---------- helpers ---------- */
+const T = window.THREE;
+const V3 = (x, y, z) => new T.Vector3(x, y, z);
+const MODELS = {};
+const clipPlane = new T.Plane(new T.Vector3(0, 0, -1), 1e6); // constant 1e6 = cutaway off
+function mat(color, o) {
+  return new T.MeshStandardMaterial(Object.assign({ color, roughness: 0.5, metalness: 0.02, side: T.DoubleSide, clippingPlanes: [clipPlane] }, o));
+}
+function glass(color, op, o) {
+  return mat(color, Object.assign({ transparent: true, opacity: op === undefined ? 0.3 : op, depthWrite: false, roughness: 0.3 }, o));
+}
+function rng(seed) {
+  let a = seed >>> 0;
+  return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function sphere(r, m, x, y, z, sx, sy, sz) {
+  const s = new T.Mesh(new T.SphereGeometry(r, 28, 20), m);
+  s.position.set(x || 0, y || 0, z || 0);
+  s.scale.set(sx || 1, sy || 1, sz || 1);
+  return s;
+}
+function fib(n) {
+  const a = [], ga = Math.PI * (3 - Math.sqrt(5));
+  for (let i = 0; i < n; i++) { const y = 1 - (i + 0.5) * 2 / n, r = Math.sqrt(1 - y * y), th = i * ga; a.push(V3(Math.cos(th) * r, y, Math.sin(th) * r)); }
+  return a;
+}
+function ball(n, rad, R, sx, sy, sz) {
+  const a = [];
+  while (a.length < n) {
+    const p = V3(R() * 2 - 1, R() * 2 - 1, R() * 2 - 1);
+    if (p.length() <= 1) a.push(p.multiplyScalar(rad).multiply(V3(sx || 1, sy || 1, sz || 1)));
+  }
+  return a;
+}
+function dots(pts, r, m, R) {
+  const im = new T.InstancedMesh(new T.SphereGeometry(r, 10, 8), m, pts.length), M = new T.Matrix4();
+  pts.forEach((p, i) => { const s = R ? 0.7 + R() * 0.6 : 1; M.makeScale(s, s, s); M.setPosition(p); im.setMatrixAt(i, M); });
+  return im;
+}
+function tube(pts, r, m, seg, rad, closed) {
+  return new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts, !!closed), seg || 64, r, rad || 6, !!closed), m);
+}
+function bump(geo, amp, f) {
+  const p = geo.attributes.position, v = new T.Vector3();
+  for (let i = 0; i < p.count; i++) {
+    v.fromBufferAttribute(p, i);
+    const n = 1 + amp * Math.sin(v.x * f + 1) * Math.sin(v.y * f * 0.8 + 2) * Math.sin(v.z * f * 1.2 + 3);
+    p.setXYZ(i, v.x * n, v.y * n, v.z * n);
+  }
+  geo.computeVertexNormals();
+  return geo;
+}
+
+/* ---------- animal cells ---------- */
+MODELS.sperm = () => {
+  const g = new T.Group();
+  g.add(sphere(1, mat(0xe8d3f0), 0, 0, 0, 1.5, 0.9, 0.45));                 // head
+  g.add(sphere(1, mat(0x4a3f9e, { roughness: 0.6 }), -0.15, 0, 0, 1.15, 0.62, 0.28)); // nucleus
+  g.add(sphere(1, mat(0xe0607e), 1.05, 0, 0, 0.62, 0.86, 0.4));              // acrosome
+  const mid = new T.Mesh(new T.CylinderGeometry(0.26, 0.26, 2.2, 20), mat(0xb7a9d6));
+  mid.rotation.z = Math.PI / 2; mid.position.x = -2.6; g.add(mid);          // midpiece core
+  const hp = [];
+  for (let i = 0; i <= 120; i++) { const s = i / 120, a = s * Math.PI * 2 * 11; hp.push(V3(-1.5 - s * 2.2, Math.cos(a) * 0.3, Math.sin(a) * 0.3)); }
+  g.add(tube(hp, 0.085, mat(0xf2a65a), 160, 6));                              // mitochondrial helix
+  let tailMesh = null;
+  const tick = (t) => {
+    const N = 90, pts = [];
+    for (let i = 0; i <= N; i++) {
+      const s = i / N, amp = 0.25 + 0.9 * s;
+      pts.push(V3(-3.7 - s * 13, amp * Math.sin(s * 9 - t * 5) * (0.4 + 0.6 * s), amp * 0.5 * Math.cos(s * 9 - t * 5) * s));
+    }
+    const geo = new T.TubeGeometry(new T.CatmullRomCurve3(pts), N, 0.11, 6, false);
+    if (tailMesh) { tailMesh.geometry.dispose(); tailMesh.geometry = geo; }
+    else { tailMesh = new T.Mesh(geo, mat(0x8f7fd0)); g.add(tailMesh); }
+  };
+  tick(0);
+  return { obj: g, tick };
+};
+
+MODELS.egg = () => {
+  const g = new T.Group(), R = rng(7);
+  g.add(sphere(1, glass(0xfff0b0, 0.55)));                                    // ooplasm
+  g.add(sphere(0.24, mat(0xb9a8f0), 0.25, 0.15, 0.1));                       // nucleus
+  g.add(sphere(0.07, mat(0x4a3f9e), 0.28, 0.18, 0.17));                      // nucleolus
+  g.add(sphere(1.28, glass(0xf3b8cc, 0.22, { roughness: 0.2 })));            // zona pellucida
+  g.add(dots(fib(110).map(v => v.multiplyScalar(1.5)), 0.13, mat(0xe8849f), R)); // corona radiata
+  g.add(dots(ball(70, 0.88, R), 0.05, mat(0xe0a24a), R));                    // cortical granules
+  const pb = V3(0.5, 0.8, 0.3).normalize().multiplyScalar(1.12);
+  g.add(sphere(0.14, mat(0xe9d2a0), pb.x, pb.y, pb.z));                      // polar body
+  return { obj: g, tick: null };
+};
+
+MODELS.rbc = () => {
+  const g = new T.Group(), pts = [], N = 40;
+  const z = r => 0.5 * Math.sqrt(Math.max(0, 1 - r * r)) * (0.207161 + 2.002558 * r * r - 1.122762 * Math.pow(r, 4));
+  for (let i = 0; i <= N; i++) pts.push(new T.Vector2(i / N, -z(i / N)));
+  for (let i = N; i >= 0; i--) pts.push(new T.Vector2(i / N, z(i / N)));
+  g.add(new T.Mesh(new T.LatheGeometry(pts, 72), mat(0xc8283f, { roughness: 0.38 })));
+  const inner = new T.Mesh(new T.LatheGeometry(pts, 48), mat(0x8f1a2e, { roughness: 0.6 }));
+  inner.scale.setScalar(0.92); g.add(inner);
+  g.scale.setScalar(1.6);
+  g.rotation.x = 0.7;
+  return { obj: g, tick: (t) => { g.rotation.x = 0.7 + 0.15 * Math.sin(t * 0.8); } };
+};
+
+MODELS.wbc = () => {
+  const g = new T.Group(), R = rng(3);
+  g.add(new T.Mesh(bump(new T.SphereGeometry(1, 48, 36), 0.07, 5), glass(0xd9cdf3, 0.38, { roughness: 0.4 })));
+  const lobes = [V3(-0.45, 0.25, 0.05), V3(-0.05, 0.45, -0.1), V3(0.38, 0.1, 0.1), V3(0.1, -0.38, -0.05)];
+  const nm = mat(0x5a4bb8, { roughness: 0.55 });
+  lobes.forEach(p => g.add(sphere(0.27, nm, p.x, p.y, p.z, 1, 0.9, 1)));
+  g.add(tube(lobes, 0.06, nm, 24, 6));
+  g.add(dots(ball(120, 0.85, R), 0.045, mat(0xd98fc0), R));
+  return { obj: g, tick: null };
+};
+
+MODELS.platelet = () => {
+  const g = new T.Group(), R = rng(11);
+  g.add(new T.Mesh(bump(new T.SphereGeometry(1, 40, 28), 0.05, 6), glass(0xc9b6e8, 0.62, { roughness: 0.45 })).translateY(0));
+  g.children[0].scale.set(1.15, 0.38, 1);
+  const band = new T.Mesh(new T.TorusGeometry(0.86, 0.035, 8, 80), mat(0x6f5de0));
+  band.rotation.x = Math.PI / 2; band.scale.set(1.15, 1, 1); g.add(band);   // marginal microtubule band
+  g.add(dots(ball(16, 1, R, 0.8, 0.12, 0.6), 0.09, mat(0x5a3d9e), R));      // alpha granules
+  g.add(dots(ball(6, 1, R, 0.7, 0.1, 0.5), 0.05, mat(0xe9c46a), R));        // dense granules
+  g.scale.setScalar(1.3);
+  g.rotation.x = 0.55;
+  return { obj: g, tick: null };
+};
+/* ---------- viruses ---------- */
+function spikesAt(geo, m, list) {
+  const im = new T.InstancedMesh(geo, m, list.length), o = new T.Object3D(), up = V3(0, 1, 0);
+  list.forEach((s, i) => { o.position.copy(s.p); o.quaternion.setFromUnitVectors(up, s.n); o.updateMatrix(); im.setMatrixAt(i, o.matrix); });
+  return im;
+}
+const onSphere = (dirs, r, lift) => dirs.map(d => ({ n: d.clone(), p: d.clone().multiplyScalar(r + lift) }));
+
+MODELS.phage = () => {
+  const g = new T.Group();
+  const head = new T.Mesh(new T.IcosahedronGeometry(1, 1), mat(0x7c6cf0, { flatShading: true, roughness: 0.4 }));
+  head.scale.set(0.85, 1.3, 0.85); head.position.y = 2.6; g.add(head);
+  const dna = new T.Mesh(new T.TorusKnotGeometry(0.35, 0.07, 140, 8, 2, 5), mat(0xe0607e));
+  dna.position.y = 2.6; g.add(dna);                                           // packaged DNA
+  const collar = new T.Mesh(new T.CylinderGeometry(0.3, 0.3, 0.18, 16), mat(0xa89cff)); collar.position.y = 1.55; g.add(collar);
+  const core = new T.Mesh(new T.CylinderGeometry(0.2, 0.2, 2.35, 14), mat(0x5a4bb8)); core.position.y = 0.275; g.add(core);
+  for (let i = 0; i < 12; i++) {
+    const ring = new T.Mesh(new T.TorusGeometry(0.24, 0.07, 8, 24), mat(0x9a8cf5));
+    ring.rotation.x = Math.PI / 2; ring.position.y = 1.35 - i * 0.2; g.add(ring);   // contractile sheath
+  }
+  const needle = new T.Mesh(new T.CylinderGeometry(0.06, 0.06, 0.9, 8), mat(0x4a3f9e)); needle.position.y = -1.3; g.add(needle);
+  const base = new T.Mesh(new T.CylinderGeometry(0.55, 0.55, 0.16, 6), mat(0xe0607e)); base.position.y = -1.0; g.add(base);
+  for (let k = 0; k < 6; k++) {
+    const a = k * Math.PI / 3, c = Math.cos(a), s = Math.sin(a);
+    g.add(tube([V3(c * 0.5, -0.95, s * 0.5), V3(c * 1.4, -0.95, s * 1.4), V3(c * 2.0, -1.9, s * 2.0), V3(c * 2.3, -2.7, s * 2.3)], 0.045, mat(0xb7acff), 30, 6)); // long tail fibers
+    const pin = new T.Mesh(new T.ConeGeometry(0.06, 0.5, 8), mat(0xe0a24a)); pin.rotation.x = Math.PI; pin.position.set(c * 0.3, -1.3, s * 0.3); g.add(pin);
+  }
+  return { obj: g, tick: null };
+};
+
+MODELS.rabies = () => {
+  const g = new T.Group(), rad = 0.55, h = 0.3;
+  const env = glass(0xd8b4f8, 0.3), mx = glass(0xe8cdf5, 0.28);
+  const body = new T.Mesh(new T.CylinderGeometry(rad, rad, 2.4, 40, 1, true), env); body.rotation.z = Math.PI / 2; g.add(body);
+  const cap = new T.Mesh(new T.SphereGeometry(rad, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), env); cap.rotation.z = -Math.PI / 2; cap.position.x = 1.2; g.add(cap);
+  const flat = new T.Mesh(new T.CircleGeometry(rad, 32), env); flat.rotation.y = Math.PI / 2; flat.position.x = -1.2; g.add(flat);
+  const b2 = new T.Mesh(new T.CylinderGeometry(rad - 0.08, rad - 0.08, 2.3, 32, 1, true), mx); b2.rotation.z = Math.PI / 2; b2.position.x = -0.05; g.add(b2);
+  const hp = [];
+  for (let i = 0; i <= 320; i++) { const s = i / 320, a = s * Math.PI * 2 * 30; hp.push(V3(-1.05 + s * 2.05, Math.cos(a) * 0.3, Math.sin(a) * 0.3)); }
+  g.add(tube(hp, 0.085, mat(0xe0607e), 320, 6));                              // helical RNP
+  const sp = []; let row = 0;
+  for (let x = -1.1; x <= 1.2; x += 0.17, row++) {
+    const n = 18;
+    for (let k = 0; k < n; k++) { const a = (k + (row % 2) * 0.5) / n * Math.PI * 2, nn = V3(0, Math.cos(a), Math.sin(a)); sp.push({ n: nn, p: V3(x, 0, 0).add(nn.clone().multiplyScalar(rad + h / 2)) }); }
+  }
+  for (let ph = 0.3; ph < Math.PI / 2; ph += 0.3) {
+    const n = Math.max(3, Math.round(18 * Math.sin(ph)));
+    for (let k = 0; k < n; k++) { const a = (k + 0.5) / n * Math.PI * 2, nn = V3(Math.cos(ph), Math.sin(ph) * Math.cos(a), Math.sin(ph) * Math.sin(a)); sp.push({ n: nn, p: V3(1.2, 0, 0).add(nn.clone().multiplyScalar(rad + h / 2)) }); }
+  }
+  sp.push({ n: V3(1, 0, 0), p: V3(1.2 + rad + h / 2, 0, 0) });
+  g.add(spikesAt(new T.ConeGeometry(0.05, h, 8), mat(0x6f5de0), sp));       // glycoprotein G spikes
+  return { obj: g, tick: null };
+};
+
+MODELS.flu = () => {
+  const g = new T.Group(), R = rng(21);
+  g.add(sphere(1, glass(0xf0b0c8, 0.35)));
+  g.add(sphere(0.88, glass(0xd8c8f5, 0.3)));
+  g.add(spikesAt(new T.ConeGeometry(0.055, 0.28, 8), mat(0x6f5de0), onSphere(fib(190), 1, 0.14))); // hemagglutinin
+  const na = fib(46).map(v => v.applyAxisAngle(V3(1, 0, 0), 0.5));
+  g.add(spikesAt(new T.CylinderGeometry(0.02, 0.02, 0.3, 6), mat(0xe0a24a), onSphere(na, 1, 0.15)));  // neuraminidase stalks
+  g.add(dots(na.map(v => v.clone().multiplyScalar(1.33)), 0.09, mat(0xe0a24a)));                       // neuraminidase heads
+  for (let k = 0; k < 8; k++) {
+    const a = k / 7 * Math.PI * 2, rr = k < 7 ? 0.42 : 0;
+    const c = new T.Mesh(new T.CylinderGeometry(0.07, 0.07, 0.6, 10), mat(0xe0607e));
+    c.position.set(Math.cos(a) * rr, 0, Math.sin(a) * rr); c.rotation.set(R() * 0.5 - 0.25, 0, R() * 0.5 - 0.25); g.add(c); // 8 RNA segments
+  }
+  return { obj: g, tick: null };
+};
+
+MODELS.polio = () => {
+  const g = new T.Group(), p = (1 + Math.sqrt(5)) / 2, vs = [];
+  [[0, 1, p], [1, p, 0], [p, 0, 1]].forEach(b => [-1, 1].forEach(s1 => [-1, 1].forEach(s2 => {
+    const v = V3(b[0] ? b[0] * s1 : 0, b[1] ? b[1] * (b[0] ? s2 : s1) : 0, b[2] ? b[2] * s2 : 0);
+    if (!vs.some(u => u.distanceTo(v) < 1e-6)) vs.push(v);
+  })));
+  g.add(new T.Mesh(new T.IcosahedronGeometry(1, 2), mat(0xa89cff, { flatShading: true, roughness: 0.4 })));
+  g.add(dots(vs.map(v => v.clone().normalize().multiplyScalar(1.03)), 0.14, mat(0xe0607e)));  // 12 five-fold vertices
+  g.add(new T.Mesh(new T.TorusKnotGeometry(0.4, 0.06, 180, 8, 3, 7), mat(0x5a2d82)));          // RNA genome
+  return { obj: g, tick: null };
+};
+
+/* ---------- fungus, mite, plant cell ---------- */
+MODELS.candida = () => {
+  const g = new T.Group(), wall = glass(0xf0e6b0, 0.4, { roughness: 0.35 });
+  g.add(sphere(1.12, wall, 0, 0, 0, 1.1, 0.95, 0.95));
+  g.add(sphere(1, glass(0xfff7d6, 0.3), 0, 0, 0, 1.05, 0.9, 0.9));
+  g.add(sphere(0.34, mat(0x6f5de0), 0.2, 0.2, 0.1));                         // nucleus
+  g.add(sphere(0.4, glass(0xbfe4f0, 0.6), -0.35, -0.2, 0.1));                // vacuole
+  g.add(sphere(0.6, wall, 1.55, 0.7, 0));                                    // bud
+  g.add(sphere(0.2, mat(0x6f5de0), 1.6, 0.75, 0));
+  const hy = [V3(-0.9, -0.55, 0), V3(-1.9, -0.95, 0.2), V3(-3.0, -1.1, 0.35), V3(-4.2, -1.5, 0.3)];
+  g.add(tube(hy, 0.36, wall, 40, 12));                                       // germ tube / hypha
+  [0.35, 0.65, 0.92].forEach(s => { const q = new T.CatmullRomCurve3(hy).getPoint(s); const d = new T.Mesh(new T.CylinderGeometry(0.34, 0.34, 0.04, 16), mat(0xc9a64a)); d.position.copy(q); d.rotation.z = 1.2; g.add(d); }); // septa
+  return { obj: g, tick: null };
+};
+
+MODELS.mite = () => {
+  const g = new T.Group(), body = mat(0xe8dcc0, { roughness: 0.6 }), leg = mat(0xcdb98e, { roughness: 0.6 });
+  g.add(sphere(1, body, 0, 0, 0, 1.3, 0.62, 0.95));                          // idiosoma
+  g.add(sphere(1, mat(0xd9c79a), 1.55, -0.05, 0, 0.38, 0.3, 0.4));           // gnathosoma
+  [-1, 1].forEach(s => g.add(sphere(0.12, leg, 1.8, -0.1, s * 0.3)));
+  for (let i = 0; i < 4; i++) [-1, 1].forEach(s => {
+    const x = 0.85 - i * 0.55, dir = i < 2 ? 1 : -1;
+    g.add(tube([V3(x, -0.15, s * 0.75), V3(x + dir * 0.35, 0.3, s * 1.5), V3(x + dir * 0.7, -0.25, s * 2.2), V3(x + dir * 0.75, -0.7, s * 2.45)], 0.075, leg, 24, 6));
+    g.add(sphere(0.1, leg, x + dir * 0.75, -0.72, s * 2.47));
+  });
+  const R = rng(5);
+  for (let i = 0; i < 26; i++) { const a = R() * Math.PI * 2, c = new T.Mesh(new T.ConeGeometry(0.025, 0.28, 5), leg); c.position.set(Math.cos(a) * 1.15, 0.45 + R() * 0.1, Math.sin(a) * 0.85); c.rotation.z = -0.3; g.add(c); } // setae
+  g.rotation.x = 0.35;
+  return { obj: g, tick: null };
+};
+
+MODELS.onion = () => {
+  const g = new T.Group(), R = rng(9), cw = 3, ch = 1.25, cd = 0.55;
+  const wallM = glass(0xe9f2dc, 0.26), edge = new T.LineBasicMaterial({ color: 0x4a9a35, clippingPlanes: [clipPlane] });
+  const cell = (x, y, i) => {
+    const c = new T.Group(); c.position.set(x, y, 0);
+    const bg = new T.BoxGeometry(cw, ch, cd);
+    c.add(new T.Mesh(bg, wallM), new T.LineSegments(new T.EdgesGeometry(bg), edge));
+    c.add(new T.Mesh(new T.BoxGeometry(cw - 0.18, ch - 0.18, cd - 0.14), glass(0xcfe8c4, 0.35)));   // cytoplasm layer
+    c.add(new T.Mesh(new T.BoxGeometry(cw - 0.42, ch - 0.42, cd - 0.3), glass(0xbfe4f0, 0.45)));    // central vacuole
+    const nx = (R() - 0.5) * (cw - 0.9), ny = (i % 2 ? -1 : 1) * (ch / 2 - 0.3);
+    c.add(sphere(0.17, mat(0x6f5de0), nx, ny, 0), sphere(0.06, mat(0x2d2470), nx + 0.04, ny, 0.1)); // nucleus against the wall
+    return c;
+  };
+  [[-3, 0.625], [0, 0.625], [3, 0.625], [-1.5, -0.625], [1.5, -0.625]].forEach((p, i) => g.add(cell(p[0], p[1], i)));
+  g.rotation.x = -0.55;
+  return { obj: g, tick: null };
+};
+/* ---------- bacteria: one parametric builder ---------- */
+function capsuleGeo(L, W, seg) {
+  const r = W / 2, Lc = Math.max(0, L - W), pts = [], n = 12;
+  for (let i = 0; i <= n; i++) { const a = -Math.PI / 2 + i / n * Math.PI / 2; pts.push(new T.Vector2(r * Math.cos(a), -Lc / 2 + r * Math.sin(a))); }
+  for (let i = 0; i <= n; i++) { const a = i / n * Math.PI / 2; pts.push(new T.Vector2(r * Math.cos(a), Lc / 2 + r * Math.sin(a))); }
+  const geo = new T.LatheGeometry(pts, seg || 32); geo.rotateZ(Math.PI / 2); return geo;
+}
+function makeBact(o) {
+  const g = new T.Group(), body = new T.Group(), R = rng(o.seed || 1); g.add(body);
+  const col = o.gram === 'pos' ? 0x7a5cc7 : o.gram === 'af' ? 0xc0392b : 0xe8849f;   // Gram / acid-fast stain colour
+  const env = glass(col, o.gram === 'neg' || !o.gram ? 0.45 : 0.62, { roughness: 0.35 });
+  const cyto = glass(0xfff3cf, 0.35), nuc = mat(0x4a3f9e, { roughness: 0.6 }), ribo = mat(0xe0a24a);
+  const L = o.L || 3.2, W = o.W || 1, attach = [];
+  let tipA = V3(L / 2, 0, 0), tipDir = V3(1, 0, 0);
+  if (o.shape === 'spiral') {
+    const pts = [], amp = 0.5, turns = 1.7;
+    for (let i = 0; i <= 90; i++) { const s = i / 90, a = s * turns * Math.PI * 2; pts.push(V3((s - 0.5) * L, Math.cos(a) * amp, Math.sin(a) * amp)); }
+    body.add(tube(pts, W / 2, env, 120, 10));
+    body.add(tube(pts, W / 2 - 0.07, cyto, 120, 8));
+    body.add(sphere(W / 2, env, pts[0].x, pts[0].y, pts[0].z), sphere(W / 2, env, pts[90].x, pts[90].y, pts[90].z));
+    tipA = pts[90].clone(); tipDir = pts[90].clone().sub(pts[88]).normalize();
+  } else if (o.shape === 'coccus') {
+    const r = W / 2, cs = [];
+    if (o.arr === 'diplo') cs.push(V3(-W * 0.45, 0, 0), V3(W * 0.45, 0, 0));
+    else if (o.arr === 'chain') for (let i = 0; i < 4; i++) cs.push(V3((i - 1.5) * W * 0.9, 0, 0));
+    else if (o.arr === 'cluster') { cs.push(V3(0, 0, 0)); fib(12).forEach(v => cs.push(v.multiplyScalar(r * 1.75))); }
+    else cs.push(V3(0, 0, 0));
+    cs.forEach(c => {
+      body.add(sphere(r, env, c.x, c.y, c.z));
+      body.add(sphere(r * 0.88, cyto, c.x, c.y, c.z));
+      body.add(sphere(r * 0.42, nuc, c.x + (R() - 0.5) * r * 0.3, c.y + (R() - 0.5) * r * 0.3, c.z));
+      fib(30).forEach(v => attach.push({ n: v, p: v.clone().multiplyScalar(r).add(c) }));
+    });
+  } else {
+    body.add(new T.Mesh(capsuleGeo(L, W), env));
+    if (o.capsule) body.add(new T.Mesh(capsuleGeo(L + o.capsule * 2, W + o.capsule * 2), glass(o.capsCol || 0xcfe8e0, 0.2)));
+    body.add(new T.Mesh(capsuleGeo(L - 0.14, W - 0.14), cyto));
+    const pts = []; for (let i = 0; i < 9; i++) pts.push(V3((R() - 0.5) * (L - W) * 0.9, (R() - 0.5) * W * 0.5, (R() - 0.5) * W * 0.5));
+    body.add(tube(pts, 0.045, nuc, 80, 6, true));
+    body.add(dots(ball(46, 1, R, (L - 0.3) / 2, W * 0.4, W * 0.4), 0.035, ribo, R));
+    for (let i = 0; i < 160; i++) { const x = (R() - 0.5) * (L - W), a = R() * Math.PI * 2, n = V3(0, Math.cos(a), Math.sin(a)); attach.push({ n, p: V3(x, 0, 0).add(n.clone().multiplyScalar(W / 2)) }); }
+  }
+  const pick = (n) => attach.slice(0, n);
+  if (o.fim) g.add(spikesAt(new T.CylinderGeometry(0.012, 0.012, 0.36, 4), mat(0xb8a9cc), pick(o.fim).map(a => ({ n: a.n, p: a.p.clone().add(a.n.clone().multiplyScalar(0.18)) }))));
+  if (o.needles) {
+    const nl = pick(o.needles).map(a => ({ n: a.n, p: a.p.clone().add(a.n.clone().multiplyScalar(0.15)) }));
+    g.add(spikesAt(new T.CylinderGeometry(0.02, 0.02, 0.3, 5), mat(0x2d2470), nl));
+    g.add(dots(nl.map(s => s.p.clone().add(s.n.clone().multiplyScalar(0.17))), 0.045, mat(0xe0a24a)));
+  }
+  const flags = [];
+  if (o.fl) {
+    const f = o.fl;
+    for (let i = 0; i < f.n; i++) {
+      let s, d;
+      if (f.type === 'peri') { const a = attach[Math.floor(R() * attach.length)]; s = a.p.clone(); d = a.n.clone().multiplyScalar(0.8).add(V3(-0.6, 0, 0)).normalize(); }
+      else { s = tipA.clone().add(V3((R() - 0.5) * 0.1, (R() - 0.5) * 0.2, (R() - 0.5) * 0.2)); d = tipDir.clone().add(V3(0, (R() - 0.5) * 0.5, (R() - 0.5) * 0.5)).normalize(); }
+      const u = d.clone().cross(V3(0.2, 1, 0.3)).normalize(), v = d.clone().cross(u).normalize();
+      const mesh = new T.Mesh(new T.BufferGeometry(), mat(0x8f7fd0)); g.add(mesh);
+      flags.push({ s, d, u, v, len: f.len, k: 2.4 + R(), ph: R() * 6, mesh });
+    }
+  }
+  const tick = flags.length ? (t) => flags.forEach(f => {
+    const N = 48, pts = [];
+    for (let i = 0; i <= N; i++) { const q = i / N, A = 0.16 * Math.min(1, q * 3), ph = q * f.k * Math.PI * 2 - t * 6 + f.ph; pts.push(f.s.clone().addScaledVector(f.d, q * f.len).addScaledVector(f.u, A * Math.sin(ph)).addScaledVector(f.v, A * Math.cos(ph))); }
+    f.mesh.geometry.dispose(); f.mesh.geometry = new T.TubeGeometry(new T.CatmullRomCurve3(pts), N, 0.035, 5, false);
+  }) : null;
+  if (tick) tick(0);
+  return { obj: g, tick, fit: body, target: flags.length ? 2.5 : 3.2 };
+}
+const ROD = { shape: 'rod', gram: 'neg' };
+const BACT = {
+  salmonella: { ...ROD, L: 3.4, W: 1, fl: { type: 'peri', n: 8, len: 2.6 }, seed: 2 },
+  s_ent: { ...ROD, L: 3.4, W: 1, fl: { type: 'peri', n: 8, len: 2.6 }, fim: 90, seed: 3 },
+  s_typh: { ...ROD, L: 3.4, W: 1, fl: { type: 'peri', n: 8, len: 2.6 }, needles: 26, seed: 4 },
+  ecoli: { ...ROD, L: 3.2, W: 0.95, fl: { type: 'peri', n: 6, len: 2.6 }, fim: 110, seed: 5 },
+  klebsiella: { ...ROD, L: 2.8, W: 1.1, capsule: 0.38, fim: 80, seed: 6 },
+  cronobacter: { ...ROD, L: 3.4, W: 1.05, capsule: 0.1, fl: { type: 'peri', n: 8, len: 2.6 }, seed: 7 },
+  shig_dys: { ...ROD, L: 2.8, W: 1, needles: 30, seed: 8 },
+  shig_son: { ...ROD, L: 2.8, W: 1, capsule: 0.12, needles: 26, seed: 9 },
+  pseudomonas: { ...ROD, L: 3.4, W: 0.8, fl: { type: 'polar', n: 1, len: 3.4 }, seed: 10 },
+  burkholderia: { ...ROD, L: 3.2, W: 0.9, fl: { type: 'tuft', n: 5, len: 2.8 }, seed: 11 },
+  hpylori: { shape: 'spiral', gram: 'neg', L: 3.8, W: 0.62, fl: { type: 'tuft', n: 5, len: 1.9 }, seed: 12 },
+  listeria: { shape: 'rod', gram: 'pos', L: 2.8, W: 0.8, fl: { type: 'peri', n: 4, len: 2.3 }, seed: 13 },
+  mabs: { shape: 'rod', gram: 'af', L: 4.2, W: 0.95, capsule: 0.16, capsCol: 0xf2b8a8, seed: 14 },
+  faecalis: { shape: 'coccus', gram: 'pos', W: 1.2, arr: 'diplo', seed: 15 },
+  hirae: { shape: 'coccus', gram: 'pos', W: 1.1, arr: 'chain', seed: 16 },
+  saureus: { shape: 'coccus', gram: 'pos', W: 1.15, arr: 'cluster', seed: 17 }
+};
+Object.keys(BACT).forEach(k => { MODELS[k] = () => makeBact(BACT[k]); });
+/* ---------- cytomegalovirus ---------- */
+MODELS.cmv = () => {
+  const g = new T.Group(), p = (1 + Math.sqrt(5)) / 2, vs = [];
+  [[0, 1, p], [1, p, 0], [p, 0, 1]].forEach(b => [-1, 1].forEach(s1 => [-1, 1].forEach(s2 => {
+    const v = V3(b[0] ? b[0] * s1 : 0, b[1] ? b[1] * (b[0] ? s2 : s1) : 0, b[2] ? b[2] * s2 : 0);
+    if (!vs.some(u => u.distanceTo(v) < 1e-6)) vs.push(v);
+  })));
+  g.add(sphere(1, glass(0xe3b5d4, 0.3)));                                     // envelope
+  g.add(sphere(0.84, glass(0xf5d98a, 0.34)));                                 // tegument layer
+  g.add(new T.Mesh(new T.IcosahedronGeometry(0.56, 1), mat(0x7c6cf0, { flatShading: true, roughness: 0.4 }))); // capsid
+  g.add(dots(vs.map(v => v.clone().normalize().multiplyScalar(0.58)), 0.07, mat(0xf2a65a)));                  // pentons
+  g.add(new T.Mesh(new T.TorusKnotGeometry(0.2, 0.035, 160, 8, 3, 5), mat(0xd0486e)));                         // dsDNA
+  g.add(spikesAt(new T.ConeGeometry(0.04, 0.22, 8), mat(0x6f5de0), onSphere(fib(150), 1, 0.11)));           // glycoprotein spikes
+  return { obj: g, tick: null };
+};
+
+/* ---------- insects ---------- */
+function wingMesh(len, wid, veins, col) {
+  const s = new T.Shape();
+  s.moveTo(0, 0);
+  s.bezierCurveTo(len * 0.1, wid * 0.55, len * 0.7, wid * 0.6, len, wid * 0.12);
+  s.bezierCurveTo(len * 0.75, -wid * 0.5, len * 0.2, -wid * 0.4, 0, 0);
+  const g = new T.Group();
+  g.add(new T.Mesh(new T.ShapeGeometry(s, 16), glass(col || 0xdfe9ff, 0.4, { roughness: 0.2 })));
+  const lm = new T.LineBasicMaterial({ color: 0x5a4bb8, clippingPlanes: [clipPlane] });
+  for (let i = 0; i < veins; i++) {
+    const y = (i / Math.max(1, veins - 1) - 0.5) * wid * 0.6;
+    const c = new T.CatmullRomCurve3([V3(0, 0, 0.002), V3(len * 0.35, y * 0.6, 0.002), V3(len * 0.92, y * 0.45 + wid * 0.06, 0.002)]);
+    g.add(new T.Line(new T.BufferGeometry().setFromPoints(c.getPoints(18)), lm));
+  }
+  return g;
+}
+function legTube(b, dx, side, k, r, m) {
+  const pts = [b, V3(b.x + dx * 0.7 * k, b.y + 0.9 * k, side * (0.5 + k)), V3(b.x + dx * 1.4 * k, b.y + 0.1 * k, side * (0.5 + 1.9 * k)), V3(b.x + dx * 1.7 * k, b.y - 1.0 * k, side * (0.5 + 2.3 * k))];
+  const g = new T.Group();
+  g.add(tube(pts, r, m, 30, 6));
+  pts.slice(1).forEach(q => g.add(sphere(r * 1.5, m, q.x, q.y, q.z)));
+  return g;
+}
+function wingPivot(len, wid, veins, pos, side, yaw, lift, col) {
+  const pivot = new T.Group(), ori = new T.Group(), lay = new T.Group();
+  pivot.position.copy(pos); ori.rotation.y = yaw; lay.rotation.x = Math.PI / 2;
+  lay.add(wingMesh(len, wid, veins, col)); ori.add(lay); pivot.add(ori);
+  pivot.rotation.x = -side * (lift || 0);
+  return pivot;
+}
+
+/* mosquitoes, modeled from a China CDC reference photograph (Asian tiger mosquito and northern house mosquito, females) */
+function mosqLeg(base, dx, side, k, g, m, pale, bands) {
+  const z0 = base.z, by = base.y;
+  const up = V3(base.x + dx * 0.45 * k, by + 0.85 * k, z0 + side * 0.7 * k);                // knee, raised
+  const ank = V3(base.x + dx * 1.15 * k, by + 0.05 * k, z0 + side * 1.75 * k);              // ankle
+  const mid = V3(base.x + dx * 0.8 * k, by + 0.55 * k, z0 + side * 1.2 * k);
+  g.add(tube([base, up, mid, ank], 0.036, m, 40, 6));                                       // femur + tibia
+  g.add(sphere(0.06, pale, up.x, up.y, up.z));                                              // pale knee spot
+  const tip = V3(ank.x + dx * 0.35 * k, by - 1.0 * k, z0 + side * 2.3 * k);
+  g.add(tube([ank, V3(ank.x + dx * 0.15 * k, by - 0.5 * k, z0 + side * 2.0 * k), tip], 0.022, m, 20, 5)); // tarsus
+  if (bands) {
+    [0.1, 0.3, 0.5, 0.7].forEach(s => {                                                     // pale basal bands on the hind tarsi
+      const r = new T.Mesh(new T.TorusGeometry(0.04, 0.026, 6, 14), pale); r.position.copy(ank.clone().lerp(tip, s)); r.lookAt(tip); g.add(r);
+    });
+    g.add(tube([ank.clone().lerp(tip, 0.8), tip], 0.04, pale, 8, 5));                     // last tarsomere mostly white
+  }
+  const claw = new T.Mesh(new T.ConeGeometry(0.02, 0.1, 5), m); claw.position.set(tip.x, tip.y - 0.04, tip.z); claw.rotation.x = Math.PI; g.add(claw);
+}
+
+function makeMosq(o) {
+  const rig = new T.Group(), body = new T.Group(); rig.add(body); rig.rotation.z = o.pitch;
+  const thx = mat(o.thorax, { roughness: 0.6 }), abm = mat(o.abd, { roughness: 0.55 }), dark = mat(o.dark, { roughness: 0.5 }), pale = mat(o.pale, { roughness: 0.7 }), leg = mat(o.leg, { roughness: 0.55 });
+  body.add(sphere(1, thx, 0, 0.05, 0, 0.95, 0.78, 0.68));                                   // thorax with dorsal hump
+  [-1, 0, 1].forEach(i => body.add(sphere(0.13, o.stripe ? pale : thx, -0.84, 0.26, i * 0.2)));  // three-lobed scutellum
+  if (o.stripe) body.add(tube([V3(0.74, 0.53, 0), V3(0.15, 0.87, 0), V3(-0.65, 0.7, 0)], 0.052, pale, 24, 6)); // white median stripe
+  body.add(sphere(0.3, dark, 1.2, -0.02, 0));                                                // head
+  if (o.stripe) body.add(sphere(0.085, pale, 1.46, -0.1, 0));                               // pale clypeus patch
+  [-1, 1].forEach(s => body.add(sphere(0.23, mat(0x0f0b14, { roughness: 0.2 }), 1.27, 0.08, s * 0.2, 1, 1.1, 0.9)));  // compound eyes
+  const pb = new T.Group(); pb.position.set(1.42, -0.08, 0); pb.rotation.z = -o.pbTilt; body.add(pb);
+  const pbm = new T.Mesh(new T.CylinderGeometry(0.03, 0.05, o.pb, 8), mat(o.proboscis, { roughness: 0.5 })); pbm.rotation.z = -Math.PI / 2; pbm.position.x = o.pb / 2; pb.add(pbm); // proboscis
+  [-1, 1].forEach(s => {
+    const pg = new T.Group(); pg.position.set(1.42, -0.03, s * 0.08); pg.rotation.z = -o.pbTilt * 0.85; body.add(pg);
+    const pm = new T.Mesh(new T.CylinderGeometry(0.026, 0.03, o.palp, 8), dark); pm.rotation.z = -Math.PI / 2; pm.position.x = o.palp / 2; pg.add(pm);                 // palps
+    if (o.stripe) pg.add(sphere(0.045, pale, o.palp, 0, 0));
+    body.add(sphere(0.04, o.stripe ? pale : dark, 1.4, 0.22, s * 0.08));                                                                                                // pedicel
+    const cv = new T.CatmullRomCurve3([V3(1.4, 0.22, s * 0.08), V3(1.85, 0.5, s * 0.22), V3(2.35, 0.64, s * 0.38)]);                                                      // antennae
+    body.add(new T.Mesh(new T.TubeGeometry(cv, 24, 0.016, 5, false), dark));
+    const hairs = [];
+    for (let i = 1; i < 12; i++) {
+      const t = i / 12, p = cv.getPoint(t), tg = cv.getTangent(t), a = tg.clone().cross(V3(0, 1, 0)).normalize(), b = tg.clone().cross(a).normalize();
+      for (let q = 0; q < 6; q++) { const ang = q / 6 * Math.PI * 2, n = a.clone().multiplyScalar(Math.cos(ang)).addScaledVector(b, Math.sin(ang)); hairs.push({ n: n, p: p.clone().addScaledVector(n, 0.08) }); }
+    }
+    body.add(spikesAt(new T.ConeGeometry(0.007, 0.16, 3), dark, hairs));
+  });
+  const abd = new T.Group(); abd.position.set(-0.95, -0.02, 0); abd.rotation.z = 0.12; body.add(abd);              // abdomen
+  const abR = s => 0.4 * (1 - 0.55 * s) * (s > 0.94 ? Math.sqrt(Math.max(0, 1 - Math.pow((s - 0.94) / 0.06, 2))) : 1);
+  const abPts = []; for (let i = 0; i <= 48; i++) { const s = i / 48; abPts.push(new T.Vector2(abR(s), s * 3.1)); }
+  const ab = new T.Mesh(new T.LatheGeometry(abPts, 32), abm); ab.rotation.z = Math.PI / 2; abd.add(ab);
+  o.bands.forEach(s => { const ring = new T.Mesh(new T.TorusGeometry(abR(s) + 0.012, o.bandW, 8, 28), pale); ring.rotation.y = Math.PI / 2; ring.position.set(-s * 3.1, 0, 0); abd.add(ring); });
+  [-1, 1].forEach(s => { const c = new T.Mesh(new T.ConeGeometry(0.03, 0.22, 5), o.tipWhite ? pale : dark); c.rotation.z = Math.PI / 2; c.position.set(-3.2, 0, s * 0.04); abd.add(c); });   // cerci
+  [-1, 1].forEach(s => { body.add(tube([V3(-0.45, 0.2, s * 0.25), V3(-0.55, 0.45, s * 0.38)], 0.012, dark, 6, 4)); body.add(sphere(0.05, pale, -0.55, 0.46, s * 0.38)); });          // halteres
+  for (let p = 0; p < 3; p++) [-1, 1].forEach(s => mosqLeg(V3([0.5, -0.05, -0.55][p], -0.38, s * 0.25), [1.0, 0.1, -1.2][p], s, o.k[p], rig, leg, pale, o.legBands && p === 2));
+  [-1, 1].forEach(s => { const w = wingPivot(3.3, 0.7, 6, V3(-0.05, 0.62, s * 0.12), s, Math.PI + s * 0.1, 0.08, o.wing); w.rotation.z = 0.1; rig.add(w); });    // wings rest folded over the abdomen
+  return { obj: rig, tick: null, fit: body, target: 3.0 };
+}
+const MOSQ = {
+  mosquito: { thorax: 0x1f1a1a, abd: 0x16121a, dark: 0x14111a, pale: 0xf2efe6, leg: 0x1a161d, proboscis: 0x14111a, wing: 0x4a4358, stripe: true, legBands: true, tipWhite: true,
+    pitch: -0.3, pb: 2.0, pbTilt: 0.85, palp: 0.55, k: [1.25, 1.4, 1.95], bandW: 0.04, bands: [0.1, 0.25, 0.4, 0.55, 0.7, 0.85] },
+  culex: { thorax: 0x6a4a2a, abd: 0x4f3820, dark: 0x3a2818, pale: 0xcdb27a, leg: 0x3a2a1c, proboscis: 0x4a3522, wing: 0xd6d2c4, stripe: false, legBands: false, tipWhite: false,
+    pitch: 0.12, pb: 2.0, pbTilt: 0.5, palp: 0.3, k: [1.25, 1.4, 1.95], bandW: 0.03, bands: [0.12, 0.3, 0.48, 0.66, 0.84] }
+};
+MODELS.mosquito = () => makeMosq(MOSQ.mosquito);
+MODELS.culex = () => makeMosq(MOSQ.culex);
+
+MODELS.fly = () => {
+  const g = new T.Group(), body = new T.Group(); g.add(body);
+  const gray = mat(0x55555e, { roughness: 0.7 }), stripe = mat(0x1c1c22, { roughness: 0.6 }), abd = mat(0x6b6656, { roughness: 0.65 });
+  const eye = mat(0xb3261e, { roughness: 0.3 }), leg = mat(0x2b2a30, { roughness: 0.7 });
+  body.add(sphere(1, gray, 0, 0, 0, 1.0, 0.85, 0.8));                                      // thorax
+  [-0.42, -0.14, 0.14, 0.42].forEach(z => body.add(tube([V3(0.8, 0.5, z * 0.7), V3(0, 0.84, z), V3(-0.85, 0.5, z * 0.7)], 0.04, stripe, 20, 5))); // four thoracic stripes
+  body.add(sphere(1, abd, -1.85, -0.05, 0, 1.35, 0.9, 0.85));                              // abdomen
+  body.add(tube([V3(-3.0, 0.15, 0), V3(-1.9, 0.86, 0), V3(-1.0, 0.55, 0)], 0.05, stripe, 20, 5));
+  const ab = fib(90).filter(v => v.y > -0.4).map(v => ({ n: v.clone(), p: v.clone().multiply(V3(1.35, 0.9, 0.85)).add(V3(-1.85, -0.05, 0)) }));
+  body.add(spikesAt(new T.ConeGeometry(0.03, 0.32, 4), stripe, ab));                       // bristles
+  body.add(sphere(0.5, gray, 1.35, 0, 0));                                                 // head
+  [-1, 1].forEach(s => body.add(sphere(0.42, eye, 1.5, 0.18, s * 0.4, 1, 1.1, 0.9)));      // compound eyes
+  body.add(tube([V3(1.7, -0.3, 0), V3(1.95, -0.55, 0), V3(2.05, -0.75, 0)], 0.09, mat(0xc79a8a), 12, 8));
+  body.add(sphere(0.2, mat(0xd9a0a0), 2.1, -0.82, 0, 1.3, 0.7, 1.1));                      // labellum (sponging mouthparts)
+  for (let p = 0; p < 3; p++) [-1, 1].forEach(s => g.add(legTube(V3([0.55, 0.0, -0.5][p], -0.4, s * 0.4), [0.9, 0.1, -1.0][p], s, 0.8, 0.06, leg)));
+  [-1, 1].forEach(s => g.add(wingPivot(4.4, 1.5, 4, V3(0, 0.85, s * 0.45), s, Math.PI + s * 0.3, 0.18)));
+  return { obj: g, tick: null, fit: body, target: 3.0 };
+};
+/* ---------- locales: one dictionary per language, same key tree ---------- */
+const LOCALES = {
+  en: {
+    ui: {
+      app: { title: 'Microbe Modeling Stack', sub: 'Specimens stacked by real size on a log scale' },
+      nav: { label: 'Pages', stack: 'Models', review: 'Self-review', monitor: 'Monitor' },
+      lang: { label: 'Language' },
+      stack: { heading: 'Scale stack' },
+      stage: { rotate: 'Rotate', cut: 'Cutaway', reset: 'Reset view', hint: 'Drag to orbit · right-drag or two fingers to pan · scroll to zoom', nogl: 'WebGL is not available in this browser, so the 3D stage is off. The notes below still work.' },
+      info: { size: 'Size', kind: 'Type', vs: 'vs. red blood cell', parts: 'Structure key' },
+      foot: 'Every model is generated procedurally with three.js and simplified: proportions are compressed (for example sperm tails, flagella and insect legs), and colors follow Gram-stain and H&E conventions. The scale bar measures the longest side of the body, not the appendages. Sizes are typical literature ranges, not measurements of one sample.',
+      rv: {
+        title: 'Self-assessment', intro: 'The author keeps this page up to date; it is not collected from visitors. It rates how rigorous and complete the models are right now, lists what is known to be weak, and says what to build next.',
+        version: 'Version', updated: 'Last updated', overall: 'Overall',
+        dims: {
+          rigor: { name: 'Scientific rigor', note: 'Descriptions and size ranges were written from general knowledge and have no citations yet. Figures such as genome sizes and lifespans are standard textbook values, but none were checked against a source in this build.' },
+          complete: { name: 'Completeness', note: 'Every specimen on the list has a model, a scale and a description in two languages. Still missing: references, a comparison view, hover labels and a quiz.' },
+          fidelity: { name: 'Model fidelity', note: 'The average of the per-specimen ratings below. Bacteria share one template, so strains differ mostly by flagella, fimbriae and capsule rather than true cell shape.' },
+          interact: { name: 'Interaction', note: 'Orbit, pan, zoom, cutaway, a live scale bar and a keyboard-reachable list. No labels appear when you point at a structure.' },
+          i18n: { name: 'Language support', note: 'Two complete locales with the same key tree. Numbers and dates use Intl, and Latin names stay untranslated on purpose. No third language and no right-to-left layout.' },
+          a11y: { name: 'Accessibility', note: 'Tabs and buttons have labels and focus rings, and the page works at phone width. The 3D stage has no text alternative beyond the info panel, and orbiting has no keyboard control.' }
+        },
+        limits_title: 'Known limits',
+        limits: {
+          sizes: 'Sizes are typical ranges written from memory and not yet cited.',
+          template: 'Every bacterium is built from one shared rod, coccus or spiral template.',
+          scalebar: 'Scale bars measure the longest side of the body. Flagella, tails and legs are left out, and some are shortened.',
+          cmv: 'The cytomegalovirus capsid is a plain icosahedron, not the real T=16 lattice.',
+          mosq: 'The two mosquitoes follow one reference photograph (China CDC) and written descriptions, not measured dimensions, so proportions are approximate.',
+          insects: 'The insects and the mite have simplified legs and no scales.',
+          colors: 'Colors follow staining conventions, not true appearance.',
+          cutaway: 'The cutaway uses a single clipping plane that faces the camera.'
+        },
+        next_title: 'Suggested next features',
+        next: {
+          photoref: { t: 'More photograph-based models', d: 'Rebuild the housefly and the dust mite from photographs, and check the mosquitoes against more than one picture.' },
+          refs: { t: 'Cited sources', d: 'Link every specimen to a source and mark which numbers were checked.' },
+          hover: { t: 'Hover labels', d: 'Point at a part of the model to see its name, matching the structure key.' },
+          compare: { t: 'Side-by-side sizes', d: 'Pick two specimens and view them at the same scale.' },
+          stain: { t: 'Stain view', d: 'Switch between Gram, acid-fast and H&E colors.' },
+          shapes: { t: 'Distinct bacterial shapes', d: 'Replace the shared template with per-species morphology.' },
+          quiz: { t: 'Quiz mode', d: 'Name the specimen from its silhouette, or sort specimens by size.' },
+          glb: { t: 'Export to GLB', d: 'Download the current model for other 3D tools.' }
+        },
+        pri: { high: 'High priority', mid: 'Medium', low: 'Low' }, effort: 'Effort',
+        spec_title: 'Per-specimen self-rating', col_name: 'Specimen', col_fid: 'Model fidelity', col_issue: 'Known issue', col_size: 'Size source',
+        size_src: 'Typical range, not cited', no_issue: '–',
+        issue: { template: 'Shared bacterial template', compressed: 'Tail is shortened for display', insect: 'Legs simplified, no scales', cmv: 'Simplified capsid' },
+        log_title: 'Change log',
+        log: { 4: 'Added the northern house mosquito. Both mosquitoes were rebuilt from a China CDC reference photograph: the Asian tiger mosquito has a white median stripe, banded hind legs, wings folded over the abdomen and a head-down stance; the house mosquito is brown and unbanded.', 3: 'Mosquito checked against a written description of Aedes aegypti: white lyre markings and scutellum, pale clypeus and pedicel, white-tipped palps, dark proboscis, banded hind tarsi ending in a white segment, pale knee spots. Not yet traced from photographs.', 1: 'First version: 28 specimens, log-scale stack, 3D stage with cutaway, two languages.', 2: 'Added cytomegalovirus, mosquito and housefly; a live scale bar; panning; a floating language switch with separate locale dictionaries; this self-assessment and the monitor page. The mosquito model was rebuilt with a tapered banded abdomen, banded legs and feathery antennae.' }
+      },
+      mon: {
+        title: 'Monitor', intro: 'How this page is running in your browser, and whether every model still builds.',
+        runtime: 'Runtime', h_gl: 'WebGL', h_ctl: 'Orbit controls', h_fps: 'Frame rate', h_err: 'Script errors', h_view: 'Viewport', h_lang: 'Language',
+        ok: 'Working', no: 'Unavailable', measuring: 'Measuring…',
+        models: 'Model build check', run: 'Run again', running: 'Checking…', never: 'Not checked yet',
+        summary: '{ok} of {n} models built · {tris} triangles in total · slowest {ms} ms',
+        col_name: 'Specimen', col_status: 'Status', col_ms: 'Build ms', col_tris: 'Triangles', st_ok: 'OK', st_fail: 'Failed',
+        cover: 'Coverage by type'
+      }
+    },
+    kind: { virus: 'Virus', bac: 'Bacterium', animal: 'Animal cell', plant: 'Plant cell', fungi: 'Fungus', arthro: 'Arthropod' },
+    part: {
+      wall_neg: 'Outer membrane + wall', wall_pos: 'Cell wall (thick peptidoglycan)', wall_af: 'Waxy wall (mycolic acids)', cyto: 'Cytoplasm',
+      nucleoid: 'Nucleoid (circular DNA)', ribo: 'Ribosomes', flagella: 'Flagella', fimbriae: 'Fimbriae', ndl: 'Type III secretion needles', capsule: 'Capsule', waxy: 'Outer waxy layer',
+      capsid: 'Protein capsid', five_fold: 'Five-fold vertices (12)', rna: 'RNA genome', envelope: 'Lipid envelope', ha: 'Hemagglutinin (HA)', na: 'Neuraminidase (NA)', rnp8: '8 RNA segments (RNPs)',
+      glyco_g: 'Glycoprotein G spikes', matrix: 'Matrix protein M', helical_rnp: 'Helical RNP', tegument: 'Tegument', glyco: 'Envelope glycoprotein spikes', penton: 'Capsid pentons', dsdna: 'Double-stranded DNA',
+      head: 'Head capsid', dna_base: 'Packaged DNA / baseplate', sheath: 'Contractile sheath', long_fibers: 'Long tail fibers', pins: 'Short pins',
+      membrane: 'Membrane', mt_band: 'Marginal microtubule band', alpha: 'Alpha granules', dense: 'Dense granules',
+      fungal_wall: 'Cell wall', nucleus: 'Nucleus', vacuole: 'Vacuole', septa: 'Hyphal septa', hemoglobin: 'Hemoglobin-rich interior', lobed: 'Lobed nucleus', granules: 'Granules',
+      acrosome: 'Acrosome', mito: 'Mitochondrial helix', tail: 'Tail flagellum', ooplasm: 'Ooplasm', zona: 'Zona pellucida', corona: 'Corona radiata cells', cortical: 'Cortical granules', polar: 'Polar body',
+      plant_wall: 'Cellulose cell wall', cyto_thin: 'Thin cytoplasm layer', central_vac: 'Large central vacuole',
+      body: 'Body (idiosoma)', legs: 'Legs', mouth: 'Mouthparts (gnathosoma)', thorax: 'Thorax', abdomen: 'Abdomen', bands: 'Pale bands', proboscis: 'Piercing proboscis', wings: 'Wings (one pair)', eyes: 'Compound eyes', labellum: 'Sponging mouthparts (labellum)', stripe: 'White median stripe'
+    },
+    sp: {
+      polio: { name: 'Poliovirus', desc: 'A non-enveloped icosahedral virus carrying about 7.5 kb of single-stranded RNA. It spreads by the fecal–oral route, and vaccines have pushed it back to a handful of countries.' },
+      flu: { name: 'Influenza A virus', desc: 'An enveloped, roughly spherical virus. Its surface proteins hemagglutinin (HA) and neuraminidase (NA) define the subtype, such as H1N1 or H3N2. The genome comes in 8 RNA segments, so strains can swap segments by reassortment.' },
+      rabies: { name: 'Rabies virus', desc: 'A bullet-shaped enveloped virus in the rhabdovirus family. The surface glycoprotein G binds host cells, and the virus travels up peripheral nerves to the central nervous system. Once symptoms appear it is almost always fatal, but prompt vaccination after exposure prevents disease.' },
+      cmv: { name: 'Cytomegalovirus (HCMV)', desc: 'Human cytomegalovirus (human herpesvirus 5) is an enveloped virus about 150–200 nm across. Inside an icosahedral capsid sits roughly 235 kb of double-stranded DNA, the largest genome of any human herpesvirus. A layer of tegument proteins lies between the capsid and a glycoprotein-studded envelope. It stays latent for life and usually causes no symptoms in healthy people, but it can pass to a fetus during pregnancy and is a major risk after organ transplants and in immunodeficiency.' },
+      phage: { name: 'Bacteriophage T4', desc: 'A virus that infects Escherichia coli. The icosahedral head holds about 169 kb of double-stranded DNA, the contractile tail sheath works like a syringe to inject it, and six long tail fibers recognize and grip the host.' },
+      saureus: { name: 'Staphylococcus aureus', desc: 'A Gram-positive coccus that divides in several planes, so cells pile up in grape-like clusters. It lives on skin and in the nose, and can cause skin infections and enterotoxin food poisoning. Methicillin-resistant MRSA is a long-standing hospital problem.' },
+      faecalis: { name: 'Enterococcus faecalis', desc: 'A Gram-positive coccus found in pairs or short chains. It is a normal gut resident, but in hospitals it can cause urinary tract infections and endocarditis, and vancomycin-resistant strains (VRE) are hard to treat.' },
+      hirae: { name: 'Enterococcus hirae', desc: 'Another enterococcus, arranged in short chains. It is common in the gut of poultry and other animals, and causes human infection less often than E. faecalis.' },
+      listeria: { name: 'Listeria monocytogenes', desc: 'A short Gram-positive rod that can still grow slowly at refrigerator temperature (about 4 °C). Pregnant people, newborns and immunocompromised people face the highest risk.' },
+      pseudomonas: { name: 'Pseudomonas aeruginosa', desc: 'A Gram-negative rod that swims with a single polar flagellum and makes the blue-green pigment pyocyanin. It forms biofilms and is naturally resistant to many antibiotics, a regular in hospital infections and cystic fibrosis lungs.' },
+      burkholderia: { name: 'Burkholderia gladioli', desc: 'A Gram-negative rod with a tuft of flagella at one end. It was named for rotting gladiolus corms, can infect the lungs of people with cystic fibrosis, and one pathovar makes bongkrekic acid, linked to fermented-rice-flour poisoning.' },
+      klebsiella: { name: 'Klebsiella pneumoniae', desc: 'A Gram-negative rod wrapped in a thick polysaccharide capsule that makes colonies look slimy. It has no flagella. It causes pneumonia and urinary tract infections, and carbapenem-resistant strains are a major clinical headache.' },
+      ecoli: { name: 'Escherichia coli', desc: 'The most common Gram-negative rod in the gut. Most strains are harmless, but a few (such as O157:H7) make Shiga toxin and cause disease. Flagella all over the cell drive swimming, and type 1 fimbriae help it stick.' },
+      shig_dys: { name: 'Shigella dysenteriae', desc: 'A Gram-negative rod with no flagella. It uses a type III secretion “needle” to inject effector proteins into colon cells and cause bacillary dysentery. Serotype 1 strains make Shiga toxin.' },
+      shig_son: { name: 'Shigella sonnei', desc: 'A Shigella species and the most common one in wealthier countries. Illness is usually milder than with S. dysenteriae, often watery diarrhea. It has no flagella and invades with a secretion needle.' },
+      platelet: { name: 'Platelet', desc: 'An anucleate fragment shed by bone-marrow megakaryocytes, living about 8–10 days. When bleeding starts, platelets stick, clump and release their granules to help form a clot.' },
+      cronobacter: { name: 'Cronobacter sakazakii', desc: 'A Gram-negative rod with flagella all over. It is linked to contaminated powdered infant formula and can cause newborn meningitis and necrotizing enterocolitis, which is why formula preparation temperature matters.' },
+      mabs: { name: 'Mycobacterium abscessus subsp. massiliense', desc: 'A fast-growing nontuberculous mycobacterium. Its waxy mycolic-acid wall stains red in acid-fast staining and makes it naturally resistant to many antibiotics. It can infect the lungs, skin and soft tissue.' },
+      hpylori: { name: 'Helicobacter pylori', desc: 'A Gram-negative spiral bacterium with 4–6 flagella at one end that corkscrews into the stomach mucus. Its urease turns urea into ammonia to neutralize nearby acid. It is linked to gastritis, ulcers and stomach cancer.' },
+      salmonella: { name: 'Salmonella', desc: 'A Gram-negative rod with flagella all over, able to grow with or without oxygen. It spreads through contaminated food and water and is a leading cause of foodborne diarrhea. The next two entries are common serovars.' },
+      s_ent: { name: 'Salmonella Enteritidis', desc: 'A serovar of Salmonella enterica often tied to eggs and poultry. It causes fever, cramps and diarrhea. It carries flagella and fimbriae.' },
+      s_typh: { name: 'Salmonella Typhimurium', desc: 'A Salmonella serovar with a very wide host range that causes gastroenteritis. It injects effector proteins into gut lining cells through a type III secretion needle, which tricks the cell into engulfing it.' },
+      candida: { name: 'Candida albicans', desc: 'An oval yeast that reproduces by budding and can also grow a hypha (germ tube) to invade tissue, a switch called dimorphism. It lives quietly in the mouth and gut, and causes candidiasis when immunity drops.' },
+      rbc: { name: 'Red blood cell', desc: 'A biconcave disc with no nucleus once mature, living about 120 days. Each cell holds roughly 270 million hemoglobin molecules. The outline uses the Evans–Fung biconcave curve.' },
+      wbc: { name: 'White blood cell (neutrophil)', desc: 'The most abundant white blood cell, about 50–70% of them. The nucleus has 3–5 lobes, and its granules carry bacteria-killing enzymes. It rushes to infection sites and engulfs bacteria.' },
+      sperm: { name: 'Sperm cell', desc: 'The head is about 5 µm and holds the condensed nucleus, with the acrosome at the front carrying digestive enzymes. A helix of mitochondria in the midpiece powers the flagellum. The tail is shortened in this schematic model.' },
+      egg: { name: 'Egg cell (oocyte)', desc: 'The largest human cell, about 0.1 mm across and barely visible to the naked eye. It is wrapped in the zona pellucida and corona radiata cells, and its cortical granules release at fertilization to block extra sperm.' },
+      onion: { name: 'Onion epidermal cell', desc: 'A brick-shaped plant cell, stacked in a staggered pattern. It has a cellulose wall and one large central vacuole that pushes the nucleus against the wall. Bulb-scale epidermis sees little light, so it has no chloroplasts.' },
+      mite: { name: 'House dust mite', desc: 'House dust mites are eight-legged arachnids that eat shed skin flakes and are nearly invisible to the eye. Their droppings and body fragments hold strong allergens that can trigger rhinitis and asthma.' },
+      mosquito: { name: 'Asian tiger mosquito (female)', desc: 'About 4–6 mm long. A white stripe runs down the dark thorax, the abdomen has white bands, and the hind legs are banded black and white. The wings rest folded over the abdomen. Only females bite, mostly in the daytime, and the species can carry dengue, chikungunya and Zika. Modeled from a China CDC reference photograph.' },
+      culex: { name: 'Northern house mosquito (female)', desc: 'About 4–6 mm long. A plain brown mosquito with a pale-banded abdomen and unbanded dark legs, biting mostly at dusk and at night and breeding in standing water around houses. Culex mosquitoes are known vectors of West Nile virus and Japanese encephalitis, though which species spreads which disease depends on the region. Modeled from the same China CDC reference photograph.' },
+      fly: { name: 'Housefly', desc: 'About 6–7 mm long, with large compound eyes, four dark stripes on the thorax and bristles over its body. Its sponging mouthparts (the labellum) dab saliva onto food and soak it back up. Bristles and sticky pads on the feet let it carry pathogens mechanically between feces and food, including Salmonella and Shigella.' }
+    }
+  },
+
+  zh: {
+    ui: {
+      app: { title: '微生物建模栈', sub: '按真实尺寸在对数轴上排成一栈的 3D 模型' },
+      nav: { label: '页面', stack: '模型', review: '自评反馈', monitor: '监控' },
+      lang: { label: '语言' },
+      stack: { heading: '尺度栈' },
+      stage: { rotate: '自转', cut: '剖面', reset: '复位', hint: '拖动旋转 · 右键拖动或双指平移 · 滚轮缩放', nogl: '这个浏览器无法启用 WebGL，3D 视窗不可用，下方的资料仍可阅读。' },
+      info: { size: '尺寸', kind: '类别', vs: '相对红细胞', parts: '结构图例' },
+      foot: '所有模型都由 three.js 程序化生成，是简化的示意图：比例经过压缩（例如精子尾部、鞭毛和昆虫的足），颜色参考革兰染色和苏木精–伊红的习惯。比例尺量的是躯体最长的一边，不含附肢。尺寸是文献中的典型范围，不是单个样本的测量值。',
+      rv: {
+        title: '自我评估', intro: '这一页由作者自己维护，不是向访客收集的反馈。它记录模型目前有多严谨、多完整，哪里还很弱，以及接下来要做什么。',
+        version: '版本', updated: '最近更新', overall: '综合',
+        dims: {
+          rigor: { name: '科学严谨度', note: '说明文字和尺寸范围是凭通识写的，还没有加引用。基因组大小、寿命这类数字是教科书上的常见值，但这一版没有逐个对照来源核实。' },
+          complete: { name: '完成度', note: '列表里的每个样本都有模型、比例尺和中英说明。还缺：参考来源、对比视图、悬停标注和测验。' },
+          fidelity: { name: '模型保真度', note: '下表各样本评分的平均值。细菌共用同一套模板，所以不同菌株主要靠鞭毛、菌毛和荚膜区分，而不是真实的细胞形状。' },
+          interact: { name: '交互', note: '支持旋转、平移、缩放、剖面、实时比例尺，列表可用键盘操作。指向模型结构时还不会显示名称。' },
+          i18n: { name: '语言支持', note: '两套完整的 locale，key 结构一致。数字和日期用 Intl 格式化，拉丁学名有意不翻译。没有第三种语言，也没有从右到左的排版。' },
+          a11y: { name: '可访问性', note: '标签页和按钮有名称和焦点框，页面在手机宽度下可用。3D 视窗除了信息面板外没有文字替代，旋转也没有键盘操作。' }
+        },
+        limits_title: '已知局限',
+        limits: {
+          sizes: '尺寸是凭记忆写的典型范围，还没有引用来源。',
+          template: '所有细菌都由同一套杆状、球状或螺旋模板生成。',
+          scalebar: '比例尺量的是躯体最长的一边，不含鞭毛、尾部和足，其中一些还被缩短了。',
+          cmv: '巨细胞病毒的衣壳只是普通二十面体，不是真实的 T=16 格点。',
+          mosq: '两种蚊子对照一张参考照片（中国疾控中心）和文字描述建成，没有实测尺寸，比例只是近似。',
+          insects: '昆虫和尘螨的足做了简化，也没有鳞片。',
+          colors: '颜色参照染色习惯，不是真实外观。',
+          cutaway: '剖面只用一个始终朝向相机的裁切面。'
+        },
+        next_title: '建议新增的功能',
+        next: {
+          photoref: { t: '更多按照片建模', d: '用照片重做家蝇和尘螨，并用不止一张图核对蚊子。' },
+          refs: { t: '引用来源', d: '给每个样本挂上来源，并标出哪些数字已核实。' },
+          hover: { t: '悬停标注', d: '指向模型的某个部分时显示名称，与结构图例对应。' },
+          compare: { t: '并排比较尺寸', d: '选两个样本，在同一比例下对比。' },
+          stain: { t: '染色视图', d: '在革兰染色、抗酸染色和 H&E 配色之间切换。' },
+          shapes: { t: '区分细菌形态', d: '用每个物种自己的形态替换共用模板。' },
+          quiz: { t: '测验模式', d: '根据轮廓认样本，或者按大小给样本排序。' },
+          glb: { t: '导出 GLB', d: '下载当前模型，方便用其他 3D 工具打开。' }
+        },
+        pri: { high: '高优先级', mid: '中', low: '低' }, effort: '工作量',
+        spec_title: '各样本自评', col_name: '样本', col_fid: '模型保真度', col_issue: '已知问题', col_size: '尺寸来源',
+        size_src: '典型范围，未引用', no_issue: '–',
+        issue: { template: '共用细菌模板', compressed: '尾部为显示而缩短', insect: '足已简化，无鳞片', cmv: '衣壳已简化' },
+        log_title: '更新记录',
+        log: { 4: '新增淡色库蚊。两种蚊子都对照中国疾控中心的一张参考照片重做：白纹伊蚊有白色胸背纵纹、黑白相间的后足、折叠在腹部上方的翅和头低尾高的姿态；淡色库蚊为棕褐色、无白环。', 3: '蚊子对照埃及伊蚊的文字描述做了核对：白色琴形斑纹和小盾片、浅色唇基和梗节、白尖的须、深色的喙、带白环且末节几乎全白的后足跗节、浅色膝斑。还没有对照照片描摹。', 1: '第一版：28 个样本、对数尺度栈、带剖面的 3D 视窗、中英两种语言。', 2: '新增巨细胞病毒、蚊子和家蝇；实时比例尺；平移；顶部浮动的语言切换，并把 locale 拆成独立字典；加入这一页自评和监控页。蚊子模型重做：腹部变细并带白色环带，足有环纹，触角带细毛。' }
+      },
+      mon: {
+        title: '监控', intro: '页面在你的浏览器里运行得怎么样，以及每个模型是否还能正常生成。',
+        runtime: '运行状态', h_gl: 'WebGL', h_ctl: '轨道控制', h_fps: '帧率', h_err: '脚本错误', h_view: '视窗', h_lang: '语言',
+        ok: '正常', no: '不可用', measuring: '测量中…',
+        models: '模型构建检查', run: '重新检查', running: '检查中…', never: '尚未检查',
+        summary: '{n} 个模型中 {ok} 个构建成功 · 共 {tris} 个三角形 · 最慢 {ms} ms',
+        col_name: '样本', col_status: '状态', col_ms: '构建耗时 ms', col_tris: '三角形', st_ok: '正常', st_fail: '失败',
+        cover: '各类别数量'
+      }
+    },
+    kind: { virus: '病毒', bac: '细菌', animal: '动物细胞', plant: '植物细胞', fungi: '真菌', arthro: '节肢动物' },
+    part: {
+      wall_neg: '外膜 + 细胞壁', wall_pos: '细胞壁（厚肽聚糖层）', wall_af: '蜡质细胞壁（分枝菌酸）', cyto: '细胞质',
+      nucleoid: '拟核（环状 DNA）', ribo: '核糖体', flagella: '鞭毛', fimbriae: '菌毛', ndl: 'III 型分泌系统针', capsule: '荚膜', waxy: '外层蜡质',
+      capsid: '蛋白衣壳', five_fold: '五重轴顶点（12 个）', rna: 'RNA 基因组', envelope: '脂质包膜', ha: '血凝素 HA', na: '神经氨酸酶 NA', rnp8: '8 段 RNA 核糖核蛋白',
+      glyco_g: '糖蛋白 G 刺突', matrix: '基质蛋白 M', helical_rnp: '螺旋状核糖核蛋白', tegument: '被膜', glyco: '包膜糖蛋白刺突', penton: '衣壳五邻体', dsdna: '双链 DNA',
+      head: '头部衣壳', dna_base: '包装好的 DNA / 基底板', sheath: '收缩尾鞘', long_fibers: '长尾丝', pins: '短尾丝（针）',
+      membrane: '细胞膜', mt_band: '边缘微管带', alpha: 'α 颗粒', dense: '致密颗粒',
+      fungal_wall: '细胞壁', nucleus: '细胞核', vacuole: '液泡', septa: '菌丝隔膜', hemoglobin: '富含血红蛋白的胞质', lobed: '分叶核', granules: '颗粒',
+      acrosome: '顶体', mito: '中段线粒体螺旋', tail: '尾部鞭毛', ooplasm: '卵质', zona: '透明带', corona: '放射冠细胞', cortical: '皮质颗粒', polar: '极体',
+      plant_wall: '纤维素细胞壁', cyto_thin: '细胞质薄层', central_vac: '中央大液泡',
+      body: '躯体（体躯）', legs: '足', mouth: '口器（颚体）', thorax: '胸部', abdomen: '腹部', bands: '白色条带', proboscis: '刺吸式口器（喙）', wings: '翅（一对）', eyes: '复眼', labellum: '舔吸式口器（唇瓣）', stripe: '胸背白色纵纹'
+    },
+    sp: {
+      polio: { name: '脊髓灰质炎病毒', desc: '无包膜的二十面体病毒，衣壳里是约 7.5 kb 的单股正链 RNA。经粪–口途径传播，疫苗已把它压缩到少数几个国家。' },
+      flu: { name: '甲型流感病毒', desc: '有包膜的近球形病毒。表面的血凝素（HA）和神经氨酸酶（NA）决定亚型，例如 H1N1、H3N2。基因组分成 8 段 RNA，不同毒株之间容易发生重配。' },
+      rabies: { name: '狂犬病毒', desc: '子弹形的包膜病毒，属于弹状病毒科。表面糖蛋白 G 负责结合并进入宿主细胞，病毒沿周围神经逆行进入中枢神经系统。出现症状后几乎总是致命，暴露后及时接种疫苗可以预防发病。' },
+      cmv: { name: '巨细胞病毒（HCMV）', desc: '人类巨细胞病毒（人类疱疹病毒 5 型）是有包膜的病毒，直径约 150–200 nm。二十面体衣壳里是约 235 kb 的双链 DNA，是已知人类疱疹病毒里基因组最大的；衣壳外有一层被膜蛋白，再外面是带糖蛋白刺突的包膜。感染后终身潜伏，健康人多半没有症状，但孕期感染可传给胎儿，也是器官移植和免疫缺陷患者的重要风险。' },
+      phage: { name: '噬菌体（T4）', desc: '专门感染大肠杆菌的病毒。二十面体的头部装着约 169 kb 的双链 DNA，收缩的尾鞘像注射器一样把 DNA 打进细菌，六条长尾丝负责识别并附着在宿主表面。' },
+      saureus: { name: '金黄色葡萄球菌', desc: '革兰阳性球菌，向多个平面分裂，所以聚成葡萄串状。常见于皮肤和鼻腔，可引起皮肤感染和肠毒素食物中毒，耐甲氧西林的 MRSA 是医院里的老问题。' },
+      faecalis: { name: '粪肠球菌', desc: '革兰阳性球菌，常成对或排成短链。本是肠道正常菌群，但在医院里可引起尿路感染和心内膜炎，耐万古霉素的 VRE 很难治疗。' },
+      hirae: { name: '海氏肠球菌', desc: '肠球菌的一种，排成短链。常见于家禽和其他动物的肠道，对人的感染比粪肠球菌少见。' },
+      listeria: { name: '单核细胞增生李斯特氏菌', desc: '革兰阳性短杆菌，连冰箱温度（约 4 ℃）下也能缓慢生长。孕妇、新生儿和免疫力低下的人感染风险高。' },
+      pseudomonas: { name: '铜绿假单胞菌', desc: '革兰阴性杆菌，靠一根极生鞭毛游动，产生蓝绿色的绿脓菌素。会形成生物膜，天然耐多种抗生素，是医院感染和囊性纤维化肺部感染的常客。' },
+      burkholderia: { name: '唐菖蒲伯克霍尔德氏菌', desc: '革兰阴性杆菌，一端长着一束鞭毛。它最早因危害唐菖蒲球茎而得名，也可在囊性纤维化患者的肺里致病；个别变种产生的米酵菌酸与发酵米面中毒有关。' },
+      klebsiella: { name: '肺炎克雷伯氏菌', desc: '革兰阴性杆菌，外面包着厚厚的多糖荚膜，菌落看上去黏稠，没有鞭毛。可引起肺炎和尿路感染，耐碳青霉烯的菌株是临床上的大麻烦。' },
+      ecoli: { name: '大肠杆菌', desc: '肠道里最常见的革兰阴性杆菌，大多数菌株无害，少数（如 O157:H7）会产生志贺毒素并致病。周身鞭毛负责游动，1 型菌毛帮助黏附。' },
+      shig_dys: { name: '痢疾志贺氏菌', desc: '革兰阴性杆菌，没有鞭毛，不能游动。用 III 型分泌系统的“针”把效应蛋白注入结肠上皮细胞，引起细菌性痢疾；1 型菌株产志贺毒素。' },
+      shig_son: { name: '宋内志贺氏菌', desc: '志贺菌的一种，在经济发达的国家里最常见，症状通常比痢疾志贺氏菌轻，以水样腹泻为主。同样没有鞭毛，靠分泌针入侵。' },
+      platelet: { name: '血小板', desc: '骨髓巨核细胞脱落的无核碎片，寿命约 8–10 天。出血时会黏附、聚集并释放颗粒，帮助形成血栓止血。' },
+      cronobacter: { name: '阪崎肠杆菌', desc: '革兰阴性杆菌，周身鞭毛。与婴儿配方奶粉污染有关，可引起新生儿脑膜炎和坏死性小肠结肠炎，所以婴儿奶粉的冲调温度很重要。' },
+      mabs: { name: '龟分枝杆菌脓肿亚种', desc: '一种生长较快的非结核分枝杆菌。蜡质的分枝菌酸细胞壁让它抗酸染色呈红色，也让它对许多抗生素天然耐药，可引起肺部和皮肤软组织感染。' },
+      hpylori: { name: '幽门螺旋杆菌', desc: '革兰阴性的螺旋形细菌，一端有 4–6 条鞭毛，拧着钻进胃黏液层。它的尿素酶把尿素分解成氨，中和周围的胃酸；与胃炎、胃溃疡和胃癌相关。' },
+      salmonella: { name: '沙门氏菌', desc: '革兰阴性杆菌，周身鞭毛，兼性厌氧。经被污染的食物和水传播，是食源性腹泻的主要原因之一。下面两个血清型是它的常见代表。' },
+      s_ent: { name: '肠炎沙门氏菌', desc: '肠道沙门氏菌的一个血清型，常与蛋类和禽肉有关，引起发热、腹痛和腹泻。长着鞭毛和菌毛。' },
+      s_typh: { name: '鼠伤寒沙门氏菌', desc: '宿主范围很广的沙门氏菌血清型，引起胃肠炎。它用 III 型分泌系统的针把效应蛋白注入肠上皮细胞，诱导自己被吞入细胞。' },
+      candida: { name: '白色念珠菌', desc: '卵圆形的酵母，靠出芽繁殖，也能伸出菌丝（芽管）侵入组织，这种两种形态切换叫二态性。常驻口腔和肠道，免疫力下降时会引起念珠菌病。' },
+      rbc: { name: '红细胞', desc: '双凹圆盘形，成熟后没有细胞核，寿命约 120 天。每个细胞里有约 2.7 亿个血红蛋白分子。模型的轮廓用的是 Evans–Fung 双凹曲线。' },
+      wbc: { name: '白细胞（中性粒细胞）', desc: '血液里最多的白细胞，占 50–70%。细胞核分成 3–5 叶，胞质里的颗粒装着杀菌的酶，会冲到感染部位吞噬细菌。' },
+      sperm: { name: '精子', desc: '头部约 5 µm，装着浓缩的细胞核，前端的顶体含水解酶；中段的线粒体呈螺旋排列，给尾部鞭毛供能。模型的尾部按示意比例缩短了。' },
+      egg: { name: '卵子', desc: '人体最大的细胞，直径约 0.1 mm，几乎肉眼可见。外面有透明带和放射冠细胞，皮质颗粒在受精时释放，防止多个精子进入。' },
+      onion: { name: '洋葱表皮细胞', desc: '长方形的植物细胞，像砖一样错开排列。有纤维素细胞壁，中央是一个大液泡，把细胞核挤到靠近壁的一侧。鳞叶表皮见光少，没有叶绿体。' },
+      mite: { name: '尘螨', desc: '尘螨是八足的蛛形纲小动物，以脱落的皮屑为食，肉眼几乎看不到。它的粪便和身体碎片含有强过敏原，可诱发过敏性鼻炎和哮喘。' },
+      mosquito: { name: '白纹伊蚊（雌蚊）', desc: '体长约 4–6 mm。深色的胸背上有一条白色纵纹，腹部有白色环带，后足黑白相间；停落时翅折叠在腹部上方。只有雌蚊吸血，主要在白天叮人，这个物种可传播登革热、基孔肯雅热和寨卡病毒。模型对照中国疾病预防控制中心的一张参考照片建成。' },
+      culex: { name: '淡色库蚊（雌蚊）', desc: '体长约 4–6 mm。整体呈棕褐色，腹部有浅色环带，足深色、没有白环，多在黄昏和夜间叮人，常在房屋周围的积水里孳生。库蚊属的蚊子是西尼罗病毒和乙型脑炎的已知媒介，具体哪种库蚊传播哪种病因地区而异。模型同样对照那张中国疾病预防控制中心的参考照片建成。' },
+      fly: { name: '家蝇', desc: '体长约 6–7 mm，复眼很大，胸部背面有四条黑色纵纹，身上长着刚毛。口器是舔吸式的，唇瓣把唾液涂到食物上再吸回去；足上的刚毛和黏性爪垫容易带着病原体在粪便和食物之间机械传播，例如沙门氏菌和志贺氏菌。' }
+    }
+  }
+};
+/* ---------- specimen data: language-neutral (text lives in LOCALES.sp / LOCALES.part) ---------- */
+/* um = length of the model's longest body side in micrometres, used for the stack position and the scale bar */
+const KIND_COLOR = { virus: '--k-virus', bac: '--k-bac', animal: '--k-animal', plant: '--k-plant', fungi: '--k-fungi', arthro: '--k-arthro' };
+const GN = '#e8849f', GP = '#7a5cc7', AF = '#c0392b';
+const P_FL = ['#8f7fd0', 'flagella'], P_FIM = ['#b8a9cc', 'fimbriae'], P_NDL = ['#2d2470', 'ndl'], P_CAP = ['#cfe8e0', 'capsule'];
+const bp = (gram, extra, cocci) => [
+  [gram === 'pos' ? GP : gram === 'af' ? AF : GN, gram === 'pos' ? 'wall_pos' : gram === 'af' ? 'wall_af' : 'wall_neg'],
+  ['#fff3cf', 'cyto'], ['#4a3f9e', 'nucleoid']
+].concat(cocci ? [] : [['#e0a24a', 'ribo']]).concat(extra || []);
+
+const DATA = [
+  { id: 'polio', um: 0.03, sz: '≈ 30 nm', k: 'virus', sci: 'Enterovirus C', parts: [['#a89cff', 'capsid'], ['#e0607e', 'five_fold'], ['#5a2d82', 'rna']] },
+  { id: 'flu', um: 0.1, sz: '80–120 nm', k: 'virus', sci: 'Alphainfluenzavirus influenzae', parts: [['#f0b0c8', 'envelope'], ['#6f5de0', 'ha'], ['#e0a24a', 'na'], ['#e0607e', 'rnp8']] },
+  { id: 'rabies', um: 0.18, sz: '≈ 180 × 75 nm', k: 'virus', sci: 'Lyssavirus rabies', parts: [['#d8b4f8', 'envelope'], ['#6f5de0', 'glyco_g'], ['#e8cdf5', 'matrix'], ['#e0607e', 'helical_rnp']] },
+  { id: 'cmv', um: 0.2, sz: '150–200 nm', k: 'virus', sci: 'Human betaherpesvirus 5', parts: [['#e3b5d4', 'envelope'], ['#6f5de0', 'glyco'], ['#f5d98a', 'tegument'], ['#7c6cf0', 'capsid'], ['#f2a65a', 'penton'], ['#d0486e', 'dsdna']] },
+  { id: 'phage', um: 0.2, sz: '≈ 200 nm', k: 'virus', sci: 'Tequatrovirus T4', parts: [['#7c6cf0', 'head'], ['#e0607e', 'dna_base'], ['#9a8cf5', 'sheath'], ['#b7acff', 'long_fibers'], ['#e0a24a', 'pins']] },
+  { id: 'saureus', um: 1, sz: '≈ 1 µm', k: 'bac', sci: 'Staphylococcus aureus', parts: bp('pos', [], true) },
+  { id: 'faecalis', um: 1.02, sz: '0.6–2 µm', k: 'bac', sci: 'Enterococcus faecalis', parts: bp('pos', [], true) },
+  { id: 'hirae', um: 1.05, sz: '0.6–2 µm', k: 'bac', sci: 'Enterococcus hirae', parts: bp('pos', [], true) },
+  { id: 'listeria', um: 1.5, sz: '1–2 µm', k: 'bac', sci: 'Listeria monocytogenes', parts: bp('pos', [P_FL]) },
+  { id: 'pseudomonas', um: 2, sz: '1.5–3 µm', k: 'bac', sci: 'Pseudomonas aeruginosa', parts: bp('neg', [P_FL]) },
+  { id: 'burkholderia', um: 2.1, sz: '1.5–3 µm', k: 'bac', sci: 'Burkholderia gladioli', parts: bp('neg', [P_FL]) },
+  { id: 'klebsiella', um: 1.9, sz: '1–2 µm', k: 'bac', sci: 'Klebsiella pneumoniae', parts: bp('neg', [P_CAP, P_FIM]) },
+  { id: 'ecoli', um: 2.5, sz: '2–3 µm', k: 'bac', sci: 'Escherichia coli', parts: bp('neg', [P_FL, P_FIM]) },
+  { id: 'shig_dys', um: 2.6, sz: '2–3 µm', k: 'bac', sci: 'Shigella dysenteriae', parts: bp('neg', [P_NDL]) },
+  { id: 'shig_son', um: 2.7, sz: '2–3 µm', k: 'bac', sci: 'Shigella sonnei', parts: bp('neg', [P_CAP, P_NDL]) },
+  { id: 'platelet', um: 2.8, sz: '2–3 µm', k: 'animal', parts: [['#c9b6e8', 'membrane'], ['#6f5de0', 'mt_band'], ['#5a3d9e', 'alpha'], ['#e9c46a', 'dense']] },
+  { id: 'cronobacter', um: 3, sz: '≈ 3 µm', k: 'bac', sci: 'Cronobacter sakazakii', parts: bp('neg', [P_CAP, P_FL]) },
+  { id: 'mabs', um: 3.1, sz: '1–4 µm', k: 'bac', sci: 'Mycobacterium abscessus subsp. massiliense', parts: bp('af', [['#f2b8a8', 'waxy']]) },
+  { id: 'hpylori', um: 3.5, sz: '2.5–5 µm', k: 'bac', sci: 'Helicobacter pylori', parts: [[GN, 'wall_neg'], ['#fff3cf', 'cyto'], P_FL] },
+  { id: 'salmonella', um: 3.6, sz: '2–5 µm', k: 'bac', sci: 'Salmonella enterica', parts: bp('neg', [P_FL]) },
+  { id: 's_ent', um: 3.7, sz: '2–5 µm', k: 'bac', sci: 'Salmonella enterica serovar Enteritidis', parts: bp('neg', [P_FL, P_FIM]) },
+  { id: 's_typh', um: 3.8, sz: '2–5 µm', k: 'bac', sci: 'Salmonella enterica serovar Typhimurium', parts: bp('neg', [P_FL, P_NDL]) },
+  { id: 'candida', um: 5, sz: '4–6 µm', k: 'fungi', sci: 'Candida albicans', parts: [['#f0e6b0', 'fungal_wall'], ['#6f5de0', 'nucleus'], ['#bfe4f0', 'vacuole'], ['#c9a64a', 'septa']] },
+  { id: 'rbc', um: 7.5, sz: '7–8 µm', k: 'animal', parts: [['#c8283f', 'membrane'], ['#8f1a2e', 'hemoglobin']] },
+  { id: 'wbc', um: 12, sz: '10–12 µm', k: 'animal', parts: [['#d9cdf3', 'membrane'], ['#5a4bb8', 'lobed'], ['#d98fc0', 'granules']] },
+  { id: 'sperm', um: 60, sz: '≈ 60 µm', k: 'animal', parts: [['#4a3f9e', 'nucleus'], ['#e0607e', 'acrosome'], ['#f2a65a', 'mito'], ['#8f7fd0', 'tail']] },
+  { id: 'egg', um: 120, sz: '≈ 120 µm', k: 'animal', parts: [['#fff0b0', 'ooplasm'], ['#b9a8f0', 'nucleus'], ['#f3b8cc', 'zona'], ['#e8849f', 'corona'], ['#e0a24a', 'cortical'], ['#e9d2a0', 'polar']] },
+  { id: 'onion', um: 250, sz: '≈ 250 µm', k: 'plant', parts: [['#e9f2dc', 'plant_wall'], ['#cfe8c4', 'cyto_thin'], ['#bfe4f0', 'central_vac'], ['#6f5de0', 'nucleus']] },
+  { id: 'mite', um: 300, sz: '≈ 0.3 mm', k: 'arthro', sci: 'Dermatophagoides pteronyssinus', parts: [['#e8dcc0', 'body'], ['#cdb98e', 'legs'], ['#d9c79a', 'mouth']] },
+  { id: 'culex', um: 5000, sz: '4–6 mm', k: 'arthro', sci: 'Culex pipiens pallens', parts: [['#8a6a3e', 'thorax'], ['#6e4e2e', 'abdomen'], ['#e3cd96', 'bands'], ['#4a3522', 'proboscis'], ['#d6d2c4', 'wings'], ['#3a2a1c', 'legs'], ['#0f0b14', 'eyes']] },
+  { id: 'mosquito', um: 5500, sz: '4–6 mm', k: 'arthro', sci: 'Aedes albopictus', parts: [['#1f1a1a', 'thorax'], ['#f2efe6', 'stripe'], ['#f2efe6', 'bands'], ['#14111a', 'proboscis'], ['#4a4358', 'wings'], ['#1a161d', 'legs'], ['#0f0b14', 'eyes']] },
+  { id: 'fly', um: 6500, sz: '6–7 mm', k: 'arthro', sci: 'Musca domestica', parts: [['#55555e', 'thorax'], ['#6b6656', 'abdomen'], ['#b3261e', 'eyes'], ['#dfe9ff', 'wings'], ['#2b2a30', 'legs'], ['#d9a0a0', 'labellum']] }
+];
+
+/* ---------- self-assessment: author-maintained, language-neutral (text lives in LOCALES.ui.rv) ---------- */
+const ASSESS = {
+  version: 4, updated: '2026-11-26',
+  /* static scores in percent; fidelity is computed from the per-specimen ratings below */
+  dims: [{ k: 'rigor', v: 55 }, { k: 'complete', v: 75 }, { k: 'fidelity', v: null }, { k: 'interact', v: 80 }, { k: 'i18n', v: 85 }, { k: 'a11y', v: 55 }],
+  limits: ['sizes', 'template', 'scalebar', 'cmv', 'mosq', 'insects', 'colors', 'cutaway'],
+  next: [{ id: 'photoref', p: 'high', e: 'M' }, { id: 'refs', p: 'high', e: 'M' }, { id: 'hover', p: 'high', e: 'M' }, { id: 'compare', p: 'mid', e: 'M' }, { id: 'stain', p: 'mid', e: 'S' }, { id: 'shapes', p: 'mid', e: 'L' }, { id: 'quiz', p: 'low', e: 'M' }, { id: 'glb', p: 'low', e: 'S' }],
+  log: [4, 3, 2, 1],
+  /* per specimen: [model fidelity 1-5, issue key or null] */
+  spec: {
+    polio: [4, null], flu: [4, null], rabies: [4, null], cmv: [3, 'cmv'], phage: [4, null],
+    saureus: [3, 'template'], faecalis: [3, 'template'], hirae: [3, 'template'], listeria: [3, 'template'], pseudomonas: [3, 'template'], burkholderia: [3, 'template'],
+    klebsiella: [3, 'template'], ecoli: [3, 'template'], shig_dys: [3, 'template'], shig_son: [3, 'template'], platelet: [3, null], cronobacter: [3, 'template'],
+    mabs: [3, 'template'], hpylori: [3, 'template'], salmonella: [3, 'template'], s_ent: [3, 'template'], s_typh: [3, 'template'], candida: [3, null],
+    rbc: [4, null], wbc: [3, null], sperm: [3, 'compressed'], egg: [3, null], onion: [3, null], mite: [3, 'insect'], mosquito: [4, 'insect'], culex: [4, 'insect'], fly: [3, 'insect']
+  }
+};
+/* ---------- app ---------- */
+(function () {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const LANGS = ['zh', 'en'], BCP = { zh: 'zh-CN', en: 'en' }, ROUTES = ['stack', 'review', 'monitor'];
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- i18n ---- */
+  let lang = (function () {
+    try { const s = localStorage.getItem('mstack.lang'); if (LANGS.indexOf(s) >= 0) return s; } catch (e) {}
+    return /^zh/i.test(navigator.language || '') ? 'zh' : 'en';
+  })();
+  const look = (loc, path) => path.split('.').reduce((o, k) => (o == null ? o : o[k]), LOCALES[loc]);
+  function L(path, vars) {
+    let v = look(lang, path);
+    if (v === undefined) v = look('en', path);
+    if (v === undefined) return path;
+    if (vars) Object.keys(vars).forEach(k => { v = v.replace('{' + k + '}', vars[k]); });
+    return v;
+  }
+  const spName = id => L('sp.' + id + '.name');
+  const fmtDate = ts => { try { return new Intl.DateTimeFormat(BCP[lang], { dateStyle: 'medium' }).format(new Date(ts)); } catch (e) { return ''; } };
+  const byUm = DATA.slice().sort((a, b) => a.um - b.um);
+  const byId = {}; DATA.forEach(d => { byId[d.id] = d; });
+
+  /* ---- state ---- */
+  let cur = null, spin = !reduce, cut = false, model = null, norm = null, interacting = false, routeNow = 'stack';
+  let renderer = null, scene, camera, controls;
+  let localErr = 0, fpsVal = null, chk = null, chkRunning = false;
+
+  /* ---- list, info ---- */
+  const list = $('list');
+  const posPct = um => Math.max(1.5, Math.min(98.5, (Math.log10(um) + 2) / 6 * 100));
+  function drawList() {
+    list.innerHTML = byUm.map(d => '<li><button class="item" type="button" data-id="' + d.id + '" aria-current="' + (!!cur && cur.id === d.id) + '" style="--kc:var(' + KIND_COLOR[d.k] + ')">' +
+      '<span class="row"><span class="nm">' + esc(spName(d.id)) + '</span><span class="sz">' + esc(d.sz) + '</span></span>' +
+      '<span class="track"><span class="pip" style="left:' + posPct(d.um) + '%"></span></span></button></li>').join('');
+  }
+  function drawInfo() {
+    if (!cur) return;
+    const d = cur, name = spName(d.id), sci = d.sci && d.sci !== name ? d.sci : '';
+    let ratio = '';
+    try { ratio = '×' + new Intl.NumberFormat(BCP[lang], { maximumSignificantDigits: 2 }).format(d.um / 7.5); } catch (e) { ratio = '×' + (d.um / 7.5).toFixed(2); }
+    $('b-name').textContent = name; $('b-sci').textContent = sci;
+    $('info').innerHTML = '<div><h3>' + esc(name) + '</h3>' + (sci ? '<p class="en2">' + esc(sci) + '</p>' : '') + '<p>' + esc(L('sp.' + d.id + '.desc')) + '</p>' +
+      '<div class="stats"><div class="stat"><small>' + esc(L('ui.info.size')) + '</small><strong>' + esc(d.sz) + '</strong></div>' +
+      '<div class="stat"><small>' + esc(L('ui.info.kind')) + '</small><strong>' + esc(L('kind.' + d.k)) + '</strong></div>' +
+      '<div class="stat"><small>' + esc(L('ui.info.vs')) + '</small><strong>' + esc(ratio) + '</strong></div></div></div>' +
+      '<div class="parts"><h4>' + esc(L('ui.info.parts')) + '</h4><ul>' + d.parts.map(p => '<li><i class="sw" style="--c:' + p[0] + '"></i><span>' + esc(L('part.' + p[1])) + '</span></li>').join('') + '</ul></div>';
+  }
+
+  /* ---- 3D stage ---- */
+  const gl = $('gl');
+  try { renderer = new T.WebGLRenderer({ antialias: true, alpha: true }); } catch (e) { renderer = null; }
+  if (renderer) {
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.localClippingEnabled = true;
+    renderer.outputEncoding = T.sRGBEncoding;
+    renderer.setClearColor(0x000000, 0);
+    gl.appendChild(renderer.domElement);
+    scene = new T.Scene();
+    camera = new T.PerspectiveCamera(38, 1, 0.1, 100);
+    scene.add(new T.HemisphereLight(0xffffff, 0x8a7aa8, 0.95));
+    const key = new T.DirectionalLight(0xffffff, 1.1); key.position.set(3, 4, 5); scene.add(key);
+    const rim = new T.DirectionalLight(0xe0a0c0, 0.45); rim.position.set(-4, -2, -3); scene.add(rim);
+    if (T.OrbitControls) {
+      controls = new T.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true; controls.dampingFactor = 0.08;
+      controls.enablePan = true; controls.screenSpacePanning = true;
+      controls.minDistance = 1.5; controls.maxDistance = 16; controls.autoRotateSpeed = 1.6;
+      controls.addEventListener('start', () => { interacting = true; });
+      controls.addEventListener('end', () => { interacting = false; });
+    } else {                                   /* fallback: plain pointer drag + wheel */
+      let down = null;
+      const el = renderer.domElement;
+      el.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; interacting = true; el.setPointerCapture(e.pointerId); });
+      el.addEventListener('pointermove', e => { if (!down || !norm) return; norm.rotation.y += (e.clientX - down[0]) * 0.01; norm.rotation.x += (e.clientY - down[1]) * 0.01; down = [e.clientX, e.clientY]; });
+      el.addEventListener('pointerup', () => { down = null; interacting = false; });
+      el.addEventListener('wheel', e => { e.preventDefault(); camera.position.z = Math.max(2, Math.min(16, camera.position.z * (1 + Math.sign(e.deltaY) * 0.08))); }, { passive: false });
+    }
+  }
+  function drawNoGl() { if (!renderer) gl.innerHTML = '<div class="nogl">' + esc(L('ui.stage.nogl')) + '</div>'; }
+  function resetView() {
+    if (!renderer) return;
+    const aspect = gl.clientWidth / Math.max(1, gl.clientHeight);
+    camera.position.set(0, 0.6, aspect < 1.1 ? 9.4 : 7.4);
+    if (norm) { norm.rotation.set(0, 0, 0); }
+    if (controls) { controls.target.set(0, 0, 0); controls.update(); } else camera.lookAt(0, 0, 0);
+  }
+  function resize() {
+    if (!renderer) return;
+    const w = gl.clientWidth, h = gl.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+  function build(id) {
+    if (norm) {
+      scene.remove(norm);
+      norm.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) [].concat(o.material).forEach(m => m.dispose()); });
+    }
+    model = MODELS[id]();
+    norm = new T.Group(); norm.add(model.obj);
+    model.obj.updateMatrixWorld(true);
+    const box = new T.Box3().setFromObject(model.fit || model.obj), size = box.getSize(new T.Vector3()), c = box.getCenter(new T.Vector3());
+    norm.scale.setScalar((model.target || 3.4) / Math.max(size.x, size.y, size.z));
+    model.obj.position.sub(c);
+    scene.add(norm);
+    resetView();
+  }
+
+  /* ---- scale bar: world units per µm from the normalised model, pixels per world unit from the camera ---- */
+  const NICE = []; for (let e = -3; e <= 4; e++) [1, 2, 5].forEach(m => NICE.push(+(m * Math.pow(10, e)).toPrecision(3)));
+  const fmtLen = um => (um < 1 ? Math.round(um * 1000) + ' nm' : um >= 1000 ? (um / 1000) + ' mm' : um + ' µm');
+  let lastScale = '';
+  function updateScale() {
+    const el = $('scale');
+    if (!renderer || !cur || !norm || !gl.clientHeight) { el.hidden = true; return; }
+    const tgt = controls ? controls.target : V3(0, 0, 0);
+    const dist = Math.max(0.01, camera.position.distanceTo(tgt));
+    const pxPerWorld = gl.clientHeight / (2 * Math.tan(camera.fov * Math.PI / 360) * dist);
+    const pxPerUm = pxPerWorld * ((model.target || 3.4) / cur.um);
+    let v = NICE.find(n => n * pxPerUm >= 70);
+    if (v === undefined) v = NICE[NICE.length - 1];
+    const px = Math.round(v * pxPerUm);
+    if (px > gl.clientWidth * 0.7 || px < 8) { el.hidden = true; lastScale = ''; return; }
+    const k = v + '|' + px;
+    if (k !== lastScale) { lastScale = k; $('scale-bar').style.width = px + 'px'; $('scale-txt').textContent = fmtLen(v); }
+    el.hidden = false;
+  }
+
+  function select(id) {
+    cur = byId[id];
+    list.querySelectorAll('.item').forEach(b => b.setAttribute('aria-current', String(b.dataset.id === id)));
+    if (renderer) build(id);
+    drawInfo();
+    if (window.matchMedia('(max-width: 860px)').matches) {
+      const el = list.querySelector('[data-id="' + id + '"]');
+      if (el && el.scrollIntoView) el.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+    }
+  }
+
+  const clock = new T.Clock();
+  let fpsFrames = 0, fpsT0 = 0, fpsDone = false;
+  function frame(now) {
+    requestAnimationFrame(frame);
+    if (!renderer || routeNow !== 'stack') return;
+    const t = clock.getElapsedTime();
+    if (model && model.tick) model.tick(t);
+    if (controls) { controls.autoRotate = spin && !interacting; controls.update(); } else if (norm && spin && !interacting) norm.rotation.y += 0.01;
+    if (cut) { clipPlane.normal.copy(camera.position).negate().normalize(); clipPlane.constant = 0; } else clipPlane.constant = 1e6;
+    renderer.render(scene, camera);
+    updateScale();
+    if (!fpsDone) {
+      if (!fpsT0) fpsT0 = now;
+      fpsFrames++;
+      if (now - fpsT0 >= 4000) { fpsDone = true; fpsVal = Math.round(fpsFrames * 1000 / (now - fpsT0)); renderHealth(); }
+    }
+  }
+
+  /* ---- self-review page ---- */
+  const dimScore = d => (d.v == null ? Math.round(DATA.reduce((a, x) => a + ASSESS.spec[x.id][0], 0) / DATA.length / 5 * 100) : d.v);
+  const meterColor = v => (v >= 75 ? 'var(--good)' : v >= 50 ? 'var(--warn)' : 'var(--bad)');
+  function renderReview() {
+    const dims = ASSESS.dims.map(d => ({ k: d.k, v: dimScore(d) }));
+    const overall = Math.round(dims.reduce((a, d) => a + d.v, 0) / dims.length);
+    const card = (name, v, note, cls) => '<article class="dim panel ' + (cls || '') + '"><div class="top"><h3>' + esc(name) + '</h3><span class="score">' + v + '%</span></div>' +
+      '<div class="meter" role="img" aria-label="' + v + '%"><i style="width:' + v + '%;--mc:' + meterColor(v) + '"></i></div>' + (note ? '<p>' + esc(note) + '</p>' : '') + '</article>';
+    $('rv-dims').innerHTML = card(L('ui.rv.overall'), overall, '', 'all') + dims.map(d => card(L('ui.rv.dims.' + d.k + '.name'), d.v, L('ui.rv.dims.' + d.k + '.note'))).join('');
+    $('rv-meta').textContent = L('ui.rv.version') + ' ' + ASSESS.version + ' · ' + L('ui.rv.updated') + ' ' + fmtDate(Date.parse(ASSESS.updated + 'T12:00:00Z'));
+    $('rv-limits').innerHTML = ASSESS.limits.map(k => '<li>' + esc(L('ui.rv.limits.' + k)) + '</li>').join('');
+    $('rv-next').innerHTML = ASSESS.next.map(n => '<div class="next-item"><div class="meta"><span class="chip pri-' + n.p + '">' + esc(L('ui.rv.pri.' + n.p)) + '</span><span>' + esc(L('ui.rv.effort')) + ' ' + n.e + '</span></div>' +
+      '<b>' + esc(L('ui.rv.next.' + n.id + '.t')) + '</b><span class="d">' + esc(L('ui.rv.next.' + n.id + '.d')) + '</span></div>').join('');
+    $('rv-spec').innerHTML = '<table><thead><tr><th>' + esc(L('ui.rv.col_name')) + '</th><th>' + esc(L('ui.rv.col_fid')) + '</th><th>' + esc(L('ui.rv.col_issue')) + '</th><th>' + esc(L('ui.rv.col_size')) + '</th></tr></thead><tbody>' +
+      byUm.map(d => { const a = ASSESS.spec[d.id]; return '<tr><td>' + esc(spName(d.id)) + '</td><td><span class="dots" role="img" aria-label="' + a[0] + '/5">' + '●'.repeat(a[0]) + '○'.repeat(5 - a[0]) + '</span></td><td>' +
+        esc(a[1] ? L('ui.rv.issue.' + a[1]) : L('ui.rv.no_issue')) + '</td><td>' + esc(d.sz) + ' · ' + esc(L('ui.rv.size_src')) + '</td></tr>'; }).join('') + '</tbody></table>';
+    $('rv-log').innerHTML = ASSESS.log.map(v => '<div class="log-item"><span class="v">v' + v + '</span><span>' + esc(L('ui.rv.log.' + v)) + '</span></div>').join('');
+  }
+
+  /* ---- monitor page ---- */
+  function renderHealth() {
+    const item = (label, v, cls) => '<div class="h-item"><small>' + esc(label) + '</small><b class="' + (cls || '') + '">' + esc(v) + '</b></div>';
+    const t = k => L('ui.mon.' + k);
+    $('mon-health').innerHTML = item(t('h_gl'), renderer ? t('ok') : t('no'), renderer ? 'ok' : 'no') +
+      item(t('h_ctl'), controls ? t('ok') : t('no'), controls ? 'ok' : 'no') +
+      item(t('h_fps'), fpsVal ? fpsVal + ' fps' : (renderer ? t('measuring') : t('no')), fpsVal ? (fpsVal >= 30 ? 'ok' : 'no') : '') +
+      item(t('h_err'), String(localErr), localErr ? 'no' : 'ok') +
+      item(t('h_view'), window.innerWidth + '×' + window.innerHeight + ' @' + (window.devicePixelRatio || 1)) +
+      item(t('h_lang'), lang === 'zh' ? '中文' : 'English');
+  }
+  function countTris(obj) {
+    let n = 0;
+    obj.traverse(o => { if (o.isMesh && o.geometry) { const g = o.geometry; n += (g.index ? g.index.count : g.attributes.position.count) / 3 * (o.isInstancedMesh ? o.count : 1); } });
+    return Math.round(n);
+  }
+  async function runCheck() {
+    if (chkRunning) return;
+    chkRunning = true; chk = {}; renderChecks();
+    for (const d of DATA) {
+      await new Promise(r => setTimeout(r, 0));
+      const t0 = performance.now();
+      try {
+        const m = MODELS[d.id]();
+        if (m.tick) m.tick(0.5);
+        const sz = new T.Box3().setFromObject(m.fit || m.obj).getSize(new T.Vector3());
+        if (!isFinite(sz.x + sz.y + sz.z) || Math.max(sz.x, sz.y, sz.z) <= 0) throw new Error('empty bounds');
+        chk[d.id] = { ok: true, ms: performance.now() - t0, tris: countTris(m.obj) };
+        m.obj.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) [].concat(o.material).forEach(x => x.dispose()); });
+      } catch (e) { chk[d.id] = { ok: false, ms: performance.now() - t0, tris: 0 }; }
+      renderChecks();
+    }
+    chkRunning = false; renderChecks();
+  }
+  function renderChecks() {
+    const t = k => L('ui.mon.' + k), nf = new Intl.NumberFormat(BCP[lang]);
+    $('mon-run').textContent = chkRunning ? t('running') : t('run'); $('mon-run').disabled = chkRunning;
+    const done = chk ? DATA.filter(d => chk[d.id]) : [], ok = done.filter(d => chk[d.id].ok);
+    $('mon-sum').textContent = !chk ? t('never') : L('ui.mon.summary', { ok: ok.length, n: DATA.length, tris: nf.format(ok.reduce((a, d) => a + chk[d.id].tris, 0)), ms: Math.round(Math.max(0, ...done.map(d => chk[d.id].ms))) });
+    $('mon-table').innerHTML = chk ? '<table><thead><tr><th>' + esc(t('col_name')) + '</th><th>' + esc(t('col_status')) + '</th><th>' + esc(t('col_ms')) + '</th><th>' + esc(t('col_tris')) + '</th></tr></thead><tbody>' +
+      byUm.map(d => { const c = chk[d.id]; return '<tr><td>' + esc(spName(d.id)) + '</td><td>' + (c ? '<span class="chip ' + (c.ok ? 'done' : 'new') + '">' + esc(t(c.ok ? 'st_ok' : 'st_fail')) + '</span>' : '…') + '</td><td>' + (c ? Math.round(c.ms) : '') + '</td><td>' + (c ? nf.format(c.tris) : '') + '</td></tr>'; }).join('') + '</tbody></table>' : '';
+    const counts = {}; DATA.forEach(d => { counts[d.k] = (counts[d.k] || 0) + 1; });
+    const max = Math.max.apply(null, Object.keys(counts).map(k => counts[k]));
+    $('mon-cover').innerHTML = Object.keys(counts).sort((a, b) => counts[b] - counts[a]).map(k => '<div class="bar-row" style="--kc:var(' + KIND_COLOR[k] + ')"><span class="nm">' + esc(L('kind.' + k)) + '</span><span class="b"><i style="width:' + counts[k] / max * 100 + '%"></i></span><span class="n">' + counts[k] + '</span></div>').join('');
+  }
+  const onError = () => { localErr++; renderHealth(); };
+  window.addEventListener('error', onError);
+  window.addEventListener('unhandledrejection', onError);
+
+  /* ---- language + routing ---- */
+  function applyLang() {
+    document.documentElement.lang = BCP[lang];
+    document.title = L('ui.app.title');
+    document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = L(el.dataset.i18n); });
+    document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', L(el.dataset.i18nAria)); });
+    document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+    $('b-spin').setAttribute('aria-pressed', String(spin)); $('b-cut').setAttribute('aria-pressed', String(cut));
+    drawNoGl(); drawList(); drawInfo(); renderReview(); renderHealth(); renderChecks();
+  }
+  function setLang(l) {
+    if (l === lang || LANGS.indexOf(l) < 0) return;
+    lang = l;
+    try { localStorage.setItem('mstack.lang', l); } catch (e) {}
+    applyLang();
+  }
+  function route() {
+    let r = (location.hash || '').slice(1);
+    if (r === 'feedback') r = 'review';
+    if (ROUTES.indexOf(r) < 0) r = 'stack';
+    routeNow = r;
+    document.querySelectorAll('[data-page]').forEach(p => { p.hidden = p.dataset.page !== r; });
+    document.querySelectorAll('[data-route]').forEach(a => { if (a.dataset.route === r) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    if (r === 'stack') resize();
+    if (r === 'monitor') { renderHealth(); if (!chk && !chkRunning) runCheck(); }
+  }
+
+  /* ---- events ---- */
+  document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
+  window.addEventListener('hashchange', route);
+  list.addEventListener('click', e => { const b = e.target.closest('.item'); if (b) select(b.dataset.id); });
+  $('b-spin').addEventListener('click', () => { spin = !spin; $('b-spin').setAttribute('aria-pressed', String(spin)); });
+  $('b-cut').addEventListener('click', () => { cut = !cut; $('b-cut').setAttribute('aria-pressed', String(cut)); });
+  $('b-reset').addEventListener('click', resetView);
+  $('mon-run').addEventListener('click', runCheck);
+  if (renderer && window.ResizeObserver) new ResizeObserver(resize).observe(gl);
+
+  applyLang();
+  route();
+  resize();
+  select('mosquito');
+  requestAnimationFrame(frame);
+})();
+</script>

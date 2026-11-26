@@ -2,7 +2,7 @@
   "title": "可见球冠地球",
   "slug": "visible-cap-globe",
   "url": "https://claude.ai/artifact/PMHiKpfSzSAJ46HNejSqgf",
-  "version": 2,
-  "versionId": "1795682797-46db",
+  "version": 3,
+  "versionId": "1795682868-2107",
   "note": "Authoring source (no doctype skeleton). Draggable 3D Earth; altitude slider (log scale, 1 m to 400,000 km) shows the visible spherical cap, horizon distance and surface fraction h/(2(R+h)). zh/EN toggle floats at the top. three.js r128 and OrbitControls load from CDN."
 }

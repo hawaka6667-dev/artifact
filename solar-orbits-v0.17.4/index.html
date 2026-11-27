@@ -129,7 +129,7 @@ h4.ct{color:var(--ac);margin:14px 0 6px;font-size:14px;font-weight:600}
   <button id="ab" data-i="lib"></button>
 </div>
 <script>
-const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.17.3";
+const R=Math.PI/180,AU=149597870.7,LY=63241.077,VER="0.17.4";
 // ---------- orbital data (J2000, heliocentric) ----------
 const L=[
 ["Mercury","水星",0.3871,0.2056,7.005,48.331,29.124,217,"p"],["Venus","金星",0.7233,0.0068,3.395,76.680,54.884,245,"p"],["Earth","地球",1.0,0.0167,0,0,102.937,345,"p"],["Mars","火星",1.5237,0.0934,1.850,49.558,286.502,249,"p"],
@@ -275,6 +275,12 @@ const eqPole=eqv(0,90),satPole=eqv(40.59,83.54);
 // Gaia: retired 2025-03-27 into a heliocentric orbit trailing Earth (~14-year rendezvous); schematic: a ~1.05 AU, trailing Earth by ~43 deg after ~1.67 yr
 {const th=Math.atan2(earth.p[1],earth.p[0])-.749,r=1.03,n=96,o=new Float64Array((n+1)*3);for(let k=0;k<=n;k++){const f=k/n*2*Math.PI;o[k*3]=r*Math.cos(f);o[k*3+1]=r*Math.sin(f);o[k*3+2]=0}
  L.push({n:"Gaia",z:"盖亚（Gaia）",alias:"Gaia space observatory",t:'v',k:'b',wm:1,kids:[],ma:0,a:r,e:.04,i:.3,al:.9,esc:1,p:[r*Math.cos(th),r*Math.sin(th),.004],orb:o})}
+// Queqiao-1 (鹊桥一号): halo orbit about the Earth-Moon L2 point (~64,500 km beyond the Moon); Queqiao-2 (鹊桥二号): ~24 h elliptical lunar orbit. Both schematic.
+{const mo=moons.find(b=>b.n=="Moon"),dm=unit3(mo.p.map((x,i)=>x-earth.p[i])),L2m=mo.p.map((x,i)=>x+64500/AU*dm[i]),g={a:1.3e4/AU,e:0,i:Math.acos(dm[2])/R,O:Math.atan2(dm[0],-dm[1])/R,w:0},q=at(g,.8),dE=Math.hypot(...L2m.map((x,i)=>x-earth.p[i])),
+ m={n:"Queqiao-1",z:"鹊桥一号",alias:"Queqiao-1",a:dE,km:dE*AU,e:0,i:0,O:0,w:0,per:14,par:earth,k:'m',t:'v',wm:1,dy:-6,al:.9,ph:false,nk:1};
+ m.p=[L2m[0]+q[0],L2m[1]+q[1],L2m[2]+q[2]];m.orb=ring(g,L2m);earth.kids.push(m);moons.push(m);
+ const pl=tiltPlane(eqPole,63.4,1.1),m2={n:"Queqiao-2",z:"鹊桥二号",alias:"Queqiao-2",a:9837/AU,km:9837,e:.803,i:pl.i,O:pl.O,w:0,per:1.01,par:mo,k:'m',t:'v',wm:1,dy:12,al:.9,ph:false},p2=at(m2,kep(.9,m2.e));
+ m2.p=[mo.p[0]+p2[0],mo.p[1]+p2[1],mo.p[2]+p2[2]];m2.orb=ring(m2,mo.p);(mo.kids=mo.kids||[]).push(m2);moons.push(m2)}
 L.unshift(sun);const ALL=L.concat(moons);ALL.forEach(b=>{if(!byN[b.n])byN[b.n]=b});
 // ---------- information library ----------
 // ax = semi-axes in km (a>=b>=c); ct 'm' measured / 'e' estimate; cl override: sph|near|ell|irr; P orbital period (yr) for self-check
@@ -380,6 +386,8 @@ DART:{ct:"e",e:"Double Asteroid Redirection Test（双小行星重定向测试�
 "Cassini":{ct:"e",e:"以天文学家乔瓦尼·卡西尼（土星环“卡西尼缝”的发现者）命名；搭载的惠更斯号以克里斯蒂安·惠更斯命名。",h:"1997-10-15 发射；2004-07-01 进入土星轨道；2005-01-14 惠更斯号在土卫六着陆；2005 年发现土卫二水羽；2017-09-15 受控坠入土星大气。",p:["乔瓦尼·卡西尼","克里斯蒂安·惠更斯"],x:"任务已于 2017 年结束 · 图中是末期“大结局”阶段的轨道示意（周期约 6.5 天，倾角约 63°），不是现在的位置"},
 "SOHO":{ct:"e",e:"SOHO 是 Solar and Heliospheric Observatory（太阳和日球层探测器）的缩写。",h:"1995-12-02 发射；1996 年进入日地 L1 点附近的晕轨道，持续监测太阳；ESA 与 NASA 合作，日冕仪 LASCO 发现了数千颗掠日彗星（2024 年超过 5000 颗），是人类发现彗星最多的“观测者”。",x:"位于日地 L1 点附近的晕轨道，距地球约 150 万公里（向日一侧）；图中的轨道圈和位置只是示意，轨道信息里的“半长轴”表示到地球的距离"},
 "Gaia":{ct:"e",e:"Gaia 原为 Global Astrometric Interferometer for Astrophysics 的缩写；任务后来改用非干涉测量，名字保留，也恰好是希腊神话中的大地女神盖亚。",h:"2013-12-19 发射；2014 年抵达日地 L2 点附近的李萨如轨道；2025-01-15 结束科学观测；2025-03-27 关闭并进入绕日“退役轨道”。它测定了约 20 亿颗恒星的位置与运动，为银河系绘制了三维地图。",x:"已退役、不再工作 · 退役轨道落在地球后方，约每 14 年才回到地球附近，最近约 1000 万公里；图中的轨道与相位是按这些数据推算的示意"},
+"Queqiao-1":{ct:"e",e:"鹊桥：取自牛郎织女“鹊桥相会”的传说，喜鹊搭桥连接两地；中继卫星正是连接地球与月球背面的“桥”。",h:"2018-05-21 发射；2018-06-14 进入地月 L2 点附近的晕轨道，为嫦娥四号（2019-01-03 首次月背软着陆）提供中继通信，是世界首颗地月 L2 中继卫星。",x:"位于地月 L2 点附近的晕轨道，在月球背面外侧约 6.5 万公里，周期约 14 天；图中的轨道圈和位置只是示意，轨道信息里的“半长轴”表示到地球的距离"},
+"Queqiao-2":{ct:"e",e:"“鹊桥二号”沿用鹊桥一号之名：喜鹊搭桥、连接月球背面与地球。",h:"2024-03-20 发射；3 月下旬被月球捕获，随后进入周期约 24 小时的环月大椭圆轨道（近月点约 200 km、远月点约 16000 km）；为嫦娥六号（2024 年月背采样返回）及后续月球任务提供中继通信。",x:"轨道的倾角与朝向、当前相位为示意；近月点与远月点高度取自公开报道的设计值"},
 "JWST":{ct:"e",e:"以 NASA 第二任局长詹姆斯·韦布（James E. Webb）命名。",h:"2021-12-25 发射；2022-01 抵达日地 L2 点；2022-07-12 公布首批科学图像。",p:["詹姆斯·韦布（NASA 局长，1961–68）","约翰·马瑟（高级项目科学家，2006 年诺贝尔物理学奖）"],x:"主镜口径 6.5 米，由 18 块镀金铍六边形镜片拼成 · 红外波段 · 位于日地 L2 点附近的晕轨道，距地球约 150 万公里；图中的轨道圈只是示意，轨道信息里的“半长轴”表示到地球的距离"}});
 Object.assign(INFO["Proxima Centauri"],{ax:[107300,107300,107300]});Object.assign(INFO["Alpha Centauri A"],{ax:[851100,851100,851100]});
 // mean radii (km) for bodies without axis data; all treated as estimates

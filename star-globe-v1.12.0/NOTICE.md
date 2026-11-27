@@ -5,3 +5,4 @@
 - Anchor-star positions, brightest-star and naked-eye-star counts: HYG database (https://github.com/astronexus/HYG-Database), CC BY-SA 4.0.
 - Sky culture metadata (names, anchors): Stellarium, CC BY-SA 4.0.
 - Constellation areas are computed from the boundary data.
+- Constellation etymology and history texts: written for this project from published sources (IAU, Wikipedia, constellation reference sites); not copied verbatim.

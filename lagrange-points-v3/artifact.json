@@ -1,0 +1,6 @@
+{
+  "title": "限制性三体问题与拉格朗日点 Lagrange Points (CR3BP)",
+  "slug": "lagrange-points",
+  "version": 3,
+  "note": "v3: dark night-chart palette (no bright white), 7 built-in orbits in the favorites panel (L1/L2 Lyapunov, DRO, lunar loops, Earth-Moon and Jupiter Trojan tadpoles, binary S/P-type), found numerically and checked in the page integrator. v2: hydrographic-chart UI and 0.5x speed. v1: wheel/pinch zoom and pan, favorites, performance pass."
+}

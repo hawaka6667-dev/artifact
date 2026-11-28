@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>行星视逆行天体力学模拟器 | Apparent Retrograde Motion</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            space: {
+              950: '#090d16',
+              900: '#0f1624',
+              800: '#162033',
+              700: '#1e2b45',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body {
+      background-color: #090d16;
+      color: #e2e8f0;
+      overflow-x: hidden;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    /* Custom subtle range slider */
+    input[type="range"] {
+      -webkit-appearance: none;
+      background: #1e2b45;
+      height: 6px;
+      border-radius: 999px;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #38bdf8;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-sky-500/30">
+
+  <!-- Top Navigation & Mode Header -->
+  <header class="border-b border-slate-800/80 bg-space-900/90 backdrop-blur-md sticky top-0 z-20">
+    <div class="max-w-[1600px] mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <!-- Brand & Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/20">
+          <svg class="w-5 h-5 text-slate-950" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="12" cy="12" r="5" />
+            <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" opacity="0.45"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-2">
+            行星视逆行天体力学模拟器
+            <span class="hidden md:inline-block text-xs font-mono font-normal px-2 py-0.5 rounded-full bg-slate-800 text-sky-400 border border-slate-700">
+              Ecliptic North Pole View
+            </span>
+          </h1>
+          <p class="text-xs text-slate-400">基于开普勒轨道运动学与内道超车视差原理（北极俯视 · 逆时针自西向东为顺行）</p>
+        </div>
+      </div>
+
+      <!-- Planet Mode Switcher & Overtake Jump -->
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="inline-flex rounded-xl bg-space-950 p-1 border border-slate-800" role="group">
+          <button id="btn-mode-mars" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-sm">
+            外行星 · 火星 (冲日逆行)
+          </button>
+          <button id="btn-mode-venus" class="px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all text-slate-400 hover:text-slate-200 border border-transparent">
+            内行星 · 金星 (下合逆行)
+          </button>
+        </div>
+
+        <button id="btn-jump-overtake" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-gradient-to-r from-rose-500/20 to-amber-500/20 hover:from-rose-500/30 hover:to-amber-500/30 text-rose-300 border border-rose-500/40 transition-all flex items-center gap-1.5 shadow-sm active:scale-95">
+          <svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          跳至逆行前夕
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main 2-Panel Scientific Workspace -->
+  <main class="flex-1 max-w-[1600px] w-full mx-auto p-3 sm:p-4 grid grid-cols-1 lg:grid-cols-12 gap-4">
+    
+    <!-- LEFT PANEL (65% -> 8/12 cols on lg): Ecliptic North Pole Top-Down View -->
+    <section class="lg:col-span-8 bg-space-900 rounded-2xl border border-slate-800/90 shadow-xl flex flex-col overflow-hidden relative min-h-[420px] sm:min-h-[540px]">
+      <!-- Panel Header Overlay -->
+      <div class="px-4 py-3 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-2 bg-space-900/80">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-sky-400 animate-pulse"></span>
+          <h2 class="text-sm font-semibold text-slate-100">黄道北极俯视图 (Ecliptic North Pole Top-Down View)</h2>
+        </div>
+        <div class="flex items-center gap-3 text-xs font-mono text-slate-400">
+          <span class="px-2 py-0.5 rounded bg-slate-800/90 border border-slate-700/70 text-slate-300">
+            右手定则：拇指指向北极(屏幕外) → 逆时针 = 向东 (Prograde)
+          </span>
+        </div>
+      </div>
+
+      <!-- Canvas Container -->
+      <div id="topdown-container" class="relative flex-1 w-full h-full min-h-[360px]">
+        <canvas id="topdown-canvas"></canvas>
+
+        <!-- Floating Status Pill inside Top-Down View -->
+        <div id="motion-status-pill" class="absolute top-3 left-3 px-3.5 py-2 rounded-xl backdrop-blur-md border transition-all duration-300 flex items-center gap-2.5 shadow-lg bg-sky-950/70 border-sky-500/40 text-sky-300">
+          <span id="status-dot" class="w-3 h-3 rounded-full bg-sky-400 shadow-[0_0_10px_#38bdf8]"></span>
+          <div>
+            <div id="status-title" class="text-xs sm:text-sm font-bold tracking-wide">PROGRADE · 顺行 (向东)</div>
+            <div id="status-subtitle" class="text-[11px] opacity-85 font-mono">视线在天球背景上逆时针推进</div>
+          </div>
+        </div>
+
+        <!-- Floating Geometry Alignment Badge -->
+        <div id="alignment-badge" class="hidden absolute top-3 right-3 px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-400/50 text-amber-200 text-xs font-semibold backdrop-blur-md shadow-lg animate-bounce">
+          冲日 (Opposition) · 发生逆行！
+        </div>
+
+        <!-- Legend Footer inside Canvas -->
+        <div class="absolute bottom-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 pointer-events-none text-[11px] text-slate-400 bg-space-950/75 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-slate-800/80">
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></i>太阳 (Sun)</span>
+            <span class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block"></i>地球 (1.00 AU · 29.8 km/s)</span>
+            <span id="legend-target-planet" class="flex items-center gap-1.5"><i class="w-2.5 h-2.5 rounded-full bg-orange-500 inline-block"></i>火星 (1.52 AU · 24.1 km/s)</span>
+          </div>
+          <div class="flex items-center gap-3 font-mono">
+            <span class="text-sky-400">━━ 顺行视线</span>
+            <span class="text-rose-400">━━ 逆行视线</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL (35% -> 4/12 cols on lg): Geocentric Sky Projection & Telemetry -->
+    <section class="lg:col-span-4 flex flex-col gap-4">
+      
+      <!-- Geocentric Sky Strip Card -->
+      <div class="bg-space-900 rounded-2xl border border-slate-800/90 shadow-xl flex flex-col overflow-hidden flex-1 min-h-[300px]">
+        <div class="px-4 py-3 border-b border-slate-800/80 flex items-center justify-between bg-space-900/80">
+          <div>
+            <h2 class="text-sm font-semibold text-slate-100">地心天球视运动投影 (恒星背景)</h2>
+            <p class="text-[11px] text-slate-400">黄经 $\lambda$ vs. 黄纬 $\beta$ 轨迹（放大轨道倾角以展示经典 S 型回环）</p>
+          </div>
+        </div>
+
+        <!-- Sky Canvas Container -->
+        <div id="sky-container" class="relative flex-1 w-full min-h-[240px]">
+          <canvas id="sky-canvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Real-Time Telemetry & Astrophysics Explanation Card -->
+      <div class="bg-space-900 rounded-2xl border border-slate-800/90 p-4 shadow-xl flex flex-col gap-3">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400">实时天体测量遥测 (Telemetry)</h3>
+          <span id="sim-day-counter" class="text-xs font-mono text-sky-400 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-800/50">Day 0.0</span>
+        </div>
+
+        <!-- 2x2 Telemetry Grid -->
+        <div class="grid grid-cols-2 gap-2.5 font-mono">
+          <div class="bg-space-950/90 p-2.5 rounded-xl border border-slate-800/80">
+            <div class="text-[11px] text-slate-400 font-sans">当前天象位置</div>
+            <div id="tel-config" class="text-xs sm:text-sm font-semibold text-slate-100 mt-0.5 truncate">顺行阶段</div>
+          </div>
+
+          <div class="bg-space-950/90 p-2.5 rounded-xl border border-slate-800/80">
+            <div class="text-[11px] text-slate-400 font-sans">黄经变化率 (dλ/dt)</div>
+            <div id="tel-rate" class="text-xs sm:text-sm font-semibold text-sky-400 mt-0.5">+0.524 °/天</div>
+          </div>
+
+          <div class="bg-space-950/90 p-2.5 rounded-xl border border-slate-800/80">
+            <div class="text-[11px] text-slate-400 font-sans">地星距离 (Δ)</div>
+            <div id="tel-dist" class="text-xs sm:text-sm font-semibold text-slate-200 mt-0.5">1.520 AU</div>
+          </div>
+
+          <div class="bg-space-950/90 p-2.5 rounded-xl border border-slate-800/80">
+            <div class="text-[11px] text-slate-400 font-sans">日距角 (Elongation)</div>
+            <div id="tel-elong" class="text-xs sm:text-sm font-semibold text-amber-300 mt-0.5">120.4° 东</div>
+          </div>
+        </div>
+
+        <!-- Dynamic Physical Intuition Box -->
+        <div id="physics-explanation" class="text-xs leading-relaxed text-slate-300 bg-slate-800/40 border border-slate-700/60 rounded-xl p-3">
+          <strong class="text-sky-300">外行星超车机制：</strong>地球在内侧快车道（29.8 km/s），火星在外侧慢车道（24.1 km/s）。当地球运行到太阳与火星之间（<span class="text-amber-300 font-semibold">冲日</span>）从内侧超越火星时，火星在遥远恒星背景上看起来就会向西倒退（逆行）。
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Bottom Interactive Control Deck -->
+  <footer class="border-t border-slate-800/90 bg-space-900/95 backdrop-blur-md">
+    <div class="max-w-[1600px] mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Playback Controls -->
+      <div class="flex items-center gap-2">
+        <button id="btn-play-pause" class="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold text-xs sm:text-sm transition-all flex items-center gap-1.5 shadow-lg shadow-sky-500/20 active:scale-95">
+          <svg id="icon-pause" class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+          <svg id="icon-play" class="w-4 h-4 hidden" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <span id="text-play-pause">暂停</span>
+        </button>
+
+        <button id="btn-step-back" title="后退 2 天" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-mono transition-all active:scale-95">
+          -1 Step
+        </button>
+        <button id="btn-step-forward" title="前进 2 天" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-mono transition-all active:scale-95">
+          +1 Step
+        </button>
+      </div>
+
+      <!-- Simulation Speed Slider -->
+      <div class="flex items-center gap-3 bg-space-950 px-3.5 py-2 rounded-xl border border-slate-800">
+        <label for="speed-slider" class="text-xs text-slate-400 whitespace-nowrap">推演速度</label>
+        <input id="speed-slider" type="range" min="0.2" max="4.0" step="0.1" value="1.2" class="w-24 sm:w-32" />
+        <span id="speed-label" class="text-xs font-mono text-sky-400 w-12 text-right">1.2x</span>
+      </div>
+
+      <!-- Visual Layer Toggles & Clear -->
+      <div class="flex flex-wrap items-center gap-4 text-xs text-slate-300">
+        <label class="flex items-center gap-2 cursor-pointer select-none">
+          <input id="chk-sightline-fan" type="checkbox" checked class="w-4 h-4 rounded accent-sky-500 bg-slate-800 border-slate-700" />
+          <span>历史视线扇 (Sightline Fan)</span>
+        </label>
+
+        <label class="flex items-center gap-2 cursor-pointer select-none">
+          <input id="chk-velocity-vectors" type="checkbox" checked class="w-4 h-4 rounded accent-sky-500 bg-slate-800 border-slate-700" />
+          <span>公转速度矢量</span>
+        </label>
+
+        <button id="btn-clear-trail" class="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all active:scale-95">
+          清除轨迹
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modular Simulation Script -->
+  <script>
+    /**
+     * ============================================================================
+     * MODULE 1: ORBITAL CONFIGURATION DATA
+     * ============================================================================
+     */
+    const ORBITAL_CONFIG = {
+      earth: {
+        name: '地球 (Earth)',
+        radiusAU: 1.0,
+        periodDays: 365.256,
+        orbitalSpeedKms: 29.78,
+        color: '#3b82f6',
+        glow: 'rgba(59, 130, 246, 0.5)',
+        dotRadius: 7,
+        inclinationDeg: 0.0
+      },
+      mars: {
+        id: 'mars',
+        type: 'superior',
+        name: '火星 (Mars)',
+        label: '外行星 · 火星',
+        radiusAU: 1.524,
+        periodDays: 686.98,
+        orbitalSpeedKms: 24.07,
+        color: '#f97316',
+        glow: 'rgba(249, 115, 22, 0.55)',
+        dotRadius: 6.5,
+        // Slightly amplified inclination so the classic S-loop in ecliptic latitude is super clear
+        inclinationDeg: 4.2,
+        ascendingNodeDeg: 49.5,
+        overtakeLeadAngleRad: -0.42, // Earth slightly behind Mars before Opposition
+        explanationHTML: `<strong class="text-sky-300">外行星超车机制（冲日逆行）：</strong>地球在内侧快车道（29.8 km/s），火星在外侧慢车道（24.1 km/s）。当地球运行到太阳与火星正中间（<span class="text-amber-300 font-semibold">冲日 Opposition</span>）从内侧超越火星时，历史视线扇发生交叉翻转，火星在恒星背景上向西倒退（<span class="text-rose-400 font-semibold">视逆行</span>）。`
+      },
+      venus: {
+        id: 'venus',
+        type: 'inferior',
+        name: '金星 (Venus)',
+        label: '内行星 · 金星',
+        radiusAU: 0.723,
+        periodDays: 224.701,
+        orbitalSpeedKms: 35.02,
+        color: '#eab308',
+        glow: 'rgba(234, 179, 8, 0.55)',
+        dotRadius: 6.5,
+        inclinationDeg: 4.6,
+        ascendingNodeDeg: 76.7,
+        overtakeLeadAngleRad: 0.48, // Earth slightly ahead of Venus before Inferior Conjunction
+        explanationHTML: `<strong class="text-sky-300">内行星超车机制（下合逆行）：</strong>金星在内侧快车道（35.0 km/s），地球在外侧慢车道（29.8 km/s）。当金星运行到太阳与地球正中间（<span class="text-amber-300 font-semibold">下合 Inferior Conjunction</span>）从内侧超越地球时，金星在恒星背景上同样向西倒退（<span class="text-rose-400 font-semibold">视逆行</span>）。`
+      }
+    };
+
+    /**
+     * ============================================================================
+     * MODULE 2: ASTROPHYSICAL KINEMATICS ENGINE
+     * ============================================================================
+     */
+    class PhysicsEngine {
+      constructor() {
+        this.mode = 'mars';
+        this.simDays = 0;
+        this.earthAngle = 0; // Counterclockwise from +X axis (radians)
+        this.targetAngle = 0;
+        this.history = []; // Stores snapshots for sky trail & sightline fan
+        this.maxHistory = 420;
+        this.fanSampleInterval = 10; // Sample ray every N steps
+        this.stepCounter = 0;
+        this.jumpToPreOvertake('mars');
+      }
+
+      setMode(modeKey) {
+        if (!ORBITAL_CONFIG[modeKey]) return;
+        this.mode = modeKey;
+        this.jumpToPreOvertake(modeKey);
+      }
+
+      /**
+       * Positions Earth and Target Planet shortly before Opposition (Mars) or Inferior Conjunction (Venus)
+       */
+      jumpToPreOvertake(modeKey = this.mode) {
+        const cfg = ORBITAL_CONFIG[modeKey];
+        this.simDays = 0;
+        this.stepCounter = 0;
+        this.history = [];
+        // Place alignment near angle = -PI/2 (bottom of screen, where West=Left and East=Right!)
+        const baseAlignmentAngle = -Math.PI / 2;
+        if (cfg.type === 'superior') {
+          // Earth is faster, so start Earth slightly behind (more negative angle) Mars
+          this.targetAngle = baseAlignmentAngle + 0.18;
+          this.earthAngle = this.targetAngle - 0.34;
+        } else {
+          // Venus is faster, so start Venus slightly behind Earth
+          this.earthAngle = baseAlignmentAngle + 0.22;
+          this.targetAngle = this.earthAngle - 0.42;
+        }
+        this.recordState();
+      }
+
+      clearHistory() {
+        this.history = [];
+        this.stepCounter = 0;
+        this.recordState();
+      }
+
+      advanceDays(dtDays) {
+        const cfg = ORBITAL_CONFIG[this.mode];
+        const omegaEarth = (2 * Math.PI) / ORBITAL_CONFIG.earth.periodDays;
+        const omegaTarget = (2 * Math.PI) / cfg.periodDays;
+
+        this.simDays += dtDays;
+        this.earthAngle = this.normalizeAngle(this.earthAngle + omegaEarth * dtDays);
+        this.targetAngle = this.normalizeAngle(this.targetAngle + omegaTarget * dtDays);
+        this.stepCounter++;
+        this.recordState();
+      }
+
+      normalizeAngle(rad) {
+        let a = rad % (2 * Math.PI);
+        if (a <= -Math.PI) a += 2 * Math.PI;
+        if (a > Math.PI) a -= 2 * Math.PI;
+        return a;
+      }
+
+      normalize360(deg) {
+        return ((deg % 360) + 360) % 360;
+      }
+
+      /**
+       * Computes 3D heliocentric coordinates and geocentric projection telemetry
+       */
+      computeState(eAngle = this.earthAngle, tAngle = this.targetAngle) {
+        const cfg = ORBITAL_CONFIG[this.mode];
+        const rE = ORBITAL_CONFIG.earth.radiusAU;
+        const rP = cfg.radiusAU;
+
+        // Earth position in ecliptic plane (z = 0)
+        const ex = rE * Math.cos(eAngle);
+        const ey = rE * Math.sin(eAngle);
+        const ez = 0;
+
+        // Target planet 3D position with orbital inclination i and ascending node Omega
+        const inc = (cfg.inclinationDeg * Math.PI) / 180;
+        const omegaNode = (cfg.ascendingNodeDeg * Math.PI) / 180;
+        const u = tAngle - omegaNode;
+
+        const px = rP * (Math.cos(omegaNode) * Math.cos(u) - Math.sin(omegaNode) * Math.sin(u) * Math.cos(inc));
+        const py = rP * (Math.sin(omegaNode) * Math.cos(u) + Math.cos(omegaNode) * Math.sin(u) * Math.cos(inc));
+        const pz = rP * (Math.sin(u) * Math.sin(inc));
+
+        // Geocentric vector from Earth to Planet
+        const dx = px - ex;
+        const dy = py - ey;
+        const dz = pz - ez;
+        const distAU = Math.hypot(dx, dy, dz);
+        const distXY = Math.hypot(dx, dy);
+
+        // Geocentric Ecliptic Longitude (lambda) & Latitude (beta)
+        const lambdaRad = Math.atan2(dy, dx);
+        const betaRad = Math.atan2(dz, distXY);
+
+        // Compute exact instantaneous angular velocity d(lambda)/dt via small finite difference
+        const eps = 0.05; // days
+        const wE = (2 * Math.PI) / ORBITAL_CONFIG.earth.periodDays;
+        const wP = (2 * Math.PI) / cfg.periodDays;
+        const ex2 = rE * Math.cos(eAngle + wE * eps);
+        const ey2 = rE * Math.sin(eAngle + wE * eps);
+        const u2 = (tAngle + wP * eps) - omegaNode;
+        const px2 = rP * (Math.cos(omegaNode) * Math.cos(u2) - Math.sin(omegaNode) * Math.sin(u2) * Math.cos(inc));
+        const py2 = rP * (Math.sin(omegaNode) * Math.cos(u2) + Math.cos(omegaNode) * Math.sin(u2) * Math.cos(inc));
+        const lambdaRad2 = Math.atan2(py2 - ey2, px2 - ex2);
+        const dLambdaRad = this.normalizeAngle(lambdaRad2 - lambdaRad);
+        const dLambdaDegPerDay = ((dLambdaRad * 180) / Math.PI) / eps;
+
+        const isRetrograde = dLambdaDegPerDay < 0;
+
+        // Sun-Earth-Planet Elongation Angle
+        // Vector Earth->Sun is (-ex, -ey), Vector Earth->Planet is (dx, dy)
+        const sunAngleFromEarth = Math.atan2(-ey, -ex);
+        const relElongRad = this.normalizeAngle(lambdaRad - sunAngleFromEarth);
+        const elongDeg = Math.abs((relElongRad * 180) / Math.PI);
+        const elongDir = relElongRad >= 0 ? '东 (East)' : '西 (West)';
+
+        // Planetary Configuration Detection (Opposition, Conjunction, Inferior/Superior Conjunction, Greatest Elongation)
+        const heliocentricDiff = Math.abs(this.normalizeAngle(tAngle - eAngle)); // 0 = same side of Sun, PI = opposite side
+        let configLabel = isRetrograde ? '逆行弧段 (Retrograde Arc)' : '顺行弧段 (Prograde Arc)';
+        let specialEvent = null;
+
+        if (cfg.type === 'superior') {
+          if (heliocentricDiff < 0.08) {
+            configLabel = '冲日 (Opposition)';
+            specialEvent = '冲日 (Opposition) · 发生逆行！';
+          } else if (Math.abs(heliocentricDiff - Math.PI) < 0.08) {
+            configLabel = '合日 (Conjunction)';
+            specialEvent = '合日 (Conjunction) · 顺行最快';
+          } else if (Math.abs(elongDeg - 90) < 3.5) {
+            configLabel = relElongRad > 0 ? '东方照 (East Quadrature)' : '西方照 (West Quadrature)';
+          }
+        } else {
+          if (heliocentricDiff < 0.08) {
+            configLabel = '下合 (Inferior Conjunction)';
+            specialEvent = '下合 (Inferior Conjunction) · 发生逆行！';
+          } else if (Math.abs(heliocentricDiff - Math.PI) < 0.08) {
+            configLabel = '上合 (Superior Conjunction)';
+            specialEvent = '上合 (Superior Conjunction) · 顺行最快';
+          } else if (Math.abs(elongDeg - 46.3) < 2.2) {
+            configLabel = relElongRad > 0 ? '东大距 (Greatest Eastern Elongation)' : '西大距 (Greatest Western Elongation)';
+            specialEvent = configLabel;
+          }
+        }
+
+        return {
+          simDays: this.simDays,
+          earth: { x: ex, y: ey, angle: eAngle },
+          target: { x: px, y: py, z: pz, angle: tAngle },
+          lambdaRad,
+          lambdaDeg: this.normalize360((lambdaRad * 180) / Math.PI),
+          betaDeg: (betaRad * 180) / Math.PI,
+          dLambdaDegPerDay,
+          isRetrograde,
+          distAU,
+          elongDeg,
+          elongDir,
+          configLabel,
+          specialEvent
+        };
+      }
+
+      recordState() {
+        const state = this.computeState();
+        state.isFanSample = (this.stepCounter % this.fanSampleInterval === 0);
+        this.history.push(state);
+        if (this.history.length > this.maxHistory) {
+          this.history.shift();
+        }
+        return state;
+      }
+    }
+
+    /**
+     * ============================================================================
+     * MODULE 3: ECLIPTIC NORTH POLE TOP-DOWN RENDERER (LEFT PANEL)
+     * ============================================================================
+     */
+    class TopDownRenderer {
+      constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.stars = this.generateBackgroundStars(90);
+      }
+
+      generateBackgroundStars(count) {
+        const arr = [];
+        for (let i = 0; i < count; i++) {
+          arr.push({
+            rx: Math.random(),
+            ry: Math.random(),
+            size: Math.random() * 1.4 + 0.4,
+            alpha: Math.random() * 0.5 + 0.15
+          });
+        }
+        return arr;
+      }
+
+      /**
+       * Computes exact intersection of ray P0 + t*D (t > 0) with circle centered at (0,0) of radius R
+       */
+      intersectRayWithCelestialSphere(x0, y0, dx, dy, R) {
+        const len = Math.hypot(dx, dy);
+        const ux = dx / len;
+        const uy = dy / len;
+        const b = 2 * (x0 * ux + y0 * uy);
+        const c = x0 * x0 + y0 * y0 - R * R;
+        const disc = b * b - 4 * c;
+        if (disc < 0) return { x: ux * R, y: uy * R };
+        const t = (-b + Math.sqrt(disc)) / 2;
+        return { x: x0 + t * ux, y: y0 + t * uy };
+      }
+
+      render(state, history, options) {
+        const ctx = this.ctx;
+        const dpr = window.devicePixelRatio || 1;
+        const rect = this.canvas.parentElement.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return;
+
+        if (this.canvas.width !== Math.floor(rect.width * dpr) || this.canvas.height !== Math.floor(rect.height * dpr)) {
+          this.canvas.width = Math.floor(rect.width * dpr);
+          this.canvas.height = Math.floor(rect.height * dpr);
+        }
+
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        const W = rect.width;
+        const H = rect.height;
+        const cx = W / 2;
+        const cy = H / 2;
+
+        // Clear space background
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(0, 0, W, H);
+
+        // Subtle starfield
+        for (const s of this.stars) {
+          ctx.fillStyle = `rgba(226, 232, 240, ${s.alpha})`;
+          ctx.beginPath();
+          ctx.arc(s.rx * W, s.ry * H, s.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Scale AU -> Pixels
+        const maxOrbitAU = Math.max(ORBITAL_CONFIG.earth.radiusAU, ORBITAL_CONFIG[options.mode].radiusAU);
+        const celestialRadiusPx = Math.min(W, H) * 0.43;
+        const auScale = (celestialRadiusPx * 0.66) / maxOrbitAU;
+
+        // Subtle polar coordinate grid
+        ctx.strokeStyle = 'rgba(30, 43, 69, 0.35)';
+        ctx.lineWidth = 1;
+        for (let r = celestialRadiusPx * 0.25; r < celestialRadiusPx; r += celestialRadiusPx * 0.25) {
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // Outer Celestial Sphere Ring (天球投影背景环)
+        ctx.save();
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.32)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 6]);
+        ctx.beginPath();
+        ctx.arc(cx, cy, celestialRadiusPx, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+
+        // Cardinal Ecliptic Longitude Ticks & North Pole Prograde Arrow
+        this.drawCelestialLabels(ctx, cx, cy, celestialRadiusPx);
+
+        // Draw Historical Sightline Fan (历史视线扇)
+        if (options.showFan && history.length > 1) {
+          for (let i = 0; i < history.length; i++) {
+            const h = history[i];
+            if (!h.isFanSample && i !== history.length - 1) continue;
+            const ageRatio = i / history.length; // 0 (oldest) -> 1 (newest)
+            const exPx = cx + h.earth.x * auScale;
+            const eyPx = cy - h.earth.y * auScale; // Canvas Y is down, math Y is up (CCW)
+            const pxPx = cx + h.target.x * auScale;
+            const pyPx = cy - h.target.y * auScale;
+
+            const hit = this.intersectRayWithCelestialSphere(
+              exPx - cx,
+              eyPx - cy,
+              pxPx - exPx,
+              pyPx - eyPx,
+              celestialRadiusPx
+            );
+
+            ctx.strokeStyle = h.isRetrograde
+              ? `rgba(251, 113, 133, ${0.08 + ageRatio * 0.28})`
+              : `rgba(56, 189, 248, ${0.06 + ageRatio * 0.22})`;
+            ctx.lineWidth = h.isRetrograde ? 1.35 : 1;
+            ctx.beginPath();
+            ctx.moveTo(exPx, eyPx);
+            ctx.lineTo(cx + hit.x, cy + hit.y);
+            ctx.stroke();
+
+            // Small dot on celestial sphere ring
+            ctx.fillStyle = h.isRetrograde
+              ? `rgba(251, 113, 133, ${0.25 + ageRatio * 0.7})`
+              : `rgba(56, 189, 248, ${0.2 + ageRatio * 0.6})`;
+            ctx.beginPath();
+            ctx.arc(cx + hit.x, cy + hit.y, h.isRetrograde ? 2.6 : 2.0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        // Draw Orbits (Earth & Target Planet)
+        const cfg = ORBITAL_CONFIG[options.mode];
+        this.drawOrbitCircle(ctx, cx, cy, ORBITAL_CONFIG.earth.radiusAU * auScale, 'rgba(59, 130, 246, 0.35)');
+        this.drawOrbitCircle(ctx, cx, cy, cfg.radiusAU * auScale, 'rgba(249, 115, 22, 0.35)');
+
+        // Draw Sun at Center
+        const sunGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, 24);
+        sunGrad.addColorStop(0, '#fef08a');
+        sunGrad.addColorStop(0.4, '#f59e0b');
+        sunGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
+        ctx.fillStyle = sunGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 24, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#fde047';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 8.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Current Planet Screen Coordinates (Canvas Y inverted so CCW is visually counterclockwise!)
+        const ex = cx + state.earth.x * auScale;
+        const ey = cy - state.earth.y * auScale;
+        const px = cx + state.target.x * auScale;
+        const py = cy - state.target.y * auScale;
+
+        // Current Line-of-Sight Ray to Celestial Sphere
+        const hitNow = this.intersectRayWithCelestialSphere(
+          ex - cx,
+          ey - cy,
+          px - ex,
+          py - ey,
+          celestialRadiusPx
+        );
+        const skyX = cx + hitNow.x;
+        const skyY = cy + hitNow.y;
+
+        const rayColor = state.isRetrograde ? '#fb7185' : '#38bdf8';
+        ctx.save();
+        ctx.strokeStyle = rayColor;
+        ctx.lineWidth = 2.4;
+        ctx.shadowColor = rayColor;
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.moveTo(ex, ey);
+        ctx.lineTo(skyX, skyY);
+        ctx.stroke();
+        ctx.restore();
+
+        // Projected Apparent Position Marker on Celestial Sphere
+        ctx.save();
+        ctx.fillStyle = rayColor;
+        ctx.shadowColor = rayColor;
+        ctx.shadowBlur = 14;
+        ctx.beginPath();
+        ctx.arc(skyX, skyY, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.restore();
+
+        // Label on Celestial Sphere Projection
+        const labelOffsetX = (hitNow.x / celestialRadiusPx) * 22;
+        const labelOffsetY = (hitNow.y / celestialRadiusPx) * 22;
+        ctx.font = '600 11px "Inter", sans-serif';
+        ctx.fillStyle = rayColor;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(
+          state.isRetrograde ? '视投影 (向西逆行)' : '视投影 (向东顺行)',
+          skyX + labelOffsetX * 1.4,
+          skyY + labelOffsetY * 1.1
+        );
+
+        // Draw Velocity Vectors (Tangent CCW arrows)
+        if (options.showVectors) {
+          this.drawVelocityVector(ctx, ex, ey, state.earth.angle, ORBITAL_CONFIG.earth.orbitalSpeedKms * 1.15, '#60a5fa');
+          this.drawVelocityVector(ctx, px, py, state.target.angle, cfg.orbitalSpeedKms * 1.15, cfg.color);
+        }
+
+        // Draw Earth & Target Planet Bodies
+        this.drawPlanetBody(ctx, ex, ey, ORBITAL_CONFIG.earth.dotRadius, ORBITAL_CONFIG.earth.color, ORBITAL_CONFIG.earth.glow, '地球');
+        this.drawPlanetBody(ctx, px, py, cfg.dotRadius, cfg.color, cfg.glow, cfg.id === 'mars' ? '火星' : '金星');
+
+        ctx.restore();
+      }
+
+      drawOrbitCircle(ctx, cx, cy, radius, strokeStyle) {
+        ctx.strokeStyle = strokeStyle;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      drawPlanetBody(ctx, x, y, r, color, glow, label) {
+        ctx.save();
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(x, y, r * 2.1, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        ctx.font = '600 11px "Inter", sans-serif';
+        ctx.fillStyle = '#f8fafc';
+        ctx.textAlign = 'left';
+        ctx.fillText(label, x + r + 5, y + 4);
+        ctx.restore();
+      }
+
+      drawVelocityVector(ctx, x, y, orbitAngle, lengthPx, color) {
+        // Counterclockwise tangent in math coords is (-sin(theta), cos(theta))
+        // In screen coords (Y inverted), tangent is (-sin(theta), -cos(theta))
+        const tx = -Math.sin(orbitAngle);
+        const ty = -Math.cos(orbitAngle);
+        const endX = x + tx * lengthPx;
+        const endY = y + ty * lengthPx;
+
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
+
+        // Arrowhead
+        const headLen = 6;
+        const angle = Math.atan2(ty, tx);
+        ctx.beginPath();
+        ctx.moveTo(endX, endY);
+        ctx.lineTo(endX - headLen * Math.cos(angle - Math.PI / 6), endY - headLen * Math.sin(angle - Math.PI / 6));
+        ctx.lineTo(endX - headLen * Math.cos(angle + Math.PI / 6), endY - headLen * Math.sin(angle + Math.PI / 6));
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      drawCelestialLabels(ctx, cx, cy, R) {
+        ctx.save();
+        ctx.font = '500 11px "JetBrains Mono", monospace';
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.75)';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        ctx.fillText('天球背景 (Celestial Sphere) · λ = 90°', cx, cy - R - 14);
+        ctx.fillText('λ = 270° (底部视角：左西 West ◄───► 右东 East)', cx, cy + R + 16);
+
+        // Curved CCW Prograde Directional Arrow near top-right of Celestial Sphere
+        const arcR = R + 8;
+        const startA = -0.35;
+        const endA = -0.75;
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.arc(cx, cy, arcR, startA, endA, true);
+        ctx.stroke();
+
+        const tipX = cx + arcR * Math.cos(endA);
+        const tipY = cy + arcR * Math.sin(endA);
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.8)';
+        ctx.beginPath();
+        ctx.arc(tipX, tipY, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillText('CCW 顺行 (东)', cx + (arcR + 36) * Math.cos(-0.55), cy + (arcR + 18) * Math.sin(-0.55));
+        ctx.restore();
+      }
+    }
+
+    /**
+     * ============================================================================
+     * MODULE 4: GEOCENTRIC SKY PROJECTION RENDERER (RIGHT PANEL)
+     * ============================================================================
+     */
+    class SkyRenderer {
+      constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.bgStars = this.createStarStrip(75);
+      }
+
+      createStarStrip(count) {
+        const stars = [];
+        for (let i = 0; i < count; i++) {
+          stars.push({
+            lonDeg: (i / count) * 360 + (Math.random() * 4 - 2),
+            latNorm: Math.random() * 2 - 1, // -1 to +1
+            size: Math.random() * 1.5 + 0.5,
+            alpha: Math.random() * 0.55 + 0.2
+          });
+        }
+        return stars;
+      }
+
+      render(state, history) {
+        const ctx = this.ctx;
+        const dpr = window.devicePixelRatio || 1;
+        const rect = this.canvas.parentElement.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return;
+
+        if (this.canvas.width !== Math.floor(rect.width * dpr) || this.canvas.height !== Math.floor(rect.height * dpr)) {
+          this.canvas.width = Math.floor(rect.width * dpr);
+          this.canvas.height = Math.floor(rect.height * dpr);
+        }
+
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        const W = rect.width;
+        const H = rect.height;
+
+        // Deep sky gradient
+        const grad = ctx.createLinearGradient(0, 0, 0, H);
+        grad.addColorStop(0, '#070b14');
+        grad.addColorStop(0.5, '#0d1526');
+        grad.addColorStop(1, '#070b14');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+
+        // Follow camera smoothly centered on current ecliptic longitude lambdaDeg
+        // Note: Standard Sky Chart convention: West is RIGHT, East is LEFT (when facing South in Northern Hemisphere),
+        // OR we plot East -> Right so left-to-right matches prograde motion and backward loop goes Left (West)!
+        // Plotting East = Right (+X) and West = Left (-X) is super intuitive for visualizing "moving forward then backing up"!
+        const centerLon = state.lambdaDeg;
+        const spanDeg = 110; // Visible horizontal window in degrees
+        const pxPerDeg = W / spanDeg;
+        const midY = H * 0.52;
+        const latScale = (H * 0.34) / 8; // +/- 8 degrees latitude window
+
+        const lonToX = (lon) => {
+          let diff = ((lon - centerLon + 540) % 360) - 180;
+          return W / 2 + diff * pxPerDeg;
+        };
+        const latToY = (beta) => midY - beta * latScale;
+
+        // Draw Ecliptic Equator (beta = 0)
+        ctx.strokeStyle = 'rgba(250, 204, 21, 0.25)';
+        ctx.setLineDash([5, 5]);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, midY);
+        ctx.lineTo(W, midY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Draw Longitude Gridlines every 15 degrees
+        ctx.font = '10px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        const firstGridLon = Math.floor((centerLon - spanDeg / 2) / 15) * 15;
+        for (let lon = firstGridLon; lon <= centerLon + spanDeg / 2 + 15; lon += 15) {
+          const wrappedLon = ((lon % 360) + 360) % 360;
+          const x = lonToX(wrappedLon);
+          ctx.strokeStyle = 'rgba(30, 41, 59, 0.6)';
+          ctx.beginPath();
+          ctx.moveTo(x, 26);
+          ctx.lineTo(x, H - 22);
+          ctx.stroke();
+
+          ctx.fillStyle = 'rgba(148, 163, 184, 0.65)';
+          ctx.fillText(`${wrappedLon}°`, x, H - 8);
+        }
+
+        // Draw Fixed Background Stars scrolling past
+        for (const st of this.bgStars) {
+          let diff = ((st.lonDeg - centerLon + 540) % 360) - 180;
+          if (Math.abs(diff) > spanDeg * 0.6) continue;
+          const sx = W / 2 + diff * pxPerDeg;
+          const sy = midY + st.latNorm * (H * 0.36);
+          ctx.fillStyle = `rgba(241, 245, 249, ${st.alpha})`;
+          ctx.beginPath();
+          ctx.arc(sx, sy, st.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Top Directional Compass Banner (WEST <-- | --> EAST)
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.fillRect(0, 0, W, 24);
+        ctx.font = '600 11px "Inter", sans-serif';
+        ctx.textBaseline = 'middle';
+
+        ctx.fillStyle = '#fb7185';
+        ctx.textAlign = 'left';
+        ctx.fillText('◄ 西 (WEST · 逆行方向)', 10, 12);
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.textAlign = 'right';
+        ctx.fillText('东 (EAST · 顺行方向) ►', W - 10, 12);
+
+        // Draw Apparent Sky Trail (S-Curve / Retrograde Loop)
+        if (history.length > 1) {
+          for (let i = 1; i < history.length; i++) {
+            const p0 = history[i - 1];
+            const p1 = history[i];
+            // Avoid wrap-around jumps across 360/0 boundary
+            if (Math.abs(p1.lambdaDeg - p0.lambdaDeg) > 180) continue;
+
+            const x0 = lonToX(p0.lambdaDeg);
+            const y0 = latToY(p0.betaDeg);
+            const x1 = lonToX(p1.lambdaDeg);
+            const y1 = latToY(p1.betaDeg);
+
+            ctx.strokeStyle = p1.isRetrograde ? '#fb7185' : '#38bdf8';
+            ctx.lineWidth = p1.isRetrograde ? 3.2 : 2.2;
+            ctx.beginPath();
+            ctx.moveTo(x0, y0);
+            ctx.lineTo(x1, y1);
+            ctx.stroke();
+          }
+        }
+
+        // Draw Current Apparent Planet Dot on Sky Strip
+        const curX = lonToX(state.lambdaDeg);
+        const curY = latToY(state.betaDeg);
+        const dotColor = state.isRetrograde ? '#fb7185' : '#38bdf8';
+
+        ctx.save();
+        ctx.fillStyle = dotColor;
+        ctx.shadowColor = dotColor;
+        ctx.shadowBlur = 14;
+        ctx.beginPath();
+        ctx.arc(curX, curY, 6.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // Motion Arrow above the planet dot
+        const dirSign = state.isRetrograde ? -1 : 1;
+        const arrowX = curX + dirSign * 26;
+        ctx.strokeStyle = dotColor;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(curX, curY - 14);
+        ctx.lineTo(arrowX, curY - 14);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(arrowX, curY - 14);
+        ctx.lineTo(arrowX - dirSign * 6, curY - 18);
+        ctx.lineTo(arrowX - dirSign * 6, curY - 10);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        ctx.restore();
+      }
+    }
+
+    /**
+     * ============================================================================
+     * MODULE 5: APPLICATION CONTROLLER & UI BINDINGS
+     * ============================================================================
+     */
+    class AppController {
+      constructor() {
+        this.engine = new PhysicsEngine();
+        this.topDownRenderer = new TopDownRenderer(document.getElementById('topdown-canvas'));
+        this.skyRenderer = new SkyRenderer(document.getElementById('sky-canvas'));
+
+        this.isPlaying = true;
+        this.speedMultiplier = 1.2;
+        this.showFan = true;
+        this.showVectors = true;
+        this.lastFrameTime = null;
+
+        this.bindEvents();
+        this.syncModeUI('mars');
+      }
+
+      bindEvents() {
+        // Mode Switchers
+        document.getElementById('btn-mode-mars').addEventListener('click', () => {
+          this.engine.setMode('mars');
+          this.syncModeUI('mars');
+        });
+
+        document.getElementById('btn-mode-venus').addEventListener('click', () => {
+          this.engine.setMode('venus');
+          this.syncModeUI('venus');
+        });
+
+        // Quick-Jump to Overtake
+        document.getElementById('btn-jump-overtake').addEventListener('click', () => {
+          this.engine.jumpToPreOvertake();
+          this.renderFrame();
+        });
+
+        // Play / Pause
+        document.getElementById('btn-play-pause').addEventListener('click', () => {
+          this.isPlaying = !this.isPlaying;
+          document.getElementById('icon-pause').classList.toggle('hidden', !this.isPlaying);
+          document.getElementById('icon-play').classList.toggle('hidden', this.isPlaying);
+          document.getElementById('text-play-pause').textContent = this.isPlaying ? '暂停' : '继续';
+        });
+
+        // Single-Step Buttons
+        document.getElementById('btn-step-back').addEventListener('click', () => {
+          this.isPlaying = false;
+          document.getElementById('icon-pause').classList.add('hidden');
+          document.getElementById('icon-play').classList.remove('hidden');
+          document.getElementById('text-play-pause').textContent = '继续';
+          this.engine.advanceDays(-2.5);
+          this.renderFrame();
+        });
+
+        document.getElementById('btn-step-forward').addEventListener('click', () => {
+          this.isPlaying = false;
+          document.getElementById('icon-pause').classList.add('hidden');
+          document.getElementById('icon-play').classList.remove('hidden');
+          document.getElementById('text-play-pause').textContent = '继续';
+          this.engine.advanceDays(2.5);
+          this.renderFrame();
+        });
+
+        // Speed Slider
+        const slider = document.getElementById('speed-slider');
+        slider.addEventListener('input', (e) => {
+          this.speedMultiplier = parseFloat(e.target.value);
+          document.getElementById('speed-label').textContent = `${this.speedMultiplier.toFixed(1)}x`;
+        });
+
+        // Visual Toggles
+        document.getElementById('chk-sightline-fan').addEventListener('change', (e) => {
+          this.showFan = e.target.checked;
+          this.renderFrame();
+        });
+
+        document.getElementById('chk-velocity-vectors').addEventListener('change', (e) => {
+          this.showVectors = e.target.checked;
+          this.renderFrame();
+        });
+
+        document.getElementById('btn-clear-trail').addEventListener('click', () => {
+          this.engine.clearHistory();
+          this.renderFrame();
+        });
+
+        window.addEventListener('resize', () => this.renderFrame());
+      }
+
+      syncModeUI(modeKey) {
+        const marsBtn = document.getElementById('btn-mode-mars');
+        const venusBtn = document.getElementById('btn-mode-venus');
+        const activeClasses = ['bg-sky-500/20', 'text-sky-300', 'border-sky-500/40', 'shadow-sm'];
+        const inactiveClasses = ['text-slate-400', 'hover:text-slate-200', 'border-transparent'];
+
+        if (modeKey === 'mars') {
+          marsBtn.classList.add(...activeClasses);
+          marsBtn.classList.remove(...inactiveClasses);
+          venusBtn.classList.remove(...activeClasses);
+          venusBtn.classList.add(...inactiveClasses);
+          document.getElementById('legend-target-planet').innerHTML =
+            `<i class="w-2.5 h-2.5 rounded-full bg-orange-500 inline-block"></i>火星 (1.52 AU · 24.1 km/s)`;
+        } else {
+          venusBtn.classList.add(...activeClasses);
+          venusBtn.classList.remove(...inactiveClasses);
+          marsBtn.classList.remove(...activeClasses);
+          marsBtn.classList.add(...inactiveClasses);
+          document.getElementById('legend-target-planet').innerHTML =
+            `<i class="w-2.5 h-2.5 rounded-full bg-yellow-500 inline-block"></i>金星 (0.72 AU · 35.0 km/s)`;
+        }
+
+        document.getElementById('physics-explanation').innerHTML = ORBITAL_CONFIG[modeKey].explanationHTML;
+        this.renderFrame();
+      }
+
+      updateTelemetryUI(state) {
+        // Status Pill
+        const pill = document.getElementById('motion-status-pill');
+        const dot = document.getElementById('status-dot');
+        const title = document.getElementById('status-title');
+        const subtitle = document.getElementById('status-subtitle');
+
+        if (state.isRetrograde) {
+          pill.className = 'absolute top-3 left-3 px-3.5 py-2 rounded-xl backdrop-blur-md border transition-all duration-300 flex items-center gap-2.5 shadow-lg bg-rose-950/80 border-rose-500/50 text-rose-200';
+          dot.className = 'w-3 h-3 rounded-full bg-rose-400 shadow-[0_0_12px_#fb7185] animate-ping';
+          title.textContent = 'RETROGRADE · 视逆行 (向西倒退)';
+          subtitle.textContent = '内道快车正在超车，视线在天球上顺时针后退';
+        } else {
+          pill.className = 'absolute top-3 left-3 px-3.5 py-2 rounded-xl backdrop-blur-md border transition-all duration-300 flex items-center gap-2.5 shadow-lg bg-sky-950/75 border-sky-500/40 text-sky-200';
+          dot.className = 'w-3 h-3 rounded-full bg-sky-400 shadow-[0_0_10px_#38bdf8]';
+          title.textContent = 'PROGRADE · 顺行 (向东前进)';
+          subtitle.textContent = '视线在天球背景上正常向东（逆时针）推进';
+        }
+
+        // Special Alignment Badge (Opposition / Inferior Conjunction / Greatest Elongation)
+        const badge = document.getElementById('alignment-badge');
+        if (state.specialEvent) {
+          badge.textContent = state.specialEvent;
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
+        }
+
+        // Telemetry Cards
+        document.getElementById('sim-day-counter').textContent = `Day ${state.simDays.toFixed(1)}`;
+        document.getElementById('tel-config').textContent = state.configLabel;
+
+        const rateEl = document.getElementById('tel-rate');
+        const sign = state.dLambdaDegPerDay >= 0 ? '+' : '';
+        rateEl.textContent = `${sign}${state.dLambdaDegPerDay.toFixed(3)} °/天`;
+        rateEl.className = state.isRetrograde
+          ? 'text-xs sm:text-sm font-semibold text-rose-400 mt-0.5'
+          : 'text-xs sm:text-sm font-semibold text-sky-400 mt-0.5';
+
+        document.getElementById('tel-dist').textContent = `${state.distAU.toFixed(3)} AU`;
+        document.getElementById('tel-elong').textContent = `${state.elongDeg.toFixed(1)}° ${state.elongDir.split(' ')[0]}`;
+      }
+
+      renderFrame() {
+        const state = this.engine.history[this.engine.history.length - 1] || this.engine.computeState();
+        this.topDownRenderer.render(state, this.engine.history, {
+          mode: this.engine.mode,
+          showFan: this.showFan,
+          showVectors: this.showVectors
+        });
+        this.skyRenderer.render(state, this.engine.history);
+        this.updateTelemetryUI(state);
+      }
+
+      start() {
+        const loop = (timestamp) => {
+          if (this.lastFrameTime !== null && this.isPlaying) {
+            const dtSec = Math.min((timestamp - this.lastFrameTime) / 1000, 0.1);
+            // Base simulation rate: ~28 simulated days per real second at 1.0x
+            const dtDays = dtSec * 28 * this.speedMultiplier;
+            this.engine.advanceDays(dtDays);
+          }
+          this.lastFrameTime = timestamp;
+          this.renderFrame();
+          requestAnimationFrame(loop);
+        };
+        requestAnimationFrame(loop);
+      }
+    }
+
+    // Boot simulation on window load
+    window.addEventListener('load', () => {
+      const app = new AppController();
+      app.start();
+    });
+  </script>
+</body>
+</html>

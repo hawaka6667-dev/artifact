@@ -1,0 +1,6 @@
+{
+  "title": "行星视逆行天体力学模拟器 Apparent Retrograde Motion",
+  "slug": "retrograde-motion",
+  "version": 1,
+  "note": "Interactive simulator of apparent retrograde motion (Mars opposition & Venus inferior conjunction) with ecliptic north pole top-down view, sightline fan, velocity vectors, and geocentric sky projection."
+}

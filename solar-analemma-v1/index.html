@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>太阳日行迹模拟：椭圆轨道与黄赤交角的“8”字合成</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #060a12;
+      color: #e2e8f0;
+      overflow-x: hidden;
+    }
+    .font-mono-num {
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-variant-numeric: tabular-nums;
+    }
+    input[type="range"].astro-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      cursor: pointer;
+    }
+    input[type="range"].astro-slider::-webkit-slider-runnable-track {
+      height: 6px;
+      border-radius: 999px;
+      background: #1e293b;
+      border: 1px solid #334155;
+    }
+    input[type="range"].astro-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 17px;
+      height: 17px;
+      border-radius: 50%;
+      background: #fbbf24;
+      border: 2px solid #0f172a;
+      margin-top: -6.5px;
+      box-shadow: 0 0 10px rgba(251, 191, 36, 0.55);
+      transition: transform 0.15s ease;
+    }
+    input[type="range"].astro-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.12);
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      touch-action: manipulation;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-[#060a12] text-slate-100 antialiased selection:bg-amber-500/30 selection:text-amber-200">
+  <!-- 顶部导航与思想实验预设栏 -->
+  <header class="border-b border-slate-800/90 bg-[#0b1120]/95 backdrop-blur-md sticky top-0 z-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+      <div>
+        <div class="flex items-center gap-2.5">
+          <span class="inline-flex h-2.5 w-2.5 rounded-full bg-amber-400 shadow-[0_0_10px_#fbbf24]"></span>
+          <h1 class="text-base sm:text-lg font-semibold tracking-tight text-slate-50">
+            太阳日行迹模拟：椭圆轨道与黄赤交角的“8”字合成
+            <span class="ml-1.5 text-xs sm:text-sm font-normal text-slate-400">Solar Analemma &amp; Equation of Time</span>
+          </h1>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">
+          每天固定平太阳时（如 <span class="text-amber-300 font-mono-num">12:00</span>）仰望太阳：<strong>上下（赤纬 δ）</strong>来自黄赤交角，<strong>左右（均时差 EoT）</strong>由“椭圆偏心率 1 年周期”与“黄赤交角投影半年周期”叠加而成。
+        </p>
+      </div>
+
+      <!-- 行星与思想实验快捷预设 -->
+      <div class="flex flex-wrap items-center gap-1.5">
+        <button data-preset="earth" type="button" class="preset-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-400/45 transition cursor-pointer">
+          地球 (e=0.0167, ε=23.44°)
+        </button>
+        <button data-preset="circle" type="button" class="preset-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition cursor-pointer">
+          正圆轨道 (e=0, ε=23.44°)
+        </button>
+        <button data-preset="zeroTilt" type="button" class="preset-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition cursor-pointer">
+          零倾角纯椭圆 (e=0.08, ε=0°)
+        </button>
+        <button data-preset="mars" type="button" class="preset-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition cursor-pointer">
+          火星水滴形 (e=0.0934, ε=25.19°)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-5 space-y-5">
+    <!-- 参数调节与播放控制面板 -->
+    <section class="bg-[#0d1424] border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl space-y-4">
+      <!-- 三个物理参数滑块 -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- 轨道偏心率 e -->
+        <div class="bg-slate-900/75 border border-slate-800/80 rounded-xl p-3.5">
+          <div class="flex items-center justify-between text-xs mb-1.5">
+            <span class="font-medium text-sky-300">轨道偏心率 <span class="text-slate-400">Eccentricity (e)</span></span>
+            <span id="valEcc" class="font-mono-num text-sm font-semibold text-sky-300">0.0167</span>
+          </div>
+          <input id="sliderEcc" type="range" min="0" max="0.40" step="0.0005" value="0.0167" class="astro-slider w-full" />
+          <div class="flex justify-between text-[11px] text-slate-500 mt-1 font-mono-num">
+            <span>0.000 (正圆)</span>
+            <span>0.0167 (地球)</span>
+            <span>0.400 (高偏心)</span>
+          </div>
+        </div>
+
+        <!-- 黄赤交角 ε -->
+        <div class="bg-slate-900/75 border border-slate-800/80 rounded-xl p-3.5">
+          <div class="flex items-center justify-between text-xs mb-1.5">
+            <span class="font-medium text-emerald-300">黄赤交角 <span class="text-slate-400">Axial Tilt (ε)</span></span>
+            <span id="valTilt" class="font-mono-num text-sm font-semibold text-emerald-300">23.44°</span>
+          </div>
+          <input id="sliderTilt" type="range" min="0" max="60" step="0.1" value="23.44" class="astro-slider w-full" />
+          <div class="flex justify-between text-[11px] text-slate-500 mt-1 font-mono-num">
+            <span>0.0° (无四季)</span>
+            <span>23.44° (地球)</span>
+            <span>60.0°</span>
+          </div>
+        </div>
+
+        <!-- 近日点相对冬至夹角 -->
+        <div class="bg-slate-900/75 border border-slate-800/80 rounded-xl p-3.5">
+          <div class="flex items-center justify-between text-xs mb-1.5">
+            <span class="font-medium text-violet-300">近日点相对冬至夹角 <span class="text-slate-400">ω_peri</span></span>
+            <span id="valPeri" class="font-mono-num text-sm font-semibold text-violet-300">12° (1月3日)</span>
+          </div>
+          <input id="sliderPeri" type="range" min="0" max="360" step="1" value="12" class="astro-slider w-full" />
+          <div class="flex justify-between text-[11px] text-slate-500 mt-1 font-mono-num">
+            <span>0° (冬至重合)</span>
+            <span>12° (当前地球)</span>
+            <span>180° (夏至)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 播放控制、天数拖动条与横向比例切换 -->
+      <div class="pt-3 border-t border-slate-800/80 flex flex-col lg:flex-row lg:items-center justify-between gap-3.5">
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="btnPlayPause" type="button" class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs sm:text-sm font-semibold shadow-[0_4px_14px_rgba(251,191,36,0.3)] transition flex items-center gap-1.5 cursor-pointer">
+            <span id="playIcon">❚❚</span>
+            <span id="playText">暂停追踪</span>
+          </button>
+          <button id="btnStep1" type="button" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs sm:text-sm font-medium transition cursor-pointer">
+            +1 天
+          </button>
+          <button id="btnStep7" type="button" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs sm:text-sm font-medium transition cursor-pointer">
+            +7 天
+          </button>
+          <button id="btnToggleAspect" type="button" class="px-3 py-2 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-400/35 text-xs sm:text-sm font-medium transition cursor-pointer">
+            横向比例：夸张放大 (清晰看8字)
+          </button>
+        </div>
+
+        <!-- 全年 365 天进度滑块 -->
+        <div class="flex items-center gap-3 flex-1 max-w-xl">
+          <span class="text-xs text-slate-400 shrink-0">全年进度:</span>
+          <input id="sliderDay" type="range" min="0" max="365" step="0.5" value="0" class="astro-slider flex-1" />
+          <span id="valDayDate" class="font-mono-num text-xs sm:text-sm font-semibold text-amber-300 shrink-0 w-28 text-right">第 0 天 · 1月1日</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 实时物理量读数条 -->
+    <section class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <div class="bg-[#0d1424] border border-slate-800/90 rounded-2xl p-3.5">
+        <div class="text-xs text-slate-400 flex justify-between">
+          <span>太阳赤纬 (上下高低)</span>
+          <span class="font-mono-num text-[11px] text-emerald-400">DEC δ</span>
+        </div>
+        <div id="readDec" class="mt-1 text-lg sm:text-xl font-bold font-mono-num text-emerald-300">-23.0°</div>
+        <div class="mt-0.5 text-[11px] text-slate-400">决定正午太阳高度角</div>
+      </div>
+
+      <div class="bg-[#0d1424] border border-slate-800/90 rounded-2xl p-3.5">
+        <div class="text-xs text-slate-400 flex justify-between">
+          <span>总均时差 (左右偏移)</span>
+          <span class="font-mono-num text-[11px] text-amber-400">TOTAL EoT</span>
+        </div>
+        <div id="readEoT" class="mt-1 text-lg sm:text-xl font-bold font-mono-num text-amber-300">-3.2 分</div>
+        <div id="readEoTDir" class="mt-0.5 text-[11px] text-slate-400">真太阳比平太阳钟慢 (偏东)</div>
+      </div>
+
+      <div class="bg-[#0d1424] border border-slate-800/90 rounded-2xl p-3.5">
+        <div class="text-xs text-slate-400 flex justify-between">
+          <span>轨道偏心率分量</span>
+          <span class="font-mono-num text-[11px] text-sky-400">1-YR WAVE</span>
+        </div>
+        <div id="readEoTEcc" class="mt-1 text-lg sm:text-xl font-bold font-mono-num text-sky-300">+0.3 分</div>
+        <div class="mt-0.5 text-[11px] text-slate-400">每年 1 周期 · 近日点公转快</div>
+      </div>
+
+      <div class="bg-[#0d1424] border border-slate-800/90 rounded-2xl p-3.5">
+        <div class="text-xs text-slate-400 flex justify-between">
+          <span>黄赤交角投影分量</span>
+          <span class="font-mono-num text-[11px] text-violet-400">0.5-YR WAVE</span>
+        </div>
+        <div id="readEoTObl" class="mt-1 text-lg sm:text-xl font-bold font-mono-num text-violet-300">-3.5 分</div>
+        <div class="mt-0.5 text-[11px] text-slate-400">每年 2 周期 · 斜投影赤道差</div>
+      </div>
+
+      <div class="col-span-2 lg:col-span-1 bg-[#0d1424] border border-slate-800/90 rounded-2xl p-3.5">
+        <div class="text-xs text-slate-400 flex justify-between">
+          <span>日地距离 &amp; 轨道速度</span>
+          <span class="font-mono-num text-[11px] text-rose-400">KEPLER 2ND</span>
+        </div>
+        <div id="readDist" class="mt-1 text-lg sm:text-xl font-bold font-mono-num text-rose-300">0.983 AU</div>
+        <div id="readSpeed" class="mt-0.5 text-[11px] text-slate-400">公转速度 30.29 km/s</div>
+      </div>
+    </section>
+
+    <!-- 主可视化网格：左侧日行迹“8”字投影，右侧开普勒椭圆轨道 + 均时差双波分量 -->
+    <section class="grid grid-cols-1 xl:grid-cols-12 gap-5">
+      <!-- 左侧：日行迹 (Analemma) 投影主画布 -->
+      <div class="xl:col-span-6 bg-[#0d1424] border border-slate-800/90 rounded-2xl p-4 flex flex-col">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+          <div>
+            <h2 class="text-sm sm:text-base font-semibold text-slate-100">
+              1. 每日固定钟点太阳位置：日行迹 <span class="text-xs font-normal text-slate-400">Solar Analemma (12:00 Mean Time)</span>
+            </h2>
+            <p class="text-xs text-slate-400">仰望南方正午天空：纵轴为太阳赤纬 δ，横轴为真太阳相对子午线的均时差（东左西右）。</p>
+          </div>
+          <span id="shapeBadge" class="text-[11px] font-mono-num px-2.5 py-1 rounded-lg bg-amber-500/15 text-amber-300 border border-amber-400/30">
+            非对称 8 字形
+          </span>
+        </div>
+        <div class="relative w-full flex-1 min-h-[450px] sm:min-h-[520px] rounded-xl overflow-hidden bg-[#060a13] border border-slate-800/80">
+          <canvas id="analemmaCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- 右侧：上下两个同步拆解面板 -->
+      <div class="xl:col-span-6 flex flex-col gap-5">
+        <!-- 面板 A：开普勒椭圆轨道俯视图 -->
+        <div class="bg-[#0d1424] border border-slate-800/90 rounded-2xl p-4 flex flex-col">
+          <div class="flex items-center justify-between gap-2 mb-2">
+            <div>
+              <h2 class="text-sm sm:text-base font-semibold text-slate-100">
+                2A. 开普勒椭圆轨道与自转轴 <span class="text-xs font-normal text-slate-400">Keplerian Elliptical Orbit</span>
+              </h2>
+              <p class="text-xs text-slate-400">开普勒第二定律：近日点附近扇形面积扫过更快（角速度大），自转轴保持空间倾角 ε。</p>
+            </div>
+          </div>
+          <div class="relative w-full h-[235px] sm:h-[250px] rounded-xl overflow-hidden bg-[#060a13] border border-slate-800/80">
+            <canvas id="orbitCanvas"></canvas>
+          </div>
+        </div>
+
+        <!-- 面板 B：均时差双波分解曲线 -->
+        <div class="bg-[#0d1424] border border-slate-800/90 rounded-2xl p-4 flex flex-col">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <div>
+              <h2 class="text-sm sm:text-base font-semibold text-slate-100">
+                2B. 均时差双波叠加原理 <span class="text-xs font-normal text-slate-400">Equation of Time Decomposition</span>
+              </h2>
+              <p class="text-xs text-slate-400">总均时差（琥珀色） = 轨道偏心率分量（蓝色 1 年波） + 黄赤交角分量（紫色半年波）。</p>
+            </div>
+          </div>
+          <div class="relative w-full h-[235px] sm:h-[250px] rounded-xl overflow-hidden bg-[#060a13] border border-slate-800/80">
+            <canvas id="eotCanvas"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    /**
+     * 太阳日行迹 (Solar Analemma) 与均时差 (Equation of Time) 交互物理模拟器
+     * 核心天体力学算法：
+     * 1. 牛顿-拉夫逊法 (Newton-Raphson) 精确求解开普勒方程 M = E - e * sin(E)
+     * 2. 由偏近点角 E 计算真近点角 ν，加上近日点黄经得到太阳视黄经 λ_sun
+     * 3. 球面三角投影计算赤纬 δ = arcsin(sin(ε) * sin(λ_sun)) 与赤经 α = atan2(cos(ε)*sin(λ_sun), cos(λ_sun))
+     * 4. 分离计算均时差的两个物理分量：
+     *    - 偏心率分量 EoT_ecc = (M_sun - ν) [换算为分钟]（1年周期波）
+     *    - 黄赤交角分量 EoT_obl = (λ_sun - α) [换算为分钟]（半年周期波）
+     *    - 总均时差 EoT_total = EoT_ecc + EoT_obl = (L_mean - α)
+     */
+    (function () {
+      const DEG2RAD = Math.PI / 180;
+      const RAD2DEG = 180 / Math.PI;
+      const YEAR_DAYS = 365.2422;
+
+      const state = {
+        ecc: 0.0167,          // 轨道偏心率 e
+        tiltDeg: 23.44,       // 黄赤交角 ε (度)
+        periOffsetDeg: 12,    // 近日点相对冬至点的夹角 (地球约 12°，即冬至后约 12~13 天的 1 月 3 日)
+        day: 0,               // 当前模拟天数 (0 = 1月1日, 365 = 12月31日)
+        isPlaying: true,
+        exaggerateHorizontal: true, // 默认放大横向均时差角比例以便清晰观察“8”字，可一键切换真实 1:1
+        lastTime: 0,
+        curveCache: [],
+        milestones: []
+      };
+
+      const els = {
+        sliderEcc: document.getElementById('sliderEcc'),
+        sliderTilt: document.getElementById('sliderTilt'),
+        sliderPeri: document.getElementById('sliderPeri'),
+        sliderDay: document.getElementById('sliderDay'),
+        valEcc: document.getElementById('valEcc'),
+        valTilt: document.getElementById('valTilt'),
+        valPeri: document.getElementById('valPeri'),
+        valDayDate: document.getElementById('valDayDate'),
+        btnPlayPause: document.getElementById('btnPlayPause'),
+        playIcon: document.getElementById('playIcon'),
+        playText: document.getElementById('playText'),
+        btnStep1: document.getElementById('btnStep1'),
+        btnStep7: document.getElementById('btnStep7'),
+        btnToggleAspect: document.getElementById('btnToggleAspect'),
+        presetBtns: document.querySelectorAll('.preset-btn'),
+        shapeBadge: document.getElementById('shapeBadge'),
+        readDec: document.getElementById('readDec'),
+        readEoT: document.getElementById('readEoT'),
+        readEoTDir: document.getElementById('readEoTDir'),
+        readEoTEcc: document.getElementById('readEoTEcc'),
+        readEoTObl: document.getElementById('readEoTObl'),
+        readDist: document.getElementById('readDist'),
+        readSpeed: document.getElementById('readSpeed'),
+        analemmaCanvas: document.getElementById('analemmaCanvas'),
+        orbitCanvas: document.getElementById('orbitCanvas'),
+        eotCanvas: document.getElementById('eotCanvas')
+      };
+
+      function wrapPi(rad) {
+        let x = (rad + Math.PI) % (2 * Math.PI);
+        if (x < 0) x += 2 * Math.PI;
+        return x - Math.PI;
+      }
+
+      function wrap2Pi(rad) {
+        let x = rad % (2 * Math.PI);
+        if (x < 0) x += 2 * Math.PI;
+        return x;
+      }
+
+      // 将全年天数 (0..365) 转换为公历月日文本
+      function dayToDateStr(dayVal) {
+        const dInt = Math.floor(((dayVal % 365) + 365) % 365);
+        const months = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        let rem = dInt;
+        for (let m = 0; m < 12; m++) {
+          if (rem < months[m]) {
+            return `${m + 1}月${rem + 1}日`;
+          }
+          rem -= months[m];
+        }
+        return '12月31日';
+      }
+
+      // 牛顿-拉夫逊法求解开普勒方程 M = E - e * sin(E)
+      function solveKepler(M, e) {
+        let E = e < 0.8 ? M : Math.PI;
+        for (let iter = 0; iter < 15; iter++) {
+          const f = E - e * Math.sin(E) - M;
+          const fp = 1 - e * Math.cos(E);
+          const dE = f / fp;
+          E -= dE;
+          if (Math.abs(dE) < 1e-11) break;
+        }
+        return E;
+      }
+
+      /**
+       * 计算任意天数 t (0 = 1月1日) 的精确太阳天文状态
+       * 约定：
+       * - 冬至点太阳视黄经 λ_ws = 270° (-90°)
+       * - 近日点太阳视黄经 λ_peri = 270° + periOffsetDeg (当 periOffsetDeg = 12° 时，近日点位于 282°，对应 1月3日左右)
+       * - 令 Day 0 (1月1日) 的平太阳黄经比近日点略早约 2 天（当 periOffsetDeg = 12° 时，1月3日过近日点）
+       */
+      function computeSolarPoint(dayVal, ecc, tiltDeg, periOffsetDeg) {
+        const eps = tiltDeg * DEG2RAD;
+        const lambdaPeri = wrap2Pi((270 + periOffsetDeg) * DEG2RAD);
+
+        // 保持 12月21日左右为冬至：设冬至平黄经为 270°，冬至发生在一年第 355 天左右
+        // 因此第 dayVal 天的平黄经 L_mean = 270° + (dayVal + 10.2) * (360° / 365.2422)
+        const L_mean = wrap2Pi((270 + (dayVal + 10.2) * (360 / YEAR_DAYS)) * DEG2RAD);
+
+        // 平近点角 M = L_mean - λ_peri
+        const M = wrap2Pi(L_mean - lambdaPeri);
+
+        // 求解偏近点角 E 与真近点角 ν
+        const E = solveKepler(M, ecc);
+        const sinNu = (Math.sqrt(1 - ecc * ecc) * Math.sin(E)) / (1 - ecc * Math.cos(E));
+        const cosNu = (Math.cos(E) - ecc) / (1 - ecc * Math.cos(E));
+        const nu = wrap2Pi(Math.atan2(sinNu, cosNu));
+
+        // 太阳真视黄经 λ_sun = λ_peri + ν
+        const lambdaSun = wrap2Pi(lambdaPeri + nu);
+
+        // 球面三角：太阳赤纬 δ 与太阳赤经 α
+        const sinDec = Math.sin(eps) * Math.sin(lambdaSun);
+        const decRad = Math.asin(Math.max(-1, Math.min(1, sinDec)));
+        const raRad = wrap2Pi(Math.atan2(Math.cos(eps) * Math.sin(lambdaSun), Math.cos(lambdaSun)));
+
+        // 均时差 EoT = L_mean - α（弧度转分钟：2π rad = 1440 min -> 1 rad = 1440 / (2π) min）
+        const RAD2MIN = 1440 / (2 * Math.PI);
+        const eotEccMin = wrapPi(M - nu) * RAD2MIN;          // 轨道偏心率分量 (M - ν)
+        const eotOblMin = wrapPi(lambdaSun - raRad) * RAD2MIN; // 黄赤交角分量 (λ - α)
+        const eotTotalMin = eotEccMin + eotOblMin;            // 总均时差 (L_mean - α)
+
+        // 日地距离 (AU) 与瞬时轨道速率 (相对地球 1 AU 基准 29.78 km/s)
+        const rAU = 1 - ecc * Math.cos(E);
+        const speedKms = 29.78 * Math.sqrt(Math.max(0.01, (2 / rAU) - 1));
+
+        return {
+          day: dayVal,
+          M,
+          E,
+          nu,
+          lambdaPeri,
+          lambdaSun,
+          decDeg: decRad * RAD2DEG,
+          raDeg: raRad * RAD2DEG,
+          eotEccMin,
+          eotOblMin,
+          eotTotalMin,
+          rAU,
+          speedKms
+        };
+      }
+
+      // 预计算全年 365 天日行迹曲线与六大关键节点
+      function rebuildCurveCache() {
+        const pts = [];
+        for (let d = 0; d <= 365; d += 1) {
+          pts.push(computeSolarPoint(d, state.ecc, state.tiltDeg, state.periOffsetDeg));
+        }
+        state.curveCache = pts;
+
+        // 寻找最接近 近日点(M≈0)、远日点(M≈π) 以及 春分/夏至/秋分/冬至 的天数
+        const targets = [
+          { key: 'peri', label: '近日点 Perihelion', color: '#38bdf8', check: (p) => Math.abs(wrapPi(p.M)) },
+          { key: 'aphe', label: '远日点 Aphelion', color: '#818cf8', check: (p) => Math.abs(wrapPi(p.M - Math.PI)) },
+          { key: 'vernal', label: '春分 Vernal Eq.', color: '#34d399', check: (p) => Math.abs(wrapPi(p.lambdaSun - 0)) },
+          { key: 'summer', label: '夏至 Summer Sol.', color: '#fbbf24', check: (p) => Math.abs(wrapPi(p.lambdaSun - Math.PI / 2)) },
+          { key: 'autumn', label: '秋分 Autumnal Eq.', color: '#fb923c', check: (p) => Math.abs(wrapPi(p.lambdaSun - Math.PI)) },
+          { key: 'winter', label: '冬至 Winter Sol.', color: '#f472b6', check: (p) => Math.abs(wrapPi(p.lambdaSun - 1.5 * Math.PI)) }
+        ];
+
+        state.milestones = targets.map((t) => {
+          let best = pts[0];
+          let bestErr = Infinity;
+          for (const p of pts) {
+            const err = t.check(p);
+            if (err < bestErr) {
+              bestErr = err;
+              best = p;
+            }
+          }
+          return { ...t, point: best };
+        });
+
+        // 更新形状特征标签
+        if (state.tiltDeg < 0.5 && state.ecc < 0.002) {
+          els.shapeBadge.textContent = '静止单点 (正圆零倾角)';
+        } else if (state.tiltDeg < 0.5) {
+          els.shapeBadge.textContent = '纯水平直线 (仅左右摆动)';
+        } else if (state.ecc < 0.002) {
+          els.shapeBadge.textContent = '完全对称 8 字形 (正圆轨道)';
+        } else if (state.ecc > 0.065) {
+          els.shapeBadge.textContent = '水滴 / 单环日行迹 (高偏心)';
+        } else {
+          els.shapeBadge.textContent = '非对称 8 字形 (大小环)';
+        }
+      }
+
+      function setupCanvas(canvas) {
+        const rect = canvas.getBoundingClientRect();
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const w = Math.max(260, Math.floor(rect.width));
+        const h = Math.max(200, Math.floor(rect.height));
+        if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+          canvas.width = w * dpr;
+          canvas.height = h * dpr;
+        }
+        const ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        return { ctx, w, h };
+      }
+
+      /**
+       * 绘制 1：日行迹 (Analemma) 主视图
+       * - 纵轴：太阳赤纬 δ (度)
+       * - 横轴：均时差 EoT (分钟)。仰望南方时：正值(真太阳快于平太阳)偏西(右侧)，负值偏东(左侧)
+       */
+      function drawAnalemma() {
+        const { ctx, w, h } = setupCanvas(els.analemmaCanvas);
+        const cur = computeSolarPoint(state.day, state.ecc, state.tiltDeg, state.periOffsetDeg);
+
+        ctx.clearRect(0, 0, w, h);
+
+        // 动态计算坐标边界以适应大倾角或大偏心率调节
+        let maxAbsEoT = 18;
+        let maxAbsDec = 26;
+        for (const p of state.curveCache) {
+          if (Math.abs(p.eotTotalMin) + 4 > maxAbsEoT) maxAbsEoT = Math.ceil((Math.abs(p.eotTotalMin) + 4) / 5) * 5;
+          if (Math.abs(p.decDeg) + 4 > maxAbsDec) maxAbsDec = Math.ceil((Math.abs(p.decDeg) + 4) / 5) * 5;
+        }
+
+        const padL = 52;
+        const padR = 28;
+        const padTop = 34;
+        const padBot = 44;
+        const plotW = Math.max(100, w - padL - padR);
+        const plotH = Math.max(120, h - padTop - padBot);
+        const cx = padL + plotW * 0.5;
+        const cy = padTop + plotH * 0.5;
+
+        // 比例尺：夸张模式铺满画布宽度，真实 1:1 模式按 1 分钟 = 0.25° 真实天球角比例绘制
+        const scaleY = (plotH * 0.5) / maxAbsDec; // px per deg
+        const scaleX = state.exaggerateHorizontal
+          ? (plotW * 0.46) / maxAbsEoT
+          : scaleY * 0.25; // 1 min = 0.25°
+
+        const toX = (eotMin) => cx + eotMin * scaleX;
+        const toY = (decDeg) => cy - decDeg * scaleY;
+
+        // 背景渐变
+        const bgGrad = ctx.createLinearGradient(0, padTop, 0, padTop + plotH);
+        bgGrad.addColorStop(0, '#0a1428');
+        bgGrad.addColorStop(0.5, '#091120');
+        bgGrad.addColorStop(1, '#0c121e');
+        ctx.fillStyle = bgGrad;
+        ctx.fillRect(padL, padTop, plotW, plotH);
+
+        // 网格与坐标轴
+        ctx.save();
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.14)';
+        ctx.lineWidth = 1;
+        ctx.font = '10px JetBrains Mono, monospace';
+        ctx.fillStyle = '#64748b';
+
+        // 水平赤纬刻度线
+        const decStep = maxAbsDec > 35 ? 15 : 10;
+        for (let d = -Math.floor(maxAbsDec / decStep) * decStep; d <= maxAbsDec; d += decStep) {
+          const y = toY(d);
+          ctx.strokeStyle = d === 0 ? 'rgba(52, 211, 153, 0.38)' : 'rgba(148, 163, 184, 0.12)';
+          ctx.beginPath();
+          ctx.moveTo(padL, y);
+          ctx.lineTo(padL + plotW, y);
+          ctx.stroke();
+
+          ctx.textAlign = 'right';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = d === 0 ? '#34d399' : '#64748b';
+          ctx.fillText(`${d > 0 ? '+' : ''}${d}°`, padL - 7, y);
+        }
+
+        // 垂直均时差刻度线
+        const eotStep = maxAbsEoT > 40 ? 20 : maxAbsEoT > 22 ? 10 : 5;
+        const maxTickMin = state.exaggerateHorizontal ? maxAbsEoT : Math.floor((plotW * 0.48) / scaleX);
+        for (let m = -Math.floor(maxTickMin / eotStep) * eotStep; m <= maxTickMin; m += eotStep) {
+          const x = toX(m);
+          if (x < padL || x > padL + plotW) continue;
+          ctx.strokeStyle = m === 0 ? 'rgba(251, 191, 36, 0.45)' : 'rgba(148, 163, 184, 0.12)';
+          ctx.beginPath();
+          ctx.moveTo(x, padTop);
+          ctx.lineTo(x, padTop + plotH);
+          ctx.stroke();
+
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'top';
+          ctx.fillStyle = m === 0 ? '#fbbf24' : '#64748b';
+          ctx.fillText(`${m > 0 ? '+' : ''}${m}m`, x, padTop + plotH + 7);
+        }
+
+        // 顶部方位与中心子午线说明
+        ctx.font = '600 11px Inter, sans-serif';
+        ctx.fillStyle = '#38bdf8';
+        ctx.textAlign = 'left';
+        ctx.fillText('← 偏东 East (真太阳较慢)', padL + 8, padTop + 14);
+
+        ctx.fillStyle = '#fbbf24';
+        ctx.textAlign = 'center';
+        ctx.fillText('本地正午子午线 (EoT=0)', cx, padTop - 16);
+
+        ctx.fillStyle = '#fb923c';
+        ctx.textAlign = 'right';
+        ctx.fillText('偏西 West (真太阳较快) →', padL + plotW - 8, padTop + 14);
+
+        ctx.save();
+        ctx.translate(14, cy);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillStyle = '#94a3b8';
+        ctx.textAlign = 'center';
+        ctx.fillText('太阳赤纬 Declination δ (°)', 0, 0);
+        ctx.restore();
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.textAlign = 'center';
+        ctx.fillText('均时差 Equation of Time (分钟)', cx, h - 14);
+
+        // 绘制全年完整日行迹闭合曲线（淡色底轨）
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.28)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        state.curveCache.forEach((p, idx) => {
+          const x = toX(p.eotTotalMin);
+          const y = toY(p.decDeg);
+          if (idx === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.closePath();
+        ctx.stroke();
+
+        // 绘制从 Day 0 到当前 day 的发光渐变尾迹
+        const maxIdx = Math.min(365, Math.floor(state.day));
+        if (maxIdx > 0) {
+          ctx.strokeStyle = '#fbbf24';
+          ctx.lineWidth = 2.6;
+          ctx.beginPath();
+          for (let i = 0; i <= maxIdx; i++) {
+            const p = state.curveCache[i];
+            const x = toX(p.eotTotalMin);
+            const y = toY(p.decDeg);
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.lineTo(toX(cur.eotTotalMin), toY(cur.decDeg));
+          ctx.stroke();
+        }
+
+        // 绘制每隔 15 天的打卡点
+        for (let d = 0; d < 365; d += 15) {
+          const p = state.curveCache[d];
+          ctx.fillStyle = d <= state.day ? 'rgba(253, 224, 71, 0.85)' : 'rgba(148, 163, 184, 0.4)';
+          ctx.beginPath();
+          ctx.arc(toX(p.eotTotalMin), toY(p.decDeg), 2.3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // 绘制六大天文里程碑标注（近日点、远日点、二分二至）
+        state.milestones.forEach((m) => {
+          const mx = toX(m.point.eotTotalMin);
+          const my = toY(m.point.decDeg);
+
+          ctx.fillStyle = m.color;
+          ctx.beginPath();
+          ctx.arc(mx, my, 4.2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#060a12';
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+
+          // 智能左右偏移标签防止重叠
+          const alignRight = m.point.eotTotalMin < 0;
+          ctx.font = '600 10.5px Inter, sans-serif';
+          ctx.fillStyle = m.color;
+          ctx.textAlign = alignRight ? 'right' : 'left';
+          ctx.textBaseline = 'middle';
+          const offsetX = alignRight ? -8 : 8;
+          const offsetY = m.key === 'peri' ? 10 : m.key === 'winter' ? -8 : 0;
+          ctx.fillText(`${m.label} (${dayToDateStr(m.point.day)})`, mx + offsetX, my + offsetY);
+        });
+
+        // 当前太阳位置指示十字虚线与发光太阳圆点
+        const sx = toX(cur.eotTotalMin);
+        const sy = toY(cur.decDeg);
+
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.35)';
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(sx, cy);
+        ctx.lineTo(sx, sy);
+        ctx.moveTo(cx, sy);
+        ctx.lineTo(sx, sy);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        const glow = ctx.createRadialGradient(sx, sy, 2, sx, sy, 18);
+        glow.addColorStop(0, 'rgba(254, 240, 138, 0.95)');
+        glow.addColorStop(0.5, 'rgba(245, 158, 11, 0.45)');
+        glow.addColorStop(1, 'rgba(245, 158, 11, 0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(sx, sy, 18, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath();
+        ctx.arc(sx, sy, 6.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#b45309';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.restore();
+      }
+
+      /**
+       * 绘制 2A：开普勒椭圆轨道俯视图
+       */
+      function drawOrbitPanel() {
+        const { ctx, w, h } = setupCanvas(els.orbitCanvas);
+        const cur = computeSolarPoint(state.day, state.ecc, state.tiltDeg, state.periOffsetDeg);
+
+        ctx.clearRect(0, 0, w, h);
+
+        const cx = w * 0.46;
+        const cy = h * 0.5;
+        const aPx = Math.min(w * 0.34, h * 0.38);
+        const e = state.ecc;
+        const bPx = aPx * Math.sqrt(Math.max(0.05, 1 - e * e));
+        const cPx = aPx * e; // 焦点偏心距
+
+        // 将椭圆旋转使近日点位于画面右侧（方便直观对比）
+        const rotAngle = 0;
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(rotAngle);
+
+        // 椭圆轨道
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, aPx, bPx, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 椭圆几何中心十字与长短轴
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.16)';
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(-aPx - 10, 0);
+        ctx.lineTo(aPx + 10, 0);
+        ctx.moveTo(0, -bPx - 8);
+        ctx.lineTo(0, bPx + 8);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 太阳位于右焦点 (+cPx, 0)
+        const sunX = cPx;
+        const sunY = 0;
+
+        // 开普勒第二定律：绘制近日点与远日点等时间间隔（18天）扫过的面积扇形对比
+        const drawSector = (startDay, spanDays, fillStyle) => {
+          ctx.fillStyle = fillStyle;
+          ctx.beginPath();
+          ctx.moveTo(sunX, sunY);
+          for (let s = 0; s <= spanDays; s += 1) {
+            const p = computeSolarPoint(startDay + s, e, state.tiltDeg, state.periOffsetDeg);
+            const px = aPx * Math.cos(p.E);
+            const py = -bPx * Math.sin(p.E); // 逆时针向上
+            ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+          ctx.fill();
+        };
+
+        const periDay = state.milestones.find((m) => m.key === 'peri')?.point.day || 2;
+        const apheDay = state.milestones.find((m) => m.key === 'aphe')?.point.day || 184;
+        drawSector(periDay - 9, 18, 'rgba(56, 189, 248, 0.18)');
+        drawSector(apheDay - 9, 18, 'rgba(129, 140, 248, 0.18)');
+
+        // 太阳发光圆
+        const sGlow = ctx.createRadialGradient(sunX, sunY, 2, sunX, sunY, 20);
+        sGlow.addColorStop(0, '#fef08a');
+        sGlow.addColorStop(0.5, 'rgba(245, 158, 11, 0.5)');
+        sGlow.addColorStop(1, 'rgba(245, 158, 11, 0)');
+        ctx.fillStyle = sGlow;
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, 20, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#fbbf24';
+        ctx.beginPath();
+        ctx.arc(sunX, sunY, 8.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 近日点与远日点标记
+        ctx.font = '600 10px Inter, sans-serif';
+        ctx.fillStyle = '#38bdf8';
+        ctx.textAlign = 'left';
+        ctx.fillText('近日点 (快)', aPx + 8, 4);
+
+        ctx.fillStyle = '#818cf8';
+        ctx.textAlign = 'right';
+        ctx.fillText('(慢) 远日点', -aPx - 8, 4);
+
+        // 当前地球位置 (x = a cos E, y = -b sin E)
+        const ex = aPx * Math.cos(cur.E);
+        const ey = -bPx * Math.sin(cur.E);
+
+        // 日地向径连线
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.45)';
+        ctx.lineWidth = 1.3;
+        ctx.beginPath();
+        ctx.moveTo(sunX, sunY);
+        ctx.lineTo(ex, ey);
+        ctx.stroke();
+
+        // 地球圆球与倾斜自转轴示意
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(ex, ey, 6.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        const tiltRad = state.tiltDeg * DEG2RAD;
+        const axisLen = 14;
+        ctx.strokeStyle = '#34d399';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(ex - Math.sin(tiltRad) * axisLen, ey + Math.cos(tiltRad) * axisLen);
+        ctx.lineTo(ex + Math.sin(tiltRad) * axisLen, ey - Math.cos(tiltRad) * axisLen);
+        ctx.stroke();
+
+        ctx.restore();
+
+        // 右侧说明角标
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '11px Inter, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText('等面积扇形 (18天)', w - 14, 20);
+        ctx.fillStyle = '#34d399';
+        ctx.fillText(`绿线：自转轴倾角 ${state.tiltDeg.toFixed(1)}°`, w - 14, h - 12);
+      }
+
+      /**
+       * 绘制 2B：均时差双波分解曲线 (Eccentricity + Obliquity = Total EoT)
+       */
+      function drawEoTPanel() {
+        const { ctx, w, h } = setupCanvas(els.eotCanvas);
+        const cur = computeSolarPoint(state.day, state.ecc, state.tiltDeg, state.periOffsetDeg);
+
+        ctx.clearRect(0, 0, w, h);
+
+        let maxAbs = 18;
+        for (const p of state.curveCache) {
+          const peak = Math.max(Math.abs(p.eotTotalMin), Math.abs(p.eotEccMin), Math.abs(p.eotOblMin));
+          if (peak + 3 > maxAbs) maxAbs = Math.ceil((peak + 3) / 5) * 5;
+        }
+
+        const padL = 44;
+        const padR = 16;
+        const padTop = 26;
+        const padBot = 28;
+        const plotW = Math.max(100, w - padL - padR);
+        const plotH = Math.max(80, h - padTop - padBot);
+        const zeroY = padTop + plotH * 0.5;
+
+        const toX = (d) => padL + (d / 365) * plotW;
+        const toY = (minVal) => zeroY - (minVal / maxAbs) * (plotH * 0.45);
+
+        // 零线与刻度
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(padL, zeroY);
+        ctx.lineTo(padL + plotW, zeroY);
+        ctx.stroke();
+
+        ctx.font = '10px JetBrains Mono, monospace';
+        ctx.fillStyle = '#64748b';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`+${maxAbs}m`, padL - 6, toY(maxAbs));
+        ctx.fillText('0m', padL - 6, zeroY);
+        ctx.fillText(`-${maxAbs}m`, padL - 6, toY(-maxAbs));
+
+        // 月份横轴刻度
+        const monthStarts = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+        monthStarts.forEach((d, idx) => {
+          const x = toX(d);
+          ctx.strokeStyle = 'rgba(148, 163, 184, 0.1)';
+          ctx.beginPath();
+          ctx.moveTo(x, padTop);
+          ctx.lineTo(x, padTop + plotH);
+          ctx.stroke();
+
+          ctx.fillStyle = '#64748b';
+          ctx.textAlign = 'center';
+          ctx.fillText(`${idx + 1}月`, x + 10, padTop + plotH + 12);
+        });
+
+        const drawWave = (getter, color, lineWidth, dashed = false) => {
+          ctx.strokeStyle = color;
+          ctx.lineWidth = lineWidth;
+          if (dashed) ctx.setLineDash([4, 3]);
+          ctx.beginPath();
+          state.curveCache.forEach((p, idx) => {
+            const x = toX(p.day);
+            const y = toY(getter(p));
+            if (idx === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          });
+          ctx.stroke();
+          ctx.setLineDash([]);
+        };
+
+        // 1. 轨道偏心率分量 (蓝色 1 年波)
+        drawWave((p) => p.eotEccMin, '#38bdf8', 1.6, true);
+        // 2. 黄赤交角投影分量 (紫色半年波)
+        drawWave((p) => p.eotOblMin, '#a78bfa', 1.6, true);
+        // 3. 总均时差 (琥珀色实线)
+        drawWave((p) => p.eotTotalMin, '#fbbf24', 2.4, false);
+
+        // 当前天数垂直指示线
+        const curX = toX(state.day);
+        ctx.strokeStyle = 'rgba(254, 240, 138, 0.6)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(curX, padTop);
+        ctx.lineTo(curX, padTop + plotH);
+        ctx.stroke();
+
+        // 当前点在三条曲线上的标记圆点
+        const dots = [
+          { val: cur.eotEccMin, color: '#38bdf8' },
+          { val: cur.eotOblMin, color: '#a78bfa' },
+          { val: cur.eotTotalMin, color: '#fbbf24' }
+        ];
+        dots.forEach((dot) => {
+          ctx.fillStyle = dot.color;
+          ctx.beginPath();
+          ctx.arc(curX, toY(dot.val), 3.8, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        // 顶部图例
+        ctx.font = '600 10.5px Inter, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText('--- 偏心率 (1年周期)', padL + 6, 13);
+        ctx.fillStyle = '#a78bfa';
+        ctx.fillText('--- 黄赤交角 (半年周期)', padL + 135, 13);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillText('— 总均时差', padL + 275, 13);
+      }
+
+      function updateReadouts() {
+        const cur = computeSolarPoint(state.day, state.ecc, state.tiltDeg, state.periOffsetDeg);
+
+        els.valEcc.textContent = state.ecc.toFixed(4);
+        els.valTilt.textContent = `${state.tiltDeg.toFixed(2)}°`;
+        const periDayApprox = Math.round(((state.periOffsetDeg - 10) % 365 + 365) % 365);
+        els.valPeri.textContent = `${state.periOffsetDeg}° (${dayToDateStr(periDayApprox)})`;
+
+        const dayInt = Math.round(state.day);
+        els.valDayDate.textContent = `第 ${dayInt} 天 · ${dayToDateStr(state.day)}`;
+        els.sliderDay.value = String(state.day);
+
+        els.readDec.textContent = `${cur.decDeg >= 0 ? '+' : ''}${cur.decDeg.toFixed(2)}°`;
+        els.readEoT.textContent = `${cur.eotTotalMin >= 0 ? '+' : ''}${cur.eotTotalMin.toFixed(1)} 分`;
+        els.readEoTDir.textContent = cur.eotTotalMin >= 0
+          ? '真太阳比平太阳钟快 (偏西)'
+          : '真太阳比平太阳钟慢 (偏东)';
+
+        els.readEoTEcc.textContent = `${cur.eotEccMin >= 0 ? '+' : ''}${cur.eotEccMin.toFixed(1)} 分`;
+        els.readEoTObl.textContent = `${cur.eotOblMin >= 0 ? '+' : ''}${cur.eotOblMin.toFixed(1)} 分`;
+        els.readDist.textContent = `${cur.rAU.toFixed(4)} AU`;
+        els.readSpeed.textContent = `轨道速率 ${cur.speedKms.toFixed(2)} km/s`;
+      }
+
+      function renderAll() {
+        updateReadouts();
+        drawAnalemma();
+        drawOrbitPanel();
+        drawEoTPanel();
+      }
+
+      function applyPreset(key) {
+        const presets = {
+          earth: { ecc: 0.0167, tilt: 23.44, peri: 12 },
+          circle: { ecc: 0.0, tilt: 23.44, peri: 12 },
+          zeroTilt: { ecc: 0.08, tilt: 0.0, peri: 12 },
+          mars: { ecc: 0.0934, tilt: 25.19, peri: 71 }
+        };
+        const p = presets[key];
+        if (!p) return;
+        state.ecc = p.ecc;
+        state.tiltDeg = p.tilt;
+        state.periOffsetDeg = p.peri;
+
+        els.sliderEcc.value = String(p.ecc);
+        els.sliderTilt.value = String(p.tilt);
+        els.sliderPeri.value = String(p.peri);
+
+        els.presetBtns.forEach((btn) => {
+          const active = btn.dataset.preset === key;
+          btn.className = active
+            ? 'preset-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-400/45 transition cursor-pointer'
+            : 'preset-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/80 transition cursor-pointer';
+        });
+
+        rebuildCurveCache();
+        renderAll();
+      }
+
+      function animLoop(now) {
+        if (state.isPlaying) {
+          const dt = Math.min(0.1, (now - state.lastTime) / 1000);
+          state.day = (state.day + dt * 38) % 365;
+          renderAll();
+        }
+        state.lastTime = now;
+        requestAnimationFrame(animLoop);
+      }
+
+      // 事件绑定
+      els.sliderEcc.addEventListener('input', (e) => {
+        state.ecc = parseFloat(e.target.value);
+        rebuildCurveCache();
+        renderAll();
+      });
+      els.sliderTilt.addEventListener('input', (e) => {
+        state.tiltDeg = parseFloat(e.target.value);
+        rebuildCurveCache();
+        renderAll();
+      });
+      els.sliderPeri.addEventListener('input', (e) => {
+        state.periOffsetDeg = parseFloat(e.target.value);
+        rebuildCurveCache();
+        renderAll();
+      });
+      els.sliderDay.addEventListener('input', (e) => {
+        state.day = parseFloat(e.target.value);
+        renderAll();
+      });
+
+      els.btnPlayPause.addEventListener('click', () => {
+        state.isPlaying = !state.isPlaying;
+        els.playIcon.textContent = state.isPlaying ? '❚❚' : '▶';
+        els.playText.textContent = state.isPlaying ? '暂停追踪' : '继续追踪';
+      });
+      els.btnStep1.addEventListener('click', () => {
+        state.isPlaying = false;
+        els.playIcon.textContent = '▶';
+        els.playText.textContent = '继续追踪';
+        state.day = (state.day + 1) % 365;
+        renderAll();
+      });
+      els.btnStep7.addEventListener('click', () => {
+        state.isPlaying = false;
+        els.playIcon.textContent = '▶';
+        els.playText.textContent = '继续追踪';
+        state.day = (state.day + 7) % 365;
+        renderAll();
+      });
+      els.btnToggleAspect.addEventListener('click', () => {
+        state.exaggerateHorizontal = !state.exaggerateHorizontal;
+        els.btnToggleAspect.textContent = state.exaggerateHorizontal
+          ? '横向比例：夸张放大 (清晰看8字)'
+          : '横向比例：真实 1:1 天球角比例';
+        drawAnalemma();
+      });
+
+      els.presetBtns.forEach((btn) => {
+        btn.addEventListener('click', () => applyPreset(btn.dataset.preset));
+      });
+
+      window.addEventListener('resize', renderAll);
+
+      // 初始化
+      rebuildCurveCache();
+      renderAll();
+      state.lastTime = performance.now();
+      requestAnimationFrame(animLoop);
+    })();
+  </script>
+</body>
+</html>

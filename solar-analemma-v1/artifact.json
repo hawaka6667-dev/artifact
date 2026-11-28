@@ -1,0 +1,6 @@
+{
+  "title": "太阳日行迹模拟 Solar Analemma & Equation of Time",
+  "slug": "solar-analemma",
+  "version": 1,
+  "note": "Interactive simulation of the solar analemma (figure-8) and Equation of Time decomposition (orbital eccentricity 1-year wave + axial obliquity 0.5-year wave), with Keplerian elliptical orbit view and planet/thought-experiment presets."
+}

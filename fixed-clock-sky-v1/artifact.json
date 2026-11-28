@@ -1,0 +1,6 @@
+{
+  "title": "每日同一钟点：星座与月球运动模拟器 Fixed-Clock Sky & Lunar Motion",
+  "slug": "fixed-clock-sky",
+  "version": 1,
+  "note": "Interactive simulator comparing top-down orbital view (fixed-clock vs. inertial frame), ecliptic solstices/equinoxes, and sky chart vs. map orientation (east-left vs. east-right) for daily stellar drift and lunar elongation."
+}

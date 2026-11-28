@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>每日同一钟点：星座与月球运动模拟器</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    /* 基础仪器风格与字体设定 */
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #070b14;
+      color: #e2e8f0;
+      overflow-x: hidden;
+    }
+    .font-mono-num {
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-variant-numeric: tabular-nums;
+    }
+    /* 自定义滑块样式 */
+    input[type="range"].astro-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      cursor: pointer;
+    }
+    input[type="range"].astro-slider::-webkit-slider-runnable-track {
+      height: 6px;
+      border-radius: 999px;
+      background: #1e293b;
+      border: 1px solid #334155;
+    }
+    input[type="range"].astro-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #38bdf8;
+      border: 2px solid #0f172a;
+      margin-top: -7px;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.55);
+      transition: transform 0.15s ease;
+    }
+    input[type="range"].astro-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.12);
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      touch-action: manipulation;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-[#070b14] text-slate-100 antialiased selection:bg-sky-500/30 selection:text-sky-200">
+  <!-- 顶部导航与标题栏 -->
+  <header class="border-b border-slate-800/90 bg-[#0b1120]/90 backdrop-blur-md sticky top-0 z-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+      <div>
+        <div class="flex items-center gap-2.5">
+          <span class="inline-flex h-2.5 w-2.5 rounded-full bg-sky-400 shadow-[0_0_10px_#38bdf8]"></span>
+          <h1 class="text-base sm:text-lg font-semibold tracking-tight text-slate-50">
+            每日同一钟点：星座与月球运动模拟器
+            <span class="ml-1.5 text-xs sm:text-sm font-normal text-slate-400">Fixed-Clock Sky, Ecliptic &amp; Lunar Motion</span>
+          </h1>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">
+          锁定固定太阳钟时刻（默认 <span class="text-sky-300 font-mono-num">21:00</span>），统一对比俯视轨道、黄道二分二至点，以及<strong>仰望天球（东左西右）</strong>下的逐日视位移。
+        </p>
+      </div>
+
+      <!-- 轨道参考系切换器 -->
+      <div class="flex items-center gap-1.5 bg-slate-900/90 p-1 rounded-xl border border-slate-800 self-start lg:self-auto">
+        <button
+          id="btnViewFixedClock"
+          type="button"
+          class="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all bg-sky-500/20 text-sky-300 border border-sky-400/40 shadow-sm cursor-pointer"
+        >
+          固定钟点系 <span class="text-[11px] opacity-80">(24h 太阳钟)</span>
+        </button>
+        <button
+          id="btnViewInertial"
+          type="button"
+          class="px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all text-slate-400 hover:text-slate-200 border border-transparent cursor-pointer"
+        >
+          惯性星空系 <span class="text-[11px] opacity-80">(恒星参考)</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-5 space-y-5">
+    <!-- 交互控制面板 -->
+    <section class="bg-[#0d1424] border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-xl space-y-3.5">
+      <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 items-center">
+        <!-- 时间步进与播放按钮 -->
+        <div class="xl:col-span-7 flex flex-wrap items-center gap-2">
+          <button
+            id="btnPrevDay"
+            type="button"
+            class="px-3 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 active:scale-[0.98] text-slate-100 text-xs sm:text-sm font-medium border border-slate-700/80 transition flex items-center gap-1 cursor-pointer"
+          >
+            <span>←</span>
+            <span>上一天 (-1 日)</span>
+          </button>
+
+          <button
+            id="btnNextDay"
+            type="button"
+            class="px-3.5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 active:scale-[0.98] text-slate-950 text-xs sm:text-sm font-semibold shadow-[0_4px_16px_rgba(56,189,248,0.3)] transition flex items-center gap-1 cursor-pointer"
+          >
+            <span>下一天 (+1 日)</span>
+            <span>→</span>
+          </button>
+
+          <button
+            id="btnNextMonth"
+            type="button"
+            class="px-3 py-2.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 active:scale-[0.98] text-indigo-200 border border-indigo-400/40 text-xs sm:text-sm font-medium transition flex items-center gap-1 cursor-pointer"
+          >
+            <span>下一月 (+30 日)</span>
+          </button>
+
+          <button
+            id="btnAutoPlay"
+            type="button"
+            class="px-3.5 py-2.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-400/35 text-xs sm:text-sm font-medium transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <span id="playIcon">▶</span>
+            <span id="playLabel">自动播放</span>
+          </button>
+
+          <button
+            id="btnResetDay"
+            type="button"
+            class="px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/70 text-xs sm:text-sm font-medium transition cursor-pointer"
+          >
+            重置
+          </button>
+        </div>
+
+        <!-- 固定钟点调节 -->
+        <div class="xl:col-span-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/75 border border-slate-800/80 rounded-xl px-4 py-2.5">
+          <div class="flex-1 min-w-[160px]">
+            <div class="flex items-center justify-between text-xs mb-1">
+              <span class="text-slate-300 font-medium">
+                每日观测钟点 <span class="text-slate-500">(Solar Clock)</span>
+              </span>
+              <span id="clockDisplay" class="font-mono-num text-sm font-semibold text-amber-300">21:00</span>
+            </div>
+            <input
+              id="clockSlider"
+              type="range"
+              min="0"
+              max="23.5"
+              step="0.5"
+              value="21"
+              class="astro-slider w-full"
+            />
+          </div>
+
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button data-hour="18" type="button" class="clock-preset px-2.5 py-1.5 rounded-lg text-xs font-mono-num bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition cursor-pointer">18:00</button>
+            <button data-hour="21" type="button" class="clock-preset px-2.5 py-1.5 rounded-lg text-xs font-mono-num bg-amber-400/20 text-amber-300 border border-amber-400/40 transition cursor-pointer">21:00</button>
+            <button data-hour="0" type="button" class="clock-preset px-2.5 py-1.5 rounded-lg text-xs font-mono-num bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition cursor-pointer">00:00</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 黄道节气快速跳转栏 -->
+      <div class="pt-2.5 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2.5">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs text-slate-400 font-medium mr-1">跳至黄道节气点 <span class="text-slate-500">(太阳黄经 λ☉)</span>：</span>
+          <button data-season-lon="0" type="button" class="season-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-400/35 transition cursor-pointer">
+            春分点 Vernal Equinox (0°)
+          </button>
+          <button data-season-lon="90" type="button" class="season-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-400/35 transition cursor-pointer">
+            夏至点 Summer Solstice (90°)
+          </button>
+          <button data-season-lon="180" type="button" class="season-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-orange-500/15 hover:bg-orange-500/25 text-orange-300 border border-orange-400/35 transition cursor-pointer">
+            秋分点 Autumnal Equinox (180°)
+          </button>
+          <button data-season-lon="270" type="button" class="season-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-400/35 transition cursor-pointer">
+            冬至点 Winter Solstice (270°)
+          </button>
+        </div>
+
+        <label class="inline-flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none">
+          <input id="toggleEclipticOverlay" type="checkbox" checked class="rounded border-slate-600 bg-slate-800 text-sky-400 focus:ring-sky-500/40" />
+          <span>叠加黄道与二分二至标记</span>
+        </label>
+      </div>
+    </section>
+
+    <!-- 关键指标读数卡片 -->
+    <section class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <div class="bg-[#0d1424] border border-slate-800/90 rounded-2xl p-3.5">
+        <div class="text-xs text-slate-400 flex items-center justify-between">
+          <span>当前模拟天数</span>
+          <span class="font-mono-num text-[11px] text-slate-500">DAY (t)</span>
+        </div>
+        <div id="metricDay" class="mt-1 text-xl sm:text-2xl font-bold font-mono-num text-slate-50">第 0 天</div>
+        <div id="metricCycleNote" class="mt-1 text-[11px] text-slate-400 font-mono-num">公转 0.0% · 朔望 0.0%</div>
+      </div>
+
+      <div class="bg-[#0d1424] border border-slate-800/90 rounded-2xl p-3.5">
+        <div class="text-xs text-slate-400 flex items-center justify-between">
+          <span>太阳视黄经</span>
+          <span class="font-mono-num text-[11px] text-amber-400">SUN λ☉</span>
+        </div>
+        <div id="metricSunLon" class="mt-1 text-xl sm:text-2xl font-bold font-mono-num text-amber-300">0.0°</div>
+        <div id="metricSeasonLabel" class="mt-1 text-[11px] text-emerald-300">春分点 Vernal Equinox</div>
+      </div>
+
+      <div class="bg-[#0d1424] border border-slate-800/90 rounded-2xl p-3.5">
+        <div class="text-xs text-slate-400 flex items-center justify-between">
+          <span>星座同刻偏移</span>
+          <span class="font-mono-num text-[11px] text-sky-400">STAR DRIFT</span>
+        </div>
+        <div id="metricConstShift" class="mt-1 text-xl sm:text-2xl font-bold font-mono-num text-sky-300">0.00°</div>
+        <div id="metricConstDetail" class="mt-1 text-[11px] text-slate-400">每日向西偏 ~0.99° (天图向右)</div>
+      </div>
+
+      <div class="bg-[#0d1424] border border-slate-800/90 rounded-2xl p-3.5">
+        <div class="text-xs text-slate-400 flex items-center justify-between">
+          <span>月球距角 (相对太阳)</span>
+          <span class="font-mono-num text-[11px] text-emerald-300">ELONGATION</span>
+        </div>
+        <div id="metricMoonVsSun" class="mt-1 text-xl sm:text-2xl font-bold font-mono-num text-emerald-300">+35.0°</div>
+        <div class="mt-1 text-[11px] text-slate-400">相对太阳向东 +12.19°/d (天图向左)</div>
+      </div>
+
+      <div class="col-span-2 lg:col-span-1 bg-[#0d1424] border border-slate-800/90 rounded-2xl p-3.5">
+        <div class="text-xs text-slate-400 flex items-center justify-between">
+          <span>月球中天推迟</span>
+          <span class="font-mono-num text-[11px] text-violet-300">MOON DELAY</span>
+        </div>
+        <div id="metricTransitDelay" class="mt-1 text-xl sm:text-2xl font-bold font-mono-num text-violet-300">+0 分钟</div>
+        <div class="mt-1 text-[11px] text-slate-400">平均每日升落推迟 ~50.5 分钟</div>
+      </div>
+    </section>
+
+    <!-- 两个同步画布视图 -->
+    <section class="grid grid-cols-1 xl:grid-cols-12 gap-5">
+      <!-- 1. 俯视轨道视图 -->
+      <div class="xl:col-span-6 bg-[#0d1424] border border-slate-800/90 rounded-2xl p-4 flex flex-col">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div>
+            <h2 class="text-sm sm:text-base font-semibold text-slate-100">
+              1. 俯视轨道视图 <span class="text-xs font-normal text-slate-400">Top-Down Orbital Diagram</span>
+            </h2>
+            <p class="text-xs text-slate-400">从北天极俯视：逆时针（CCW）为向东公转方向；外环标注黄道十二星座与二分二至点。</p>
+          </div>
+          <span id="frameBadge" class="text-[11px] font-mono-num px-2.5 py-1 rounded-lg bg-sky-500/15 text-sky-300 border border-sky-400/30">
+            固定钟点系
+          </span>
+        </div>
+        <div class="relative w-full flex-1 min-h-[380px] sm:min-h-[430px] rounded-xl overflow-hidden bg-[#060a13] border border-slate-800/80">
+          <canvas id="orbitCanvas"></canvas>
+        </div>
+        <!-- 图例 -->
+        <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-400">
+          <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>太阳 Sun</span>
+          <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span>地球 Earth</span>
+          <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-slate-200"></span>月球 Moon</span>
+          <span class="inline-flex items-center gap-1.5"><span class="w-3 h-0.5 bg-amber-300"></span>固定钟点视线</span>
+          <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rotate-45 border border-emerald-400"></span>二分二至点</span>
+        </div>
+      </div>
+
+      <!-- 2. 地面仰望天球视角（含左右方向对比切换） -->
+      <div class="xl:col-span-6 bg-[#0d1424] border border-slate-800/90 rounded-2xl p-4 flex flex-col">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div>
+            <h2 class="text-sm sm:text-base font-semibold text-slate-100">
+              2. 地面观测天图视图 <span class="text-xs font-normal text-slate-400">Sky Chart vs. Map Orientation</span>
+            </h2>
+            <p id="skySubtitle" class="text-xs text-slate-400">仰望天球时“上北下南、东左西右”：向东运行在天图上表现为从右向左！</p>
+          </div>
+
+          <!-- 仰望天球视角 vs 常规地面地图视角 切换 -->
+          <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
+            <button
+              id="btnSkyChartMode"
+              type="button"
+              class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 transition cursor-pointer"
+            >
+              仰望天球 (东左西右)
+            </button>
+            <button
+              id="btnMapMode"
+              type="button"
+              class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 border border-transparent transition cursor-pointer"
+            >
+              地面地图 (西左东右)
+            </button>
+          </div>
+        </div>
+        <div class="relative w-full flex-1 min-h-[380px] sm:min-h-[430px] rounded-xl overflow-hidden bg-[#060a13] border border-slate-800/80">
+          <canvas id="skyCanvas"></canvas>
+        </div>
+        <!-- 底部直观解说条 -->
+        <div id="explanationBox" class="mt-3 rounded-xl bg-slate-900/85 border border-slate-800 px-3.5 py-2.5 text-xs leading-relaxed text-slate-300">
+          <strong>为什么课件里的星座方向看起来像“逆向”？</strong>当你站在地球内部<strong>抬头仰望天球</strong>（北方向朝上）时，<strong>东方（East）在左侧、西方（West）在右侧</strong>。因此太阳与月球“自西向东”沿黄道推进（黄经增大），在天图上就是<strong>从右往左</strong>移动！切换右上角按钮可立即对比两种左右方向。
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    /**
+     * 每日同一钟点：星座、黄道节气与月球运动模拟器
+     * 统一演示：
+     * 1. 俯视轨道视图（北天极俯视，逆时针 CCW 为向东公转）
+     * 2. 地面仰望天球视图（authentic sky chart: Up = North, Left = East, Right = West）
+     *    以及与常规地面地图（Left = West, Right = East）的一键翻转对比
+     * 3. 黄道（Ecliptic）与二分二至点（春分 0°、夏至 90°、秋分 180°、冬至 270°）
+     */
+    (function () {
+      const DEG2RAD = Math.PI / 180;
+
+      // 天文角速度常数（度/天）
+      const OMEGA_EARTH = 360 / 365.2422;            // ~0.985647 deg/day (CCW = 向东)
+      const OMEGA_MOON_SID = 360 / 27.32166;         // ~13.176359 deg/day (CCW = 向东)
+      const OMEGA_MOON_SYN = OMEGA_MOON_SID - OMEGA_EARTH; // ~12.190712 deg/day (相对太阳向东)
+
+      // 黄道十二星座按真实黄经顺序（自西向东 0° -> 330°）
+      const ZODIAC_CONSTELLATIONS = [
+        { name: '双鱼', en: 'Psc', lon: 0, color: '#34d399' },
+        { name: '白羊', en: 'Ari', lon: 30, color: '#94a3b8' },
+        { name: '金牛', en: 'Tau', lon: 60, color: '#94a3b8' },
+        { name: '双子', en: 'Gem', lon: 90, color: '#fbbf24' },
+        { name: '巨蟹', en: 'Cnc', lon: 120, color: '#94a3b8' },
+        { name: '狮子', en: 'Leo', lon: 150, color: '#818cf8' },
+        { name: '室女', en: 'Vir', lon: 180, color: '#fb923c' },
+        { name: '天秤', en: 'Lib', lon: 210, color: '#94a3b8' },
+        { name: '天蝎', en: 'Sco', lon: 240, color: '#f472b6' },
+        { name: '人马', en: 'Sgr', lon: 270, color: '#38bdf8' },
+        { name: '摩羯', en: 'Cap', lon: 300, color: '#94a3b8' },
+        { name: '宝瓶', en: 'Aqr', lon: 330, color: '#94a3b8' }
+      ];
+
+      // 四大黄道节气点（二分二至）
+      const SEASONAL_MARKERS = [
+        { name: '春分点', en: 'Vernal Equinox', lon: 0, color: '#34d399' },
+        { name: '夏至点', en: 'Summer Solstice', lon: 90, color: '#fbbf24' },
+        { name: '秋分点', en: 'Autumnal Equinox', lon: 180, color: '#fb923c' },
+        { name: '冬至点', en: 'Winter Solstice', lon: 270, color: '#38bdf8' }
+      ];
+
+      // 应用状态
+      const state = {
+        day: 0,                    // Day 0 设定为春分日（太阳视黄经 λ☉ = 0°，地球位于 180° 方向）
+        clockHour: 21.0,           // 固定太阳钟时刻 (0 ~ 23.5)
+        frameMode: 'fixedClock',   // 'fixedClock' | 'inertial'
+        skyOrientation: 'skyChart',// 'skyChart' (东左西右，仰望天球) | 'mapView' (西左东右，地面地图)
+        showEcliptic: true,
+        isPlaying: false,
+        lastFrameTime: 0,
+        playAccumulator: 0
+      };
+
+      // DOM 引用
+      const els = {
+        btnPrevDay: document.getElementById('btnPrevDay'),
+        btnNextDay: document.getElementById('btnNextDay'),
+        btnNextMonth: document.getElementById('btnNextMonth'),
+        btnAutoPlay: document.getElementById('btnAutoPlay'),
+        btnResetDay: document.getElementById('btnResetDay'),
+        playIcon: document.getElementById('playIcon'),
+        playLabel: document.getElementById('playLabel'),
+        clockSlider: document.getElementById('clockSlider'),
+        clockDisplay: document.getElementById('clockDisplay'),
+        clockPresets: document.querySelectorAll('.clock-preset'),
+        seasonBtns: document.querySelectorAll('.season-btn'),
+        toggleEclipticOverlay: document.getElementById('toggleEclipticOverlay'),
+        btnViewFixedClock: document.getElementById('btnViewFixedClock'),
+        btnViewInertial: document.getElementById('btnViewInertial'),
+        btnSkyChartMode: document.getElementById('btnSkyChartMode'),
+        btnMapMode: document.getElementById('btnMapMode'),
+        frameBadge: document.getElementById('frameBadge'),
+        skySubtitle: document.getElementById('skySubtitle'),
+        explanationBox: document.getElementById('explanationBox'),
+        metricDay: document.getElementById('metricDay'),
+        metricCycleNote: document.getElementById('metricCycleNote'),
+        metricSunLon: document.getElementById('metricSunLon'),
+        metricSeasonLabel: document.getElementById('metricSeasonLabel'),
+        metricConstShift: document.getElementById('metricConstShift'),
+        metricConstDetail: document.getElementById('metricConstDetail'),
+        metricMoonVsSun: document.getElementById('metricMoonVsSun'),
+        metricTransitDelay: document.getElementById('metricTransitDelay'),
+        orbitCanvas: document.getElementById('orbitCanvas'),
+        skyCanvas: document.getElementById('skyCanvas')
+      };
+
+      function normAngle180(deg) {
+        return ((deg + 180) % 360 + 360) % 360 - 180;
+      }
+
+      function normAngle360(deg) {
+        return ((deg % 360) + 360) % 360;
+      }
+
+      function formatClock(hourVal) {
+        const h = Math.floor(hourVal) % 24;
+        const m = Math.round((hourVal - Math.floor(hourVal)) * 60);
+        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+      }
+
+      // 根据太阳视黄经判断所处节气区间
+      function getSeasonDescription(sunLon) {
+        const lon = normAngle360(sunLon);
+        if (lon < 10 || lon > 350) return '春分点附近 · Vernal Equinox';
+        if (lon >= 10 && lon < 80) return '春分 → 夏至 (太阳北移)';
+        if (lon >= 80 && lon <= 100) return '夏至点附近 · Summer Solstice';
+        if (lon > 100 && lon < 170) return '夏至 → 秋分 (太阳南移)';
+        if (lon >= 170 && lon <= 190) return '秋分点附近 · Autumnal Equinox';
+        if (lon > 190 && lon < 260) return '秋分 → 冬至 (太阳南移)';
+        if (lon >= 260 && lon <= 280) return '冬至点附近 · Winter Solstice';
+        return '冬至 → 春分 (太阳北移)';
+      }
+
+      /**
+       * 核心天文几何计算：
+       * - 令 Day 0 对应春分时刻：太阳视黄经 λ☉ = 0°（指向 +X），因此地球在轨道上的日心黄经为 180°（-X）。
+       * - 随天数 day 增加，地球逆时针公转，太阳视黄经 λ☉ = day * OMEGA_EARTH（向东增加）。
+       * - 月球在 Day 0 设初始黄经 λ☽(0) = 35°（新月后约 3 天眉月），随天数以 OMEGA_MOON_SID 向东增加。
+       * - 在固定太阳钟 clockHour 时，当地子午线视线相对太阳的时角偏移为 (clockHour - 12) * 15°（CCW 为向东）。
+       */
+      function computeAstronomy(day, clockHour) {
+        const sunLon = normAngle360(day * OMEGA_EARTH);
+        const earthOrbitDeg = normAngle360(sunLon + 180);
+        const moonLon = normAngle360(35 + day * OMEGA_MOON_SID);
+
+        // 观测者在固定太阳钟 clockHour 时的视线黄经方向（向东为正 CCW）
+        const observerLookLon = normAngle360(sunLon + (clockHour - 12) * 15);
+
+        // 俯视图在“固定钟点系”下，将观测者视线锁定到画面正上方（惯性角 90°）
+        const viewRotationDeg = 90 - observerLookLon;
+
+        // 相对位移指标
+        const constShiftFromDay0 = normAngle180(-day * OMEGA_EARTH); // 每天同钟点星座向西（-）偏 ~0.986°
+        const moonElongation = normAngle180(moonLon - sunLon);       // 月球相对太阳黄经差（向东为 +）
+        const exactDelayMinutes = day * (OMEGA_MOON_SYN / 360) * 1440;
+
+        return {
+          sunLon,
+          earthOrbitDeg,
+          moonLon,
+          observerLookLon,
+          viewRotationDeg,
+          constShiftFromDay0,
+          moonElongation,
+          exactDelayMinutes
+        };
+      }
+
+      // 更新顶部指标卡与文字提示
+      function updateReadouts() {
+        const d = state.day;
+        const astro = computeAstronomy(d, state.clockHour);
+        const clockStr = formatClock(state.clockHour);
+        const isSkyChart = state.skyOrientation === 'skyChart';
+
+        els.metricDay.textContent = Number.isInteger(d) ? `第 ${d} 天` : `第 ${d.toFixed(1)} 天`;
+        const yearPct = ((normAngle360(d * OMEGA_EARTH) / 360) * 100).toFixed(1);
+        const synPct = ((normAngle360(d * OMEGA_MOON_SYN) / 360) * 100).toFixed(1);
+        els.metricCycleNote.textContent = `公转 ${yearPct}% · 朔望 ${synPct}%`;
+
+        els.metricSunLon.textContent = `${astro.sunLon.toFixed(1)}°`;
+        els.metricSeasonLabel.textContent = getSeasonDescription(astro.sunLon);
+
+        const cShift = astro.constShiftFromDay0;
+        const cSign = cShift > 0.01 ? '+' : '';
+        els.metricConstShift.textContent = `${cSign}${cShift.toFixed(2)}°`;
+        els.metricConstDetail.textContent = isSkyChart
+          ? '每日向西偏 ~0.99° (仰望天图向右)'
+          : '每日向西偏 ~0.99° (地面地图向左)';
+
+        const mElong = astro.moonElongation;
+        const mSign = mElong >= 0 ? '+' : '';
+        els.metricMoonVsSun.textContent = `${mSign}${mElong.toFixed(1)}°`;
+
+        const delayMin = astro.exactDelayMinutes;
+        const dSign = delayMin >= 0 ? '+' : '';
+        els.metricTransitDelay.textContent = `${dSign}${delayMin.toFixed(0)} 分钟`;
+
+        // 更新视角与解说
+        els.frameBadge.textContent = state.frameMode === 'fixedClock' ? '固定钟点系 (24h)' : '惯性星空系';
+        if (isSkyChart) {
+          els.skySubtitle.textContent = `仰望天球视角（上北下南、东左西右）：太阳/月球向东运行在天图上表现为从右向左！`;
+          els.explanationBox.innerHTML = `<strong>解开“逆向”疑惑：</strong>当你在地球内部<strong>抬头仰望天球</strong>（北方向朝上）时，<strong>东方（East）在左边、西方（West）在右边</strong>。因此黄道黄经增大（向东）在天图上是从<strong>右往左</strong>排列的！在 <span class="text-amber-300 font-mono-num">${clockStr}</span> 固定钟点下，背景星座逐日向西（<strong>向右</strong>）偏 <span class="text-sky-300 font-mono-num">~0.99°</span>，而月球逐日向东（<strong>向左</strong>）追赶 <span class="text-emerald-300 font-mono-num">~12.19°</span>。`;
+        } else {
+          els.skySubtitle.textContent = `常规地面地图视角（上北下南、西左东右）：向东运行在地图上表现为从左向右。`;
+          els.explanationBox.innerHTML = `<strong>对比常规地图视角：</strong>如果把黄道按地面地图习惯画成<strong>西左东右</strong>，太阳和月球“自西向东”公转就会变成<strong>从左向右</strong>推进，星座逐日向西偏则变成<strong>向左</strong>移动——两者物理运动完全相同，只是观察者处于“天球内仰望”还是“天球外俯视”导致左右镜像相反。`;
+        }
+      }
+
+      function setupCanvas(canvas) {
+        const rect = canvas.getBoundingClientRect();
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const w = Math.max(280, Math.floor(rect.width));
+        const h = Math.max(340, Math.floor(rect.height));
+        if (canvas.width !== w * dpr || canvas.height !== h * dpr) {
+          canvas.width = w * dpr;
+          canvas.height = h * dpr;
+        }
+        const ctx = canvas.getContext('2d');
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        return { ctx, w, h };
+      }
+
+      /**
+       * 绘制 1. 俯视轨道视图 (Top-Down Orbital Diagram)
+       */
+      function drawOrbitView() {
+        const { ctx, w, h } = setupCanvas(els.orbitCanvas);
+        const astro = computeAstronomy(state.day, state.clockHour);
+        const rotOffsetDeg = state.frameMode === 'fixedClock' ? astro.viewRotationDeg : 0;
+        const toCanvasRad = (lonDeg) => -(lonDeg + rotOffsetDeg) * DEG2RAD;
+
+        const cx = w * 0.5;
+        const cy = h * 0.5;
+        const maxR = Math.min(w, h) * 0.42;
+        const celestialR = maxR;
+        const earthOrbitR = maxR * 0.56;
+        const moonOrbitR = Math.max(24, maxR * 0.16);
+
+        ctx.clearRect(0, 0, w, h);
+
+        // 外围黄道/天球环
+        ctx.save();
+        ctx.strokeStyle = state.showEcliptic ? 'rgba(251, 191, 36, 0.35)' : 'rgba(148, 163, 184, 0.22)';
+        ctx.lineWidth = state.showEcliptic ? 1.6 : 1.2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, celestialR, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 地球公转轨道
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.28)';
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.arc(cx, cy, earthOrbitR, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 绘制外围黄道十二星座
+        ZODIAC_CONSTELLATIONS.forEach((c) => {
+          const rad = toCanvasRad(c.lon);
+          const x = cx + Math.cos(rad) * celestialR;
+          const y = cy + Math.sin(rad) * celestialR;
+
+          ctx.fillStyle = c.color;
+          ctx.beginPath();
+          ctx.arc(x, y, 3, 0, Math.PI * 2);
+          ctx.fill();
+
+          const lx = cx + Math.cos(rad) * (celestialR + 16);
+          const ly = cy + Math.sin(rad) * (celestialR + 16);
+          ctx.fillStyle = '#cbd5e1';
+          ctx.font = '500 10px Inter, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(c.name, lx, ly);
+        });
+
+        // 叠加二分二至点（春分 0°、夏至 90°、秋分 180°、冬至 270°）
+        if (state.showEcliptic) {
+          SEASONAL_MARKERS.forEach((s) => {
+            const rad = toCanvasRad(s.lon);
+            const x = cx + Math.cos(rad) * celestialR;
+            const y = cy + Math.sin(rad) * celestialR;
+
+            // 十字坐标轴连线
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.12)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+
+            // 菱形节气标记
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(Math.PI / 4);
+            ctx.fillStyle = s.color;
+            ctx.fillRect(-4.5, -4.5, 9, 9);
+            ctx.restore();
+
+            // 内侧节气短标签
+            const ix = cx + Math.cos(rad) * (celestialR - 22);
+            const iy = cy + Math.sin(rad) * (celestialR - 22);
+            ctx.fillStyle = s.color;
+            ctx.font = '600 10px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(s.name, ix, iy);
+          });
+        }
+
+        // 第 0 天地球基准残影
+        const day0Astro = computeAstronomy(0, state.clockHour);
+        const e0Rad = toCanvasRad(day0Astro.earthOrbitDeg);
+        const e0x = cx + Math.cos(e0Rad) * earthOrbitR;
+        const e0y = cy + Math.sin(e0Rad) * earthOrbitR;
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.45)';
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.arc(e0x, e0y, 6.5, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 中心太阳 Sun
+        const sunGrad = ctx.createRadialGradient(cx, cy, 3, cx, cy, 24);
+        sunGrad.addColorStop(0, '#fef08a');
+        sunGrad.addColorStop(0.55, '#f59e0b');
+        sunGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
+        ctx.fillStyle = sunGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 24, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#fbbf24';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 10.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#fde68a';
+        ctx.font = '600 11px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('太阳 Sun', cx, cy + 22);
+
+        // 当前地球位置
+        const eRad = toCanvasRad(astro.earthOrbitDeg);
+        const ex = cx + Math.cos(eRad) * earthOrbitR;
+        const ey = cy + Math.sin(eRad) * earthOrbitR;
+
+        // 太阳视黄经投影线（从地球穿过太阳指向外围天球）
+        const sunProjRad = toCanvasRad(astro.sunLon);
+        const spx = cx + Math.cos(sunProjRad) * celestialR;
+        const spy = cy + Math.sin(sunProjRad) * celestialR;
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.35)';
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(ex, ey);
+        ctx.lineTo(spx, spy);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 月球轨道与月球
+        ctx.strokeStyle = 'rgba(226, 232, 240, 0.25)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(ex, ey, moonOrbitR, 0, Math.PI * 2);
+        ctx.stroke();
+
+        const mRad = toCanvasRad(astro.moonLon);
+        const mx = ex + Math.cos(mRad) * moonOrbitR;
+        const my = ey + Math.sin(mRad) * moonOrbitR;
+
+        ctx.fillStyle = '#f8fafc';
+        ctx.beginPath();
+        ctx.arc(mx, my, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = '500 10px Inter, sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('Moon', mx + 6, my - 2);
+
+        // 地球本体
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(ex, ey, 7.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.fillStyle = '#7dd3fc';
+        ctx.font = '600 11px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Earth', ex, ey + 16);
+
+        // 固定钟点观测视线指针
+        const lookRad = toCanvasRad(astro.observerLookLon);
+        const ptrLen = celestialR * 0.76;
+        const px = ex + Math.cos(lookRad) * ptrLen;
+        const py = ey + Math.sin(lookRad) * ptrLen;
+
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 4]);
+        ctx.beginPath();
+        ctx.moveTo(ex, ey);
+        ctx.lineTo(px, py);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        const headAngle = Math.atan2(py - ey, px - ex);
+        ctx.fillStyle = '#fbbf24';
+        ctx.beginPath();
+        ctx.moveTo(px, py);
+        ctx.lineTo(px - 9 * Math.cos(headAngle - 0.35), py - 9 * Math.sin(headAngle - 0.35));
+        ctx.lineTo(px - 9 * Math.cos(headAngle + 0.35), py - 9 * Math.sin(headAngle + 0.35));
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#fde047';
+        ctx.font = '600 11px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${formatClock(state.clockHour)} 视线`, px, py - 10);
+
+        ctx.restore();
+      }
+
+      /**
+       * 绘制 2. 地面观测天图视图 (Sky Chart vs. Map Orientation)
+       * - 当 skyOrientation === 'skyChart'（默认，仰望天球）：
+       *   上北下南、东左西右 -> 东方（黄经增大方向）在画面左侧（-X），西方在画面右侧（+X）！
+       * - 当 skyOrientation === 'mapView'（常规地面地图）：
+       *   上北下南、西左东右 -> 西方在左侧（-X），东方（黄经增大方向）在右侧（+X）。
+       */
+      function drawSkyView() {
+        const { ctx, w, h } = setupCanvas(els.skyCanvas);
+        const astro = computeAstronomy(state.day, state.clockHour);
+        const isSkyChart = state.skyOrientation === 'skyChart';
+        // 方向符号：仰望天球时东方在左（relLon > 0 映射到 centerX 左侧），地面地图时东方在右
+        const eastSign = isSkyChart ? -1 : 1;
+
+        ctx.clearRect(0, 0, w, h);
+
+        const padX = 24;
+        const padTop = 34;
+        const padBottom = 46;
+        const stripW = Math.max(120, w - padX * 2);
+        const stripH = Math.max(180, h - padTop - padBottom);
+        const centerX = padX + stripW * 0.5;
+        const midY = padTop + stripH * 0.5;
+
+        // 天空背景
+        const skyGrad = ctx.createLinearGradient(0, padTop, 0, padTop + stripH);
+        skyGrad.addColorStop(0, '#081122');
+        skyGrad.addColorStop(0.55, '#0e1b33');
+        skyGrad.addColorStop(1, '#131926');
+        ctx.fillStyle = skyGrad;
+        ctx.beginPath();
+        ctx.roundRect(padX, padTop, stripW, stripH, 12);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.22)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        const fovHalfDeg = 95;
+        // relEastDeg > 0 表示相对视场中心偏东
+        const eastDegToX = (relEastDeg) => centerX + eastSign * (relEastDeg / fovHalfDeg) * (stripW * 0.5);
+
+        ctx.save();
+        // 顶部罗盘方位指示条（上北下南 + 左右东西）
+        ctx.font = '600 11px Inter, sans-serif';
+        if (isSkyChart) {
+          ctx.fillStyle = '#34d399';
+          ctx.textAlign = 'left';
+          ctx.fillText('← 东方 East (黄经增大 / 向东方向)', padX + 10, padTop + 19);
+          ctx.fillStyle = '#38bdf8';
+          ctx.textAlign = 'right';
+          ctx.fillText('西方 West (星座逐日偏西) →', padX + stripW - 10, padTop + 19);
+        } else {
+          ctx.fillStyle = '#38bdf8';
+          ctx.textAlign = 'left';
+          ctx.fillText('← 西方 West (星座逐日偏西)', padX + 10, padTop + 19);
+          ctx.fillStyle = '#34d399';
+          ctx.textAlign = 'right';
+          ctx.fillText('东方 East (黄经增大 / 向东方向) →', padX + stripW - 10, padTop + 19);
+        }
+
+        // 中心“北天极 North”提示
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '10px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('▲ 北 (North)', centerX, padTop + 19);
+
+        // 视角刻度网格（每 30° 一条）
+        ctx.font = '11px JetBrains Mono, monospace';
+        for (let offset = -90; offset <= 90; offset += 30) {
+          const x = centerX + (offset / fovHalfDeg) * (stripW * 0.5);
+          ctx.strokeStyle = offset === 0 ? 'rgba(251, 191, 36, 0.45)' : 'rgba(148, 163, 184, 0.13)';
+          ctx.lineWidth = offset === 0 ? 1.5 : 1;
+          ctx.beginPath();
+          ctx.moveTo(x, padTop + 28);
+          ctx.lineTo(x, padTop + stripH - 8);
+          ctx.stroke();
+
+          // 对应的偏东角度
+          const eastAngle = offset * eastSign;
+          ctx.fillStyle = offset === 0 ? '#fde047' : '#64748b';
+          const label = offset === 0 ? `${formatClock(state.clockHour)} 正中` : `${eastAngle > 0 ? '东+' : '西'}${Math.abs(eastAngle)}°`;
+          ctx.fillText(label, x, padTop + stripH + 16);
+        }
+
+        // 基准视线黄经
+        const baseLookLon = state.frameMode === 'fixedClock'
+          ? astro.observerLookLon
+          : computeAstronomy(0, state.clockHour).observerLookLon;
+
+        // 1. 绘制黄道与二分二至波浪投影线（模拟黄赤交角 23.44° 带来的黄道斜线效果）
+        if (state.showEcliptic) {
+          const eclipticCenterY = midY - 10;
+          const obliquityAmp = 34; // 视觉振幅（像素）
+
+          ctx.strokeStyle = 'rgba(251, 191, 36, 0.45)';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          let started = false;
+          for (let eastDeg = -fovHalfDeg; eastDeg <= fovHalfDeg; eastDeg += 3) {
+            const lon = normAngle360(baseLookLon + eastDeg);
+            const x = eastDegToX(eastDeg);
+            // 太阳/黄道赤纬随黄经呈 sin(λ) 变化：春分(0°)=0, 夏至(90°)=+1(偏北向上), 秋分(180°)=0, 冬至(270°)=-1(偏南向下)
+            const y = eclipticCenterY - Math.sin(lon * DEG2RAD) * obliquityAmp;
+            if (!started) {
+              ctx.moveTo(x, y);
+              started = true;
+            } else {
+              ctx.lineTo(x, y);
+            }
+          }
+          ctx.stroke();
+
+          // 天球赤道水平虚线参考
+          ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.moveTo(padX + 8, eclipticCenterY);
+          ctx.lineTo(padX + stripW - 8, eclipticCenterY);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          ctx.fillStyle = '#64748b';
+          ctx.font = '10px Inter, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText('天球赤道 (Celestial Equator)', padX + 10, eclipticCenterY - 5);
+
+          // 绘制二分二至节点
+          SEASONAL_MARKERS.forEach((s) => {
+            const relEast = normAngle180(s.lon - baseLookLon);
+            if (Math.abs(relEast) <= fovHalfDeg + 8) {
+              const x = eastDegToX(relEast);
+              const y = eclipticCenterY - Math.sin(s.lon * DEG2RAD) * obliquityAmp;
+
+              ctx.save();
+              ctx.translate(x, y);
+              ctx.rotate(Math.PI / 4);
+              ctx.fillStyle = s.color;
+              ctx.fillRect(-4.5, -4.5, 9, 9);
+              ctx.restore();
+
+              ctx.fillStyle = s.color;
+              ctx.font = '600 11px Inter, sans-serif';
+              ctx.textAlign = 'center';
+              ctx.fillText(`${s.name} (${s.lon}°)`, x, y - 12);
+            }
+          });
+        }
+
+        // 2. 绘制黄道星座带（上方区域）
+        const constBandY = padTop + 48;
+        ZODIAC_CONSTELLATIONS.forEach((c) => {
+          const relEast = normAngle180(c.lon - baseLookLon);
+          if (Math.abs(relEast) <= fovHalfDeg + 10) {
+            const x = eastDegToX(relEast);
+
+            // Day 0 残影（仅在固定钟点系下显示）
+            if (state.frameMode === 'fixedClock' && Math.abs(state.day) > 0.01) {
+              const day0Look = computeAstronomy(0, state.clockHour).observerLookLon;
+              const relEast0 = normAngle180(c.lon - day0Look);
+              if (Math.abs(relEast0) <= fovHalfDeg + 10) {
+                const x0 = eastDegToX(relEast0);
+                ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+                ctx.setLineDash([2, 2]);
+                ctx.beginPath();
+                ctx.arc(x0, constBandY, 4.5, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+              }
+            }
+
+            ctx.fillStyle = c.color;
+            ctx.beginPath();
+            ctx.arc(x, constBandY, 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#e2e8f0';
+            ctx.font = '600 11px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${c.name}座`, x, constBandY - 10);
+          }
+        });
+
+        // 3. 绘制太阳与月球逐日轨迹（下方黄道带）
+        const bodyBandY = padTop + stripH - 36;
+
+        // 太阳位置
+        const sunRelEast = normAngle180(astro.sunLon - baseLookLon);
+        if (Math.abs(sunRelEast) <= fovHalfDeg + 12) {
+          const sx = eastDegToX(sunRelEast);
+          ctx.fillStyle = '#fbbf24';
+          ctx.beginPath();
+          ctx.arc(sx, bodyBandY, 7.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#fde68a';
+          ctx.font = '600 11px Inter, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(`太阳 (${astro.sunLon.toFixed(0)}°)`, sx, bodyBandY + 17);
+        }
+
+        // 最近 8 天的月球逐日足迹
+        const startHist = Math.max(0, Math.floor(state.day) - 8);
+        const endHist = Math.floor(state.day);
+        for (let hd = startHist; hd < endHist; hd++) {
+          const hAstro = computeAstronomy(hd, state.clockHour);
+          const hRelEast = normAngle180(hAstro.moonLon - baseLookLon);
+          if (Math.abs(hRelEast) <= fovHalfDeg + 10) {
+            const hx = eastDegToX(hRelEast);
+            ctx.fillStyle = 'rgba(52, 211, 153, 0.35)';
+            ctx.beginPath();
+            ctx.arc(hx, bodyBandY, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = 'rgba(203, 213, 225, 0.55)';
+            ctx.font = '10px JetBrains Mono, monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(`D${hd}`, hx, bodyBandY - 9);
+          }
+        }
+
+        // 当前月球位置
+        const moonRelEast = normAngle180(astro.moonLon - baseLookLon);
+        if (Math.abs(moonRelEast) <= fovHalfDeg + 15) {
+          const mx = eastDegToX(moonRelEast);
+          const mGlow = ctx.createRadialGradient(mx, bodyBandY, 2, mx, bodyBandY, 15);
+          mGlow.addColorStop(0, 'rgba(248, 250, 252, 0.85)');
+          mGlow.addColorStop(1, 'rgba(248, 250, 252, 0)');
+          ctx.fillStyle = mGlow;
+          ctx.beginPath();
+          ctx.arc(mx, bodyBandY, 15, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(mx, bodyBandY, 6, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#f8fafc';
+          ctx.font = '600 11px Inter, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(`月球 (D${Number.isInteger(state.day) ? state.day : state.day.toFixed(1)})`, mx, bodyBandY + 17);
+        }
+
+        ctx.restore();
+      }
+
+      function renderAll() {
+        updateReadouts();
+        drawOrbitView();
+        drawSkyView();
+      }
+
+      function stepDay(delta) {
+        state.day = Math.max(0, Math.round((state.day + delta) * 10) / 10);
+        renderAll();
+      }
+
+      // 跳至指定太阳视黄经（春分 0°、夏至 90°、秋分 180°、冬至 270°）
+      function jumpToSeasonLon(targetLon) {
+        state.day = Math.round(targetLon / OMEGA_EARTH);
+        renderAll();
+      }
+
+      function setClockHour(val) {
+        state.clockHour = Number(val);
+        els.clockSlider.value = String(state.clockHour);
+        els.clockDisplay.textContent = formatClock(state.clockHour);
+        els.clockPresets.forEach((btn) => {
+          const isMatch = Number(btn.dataset.hour) === state.clockHour;
+          btn.className = isMatch
+            ? 'clock-preset px-2.5 py-1.5 rounded-lg text-xs font-mono-num bg-amber-400/20 text-amber-300 border border-amber-400/40 transition cursor-pointer'
+            : 'clock-preset px-2.5 py-1.5 rounded-lg text-xs font-mono-num bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition cursor-pointer';
+        });
+        renderAll();
+      }
+
+      function setFrameMode(mode) {
+        state.frameMode = mode;
+        if (mode === 'fixedClock') {
+          els.btnViewFixedClock.className = 'px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all bg-sky-500/20 text-sky-300 border border-sky-400/40 shadow-sm cursor-pointer';
+          els.btnViewInertial.className = 'px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all text-slate-400 hover:text-slate-200 border border-transparent cursor-pointer';
+        } else {
+          els.btnViewInertial.className = 'px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all bg-violet-500/20 text-violet-300 border border-violet-400/40 shadow-sm cursor-pointer';
+          els.btnViewFixedClock.className = 'px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all text-slate-400 hover:text-slate-200 border border-transparent cursor-pointer';
+        }
+        renderAll();
+      }
+
+      function setSkyOrientation(orientation) {
+        state.skyOrientation = orientation;
+        if (orientation === 'skyChart') {
+          els.btnSkyChartMode.className = 'px-2.5 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 transition cursor-pointer';
+          els.btnMapMode.className = 'px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 border border-transparent transition cursor-pointer';
+        } else {
+          els.btnMapMode.className = 'px-2.5 py-1.5 rounded-lg text-xs font-medium bg-sky-500/20 text-sky-300 border border-sky-400/40 transition cursor-pointer';
+          els.btnSkyChartMode.className = 'px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 border border-transparent transition cursor-pointer';
+        }
+        renderAll();
+      }
+
+      function toggleAutoPlay() {
+        state.isPlaying = !state.isPlaying;
+        state.lastFrameTime = performance.now();
+        state.playAccumulator = 0;
+        if (state.isPlaying) {
+          els.playIcon.textContent = '❚❚';
+          els.playLabel.textContent = '暂停';
+          els.btnAutoPlay.className = 'px-3.5 py-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40 text-xs sm:text-sm font-medium transition flex items-center gap-1.5 cursor-pointer';
+        } else {
+          els.playIcon.textContent = '▶';
+          els.playLabel.textContent = '自动播放';
+          els.btnAutoPlay.className = 'px-3.5 py-2.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-400/35 text-xs sm:text-sm font-medium transition flex items-center gap-1.5 cursor-pointer';
+        }
+      }
+
+      function animationLoop(now) {
+        if (state.isPlaying) {
+          const dt = (now - state.lastFrameTime) / 1000;
+          state.lastFrameTime = now;
+          state.playAccumulator += dt * 3.0;
+          if (state.playAccumulator >= 1) {
+            const wholeDays = Math.floor(state.playAccumulator);
+            state.playAccumulator -= wholeDays;
+            state.day = Math.round((state.day + wholeDays) * 10) / 10;
+            renderAll();
+          }
+        } else {
+          state.lastFrameTime = now;
+        }
+        requestAnimationFrame(animationLoop);
+      }
+
+      // 事件监听
+      els.btnPrevDay.addEventListener('click', () => stepDay(-1));
+      els.btnNextDay.addEventListener('click', () => stepDay(1));
+      els.btnNextMonth.addEventListener('click', () => stepDay(30));
+      els.btnResetDay.addEventListener('click', () => {
+        state.day = 0;
+        renderAll();
+      });
+      els.btnAutoPlay.addEventListener('click', toggleAutoPlay);
+      els.clockSlider.addEventListener('input', (e) => setClockHour(e.target.value));
+      els.clockPresets.forEach((btn) => {
+        btn.addEventListener('click', () => setClockHour(btn.dataset.hour));
+      });
+      els.seasonBtns.forEach((btn) => {
+        btn.addEventListener('click', () => jumpToSeasonLon(Number(btn.dataset.seasonLon)));
+      });
+      els.toggleEclipticOverlay.addEventListener('change', (e) => {
+        state.showEcliptic = e.target.checked;
+        renderAll();
+      });
+      els.btnViewFixedClock.addEventListener('click', () => setFrameMode('fixedClock'));
+      els.btnViewInertial.addEventListener('click', () => setFrameMode('inertial'));
+      els.btnSkyChartMode.addEventListener('click', () => setSkyOrientation('skyChart'));
+      els.btnMapMode.addEventListener('click', () => setSkyOrientation('mapView'));
+      window.addEventListener('resize', renderAll);
+
+      renderAll();
+      requestAnimationFrame(animationLoop);
+    })();
+  </script>
+</body>
+</html>

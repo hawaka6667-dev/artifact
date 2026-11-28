@@ -17,6 +17,8 @@ One folder per artifact, named `<slug>-v<version>`. Each folder holds the page a
 | `periodic-table-evolution-v2/` | 周期表演化史 Periodic Table Evolution: 118 elements slide between Mendeleev short form, 18-column long form, 32-column wide form and Janet left-step; 12 history milestones with inline citations, year slider, References section | 2 | 16.5 KB |
 | `microbe-modeling-stack-v5/` | 微生物建模栈 Microbe Modeling Stack: 32 procedural 3D models (viruses, bacteria, fungus, cells, mosquitoes, fly, mite) stacked by real size on a log scale, live scale bar, zh/EN, self-assessment and model-monitor pages; mosquitoes modeled from a China CDC reference photo | 5 | 107.6 KB |
 | `visible-cap-globe-v4/` | 可见球冠地球 Visible-Cap Globe: draggable 3D Earth; altitude slider shows the visible cap, horizon distance and surface share (h/(2(R+h))), with presets from a person to the Moon, incl. hot-air and stratospheric balloons, plus a custom altitude input and Great Pyramid preset | 4 | 18.2 KB |
+| `solar-analemma-v1/` | 太阳日行迹模拟 Solar Analemma & Equation of Time: interactive figure-8 analemma simulator combining Keplerian elliptical orbit and axial tilt, with Equation of Time double-wave decomposition and planet/thought-experiment presets | 1 | 45.0 KB |
+| `fixed-clock-sky-v1/` | 每日同一钟点：星座与月球运动模拟器 Fixed-Clock Sky & Lunar Motion: top-down orbital view (fixed-clock vs. inertial frame), ecliptic solstices/equinoxes, and sky chart vs. map orientation (east-left vs. east-right) | 1 | 50.4 KB |
 
 ## Rights
 

@@ -73,6 +73,11 @@ button:focus-visible,input:focus-visible,a:focus-visible,.card:focus-visible{out
 .lv{display:inline-block;font-size:12px;padding:0 8px;border-radius:999px;border:1px solid currentColor;margin:1px 2px 1px 0}.lv-fail{color:#c0553d}.lv-warn{color:#b88a1d}.lv-info{color:var(--mu)}.lv-ok{color:#5a8f4a}.lv-na{color:var(--mu)}
 .fb{display:grid;gap:8px;max-width:620px}.fb select,.fb textarea,#fbX{font:inherit;font-size:13px;color:inherit;background:var(--card);border:1px solid var(--ln);border-radius:10px;padding:6px 10px}#fbX,.fb textarea{width:100%;box-sizing:border-box}.fbl{padding-left:18px;font-size:13px}.fbl li{margin:6px 0}
 @media(max-width:560px){.brand{display:none}}
+#grid,#grid.c{grid-template-columns:repeat(auto-fill,minmax(var(--tw,128px),1fr));gap:9px}
+#grid.xs .card .t{display:none}
+#grid.l,#grid.l.c{grid-template-columns:1fr;gap:6px}#grid.l .card{display:grid;grid-template-columns:var(--lw,96px) 1fr;column-gap:14px;align-items:center;text-align:left;padding:6px}#grid.l .card canvas{grid-row:1/3;aspect-ratio:1/1}#grid.l .card .t{margin:0;font-size:15px;display:block;-webkit-line-clamp:unset}#grid.l .card .f{display:-webkit-box!important;padding:0}
+.sbar{position:sticky;bottom:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 14px;margin:12px -14px -40px;background:var(--nav);border-top:1px solid var(--ln);font-size:13px;color:var(--mu);z-index:3}
+.zs{display:flex;align-items:center;gap:8px}.zs .sp{width:10px}.zs button{border:1px solid var(--ln);background:var(--card);color:var(--tx);border-radius:8px;min-width:30px;height:26px;cursor:pointer;font-size:14px;line-height:1;padding:0 6px}.zs button[aria-pressed="true"]{background:var(--ac);color:var(--acx)}.zs input[type=range]{width:150px;padding:0;margin:0;border:0;background:none;accent-color:var(--ac);border-radius:0}
 </style>
 </head>
 <body>
@@ -84,7 +89,7 @@ button:focus-visible,input:focus-visible,a:focus-visible,.card:focus-visible{out
 <section id="v-viewer" class="view on"><p class="sub" data-i="sub"></p>
  <div class="vgrid"><div class="vmain"><div class="stage"><canvas id="cv"></canvas><button class="arr l" id="prev">‹</button><button class="arr r" id="next">›</button><div class="zm"><button id="zi">+</button><button id="zo">−</button><button id="zr">⟲</button><button id="zs">◎</button><button id="zmv">✥</button></div><div id="cap"></div></div>
  <div class="row"><div class="lg" id="lg"></div><span id="pos"></span><button id="hb" class="mini"></button></div><p class="hint" data-i="drag"></p></div><div class="box info" id="info"></div></div></section>
-<section id="v-library" class="view"><div class="kh"><h2><span data-i="nl"></span><small id="cnt"></small></h2><input id="q" type="search"><label class="sw"><input type="checkbox" id="sh"><span data-i="sh"></span></label><label class="sw"><input type="checkbox" id="cp"><span data-i="cp"></span></label><div class="chips"><button data-f="all"></button><button data-f="c"></button><button data-f="n"></button><button data-f="el"></button><button data-f="aa"></button><button data-f="vit"></button><button data-f="hm"></button><button data-f="ot"></button><button data-f="ph"></button><button data-f="h"></button></div></div><div id="grid"></div></section>
+<section id="v-library" class="view"><div class="kh"><h2><span data-i="nl"></span><small id="cnt"></small></h2><input id="q" type="search"><label class="sw"><input type="checkbox" id="sh"><span data-i="sh"></span></label><label class="sw" style="display:none"><input type="checkbox" id="cp"><span data-i="cp"></span></label><div class="chips"><button data-f="all"></button><button data-f="c"></button><button data-f="n"></button><button data-f="el"></button><button data-f="aa"></button><button data-f="vit"></button><button data-f="hm"></button><button data-f="ot"></button><button data-f="ph"></button><button data-f="h"></button></div></div><div id="grid"></div><div class="sbar"><span id="stat"></span><div class="zs"><button id="vg" aria-label="Grid">▦</button><button id="vl" aria-label="List">☰</button><span class="sp"></span><button id="tm" aria-label="Smaller">−</button><input type="range" id="tz" min="72" max="360" step="4" aria-label="Thumbnail size"><button id="tp" aria-label="Larger">+</button></div></div></section>
 <section id="v-builder" class="view"><div class="box defer"><h2><span data-i="nb"></span><span class="tag">deferred</span></h2><p class="sub" data-i="bd"></p>
  <ul><li data-i="b1"></li><li data-i="b2"></li><li data-i="b3"></li></ul>
  <div class="pal" aria-hidden="true"><i style="background:#e8877b">H</i><i style="background:#e6c35c">C</i><i style="background:#96bf6c">N</i><i style="background:#8fb0e6">O</i></div></div></section>
@@ -280,6 +285,9 @@ const AAS=new Set(['NCC(=O)O','CC(N)C(=O)O',...AAX.map(a=>a[0])]);
 const VIT=new Set(['OCC(O)C1OC(=O)C(O)=C1O',...OTX.slice(11).map(o=>o[0])]);
 const isEl=m=>new Set(m.g.A).size==1;
 let compact=true;try{compact=localStorage.getItem('mol-compact')!='0'}catch(e){}
+let tsz=128,vm='g';try{tsz=+localStorage.getItem('mol-tsz')||128;vm=localStorage.getItem('mol-vm')||'g'}catch(e){}
+function applyCls(){const g=$('#grid');tsz=Math.max(72,Math.min(360,tsz));compact=tsz<200;g.style.setProperty('--tw',tsz+'px');g.style.setProperty('--lw',Math.max(64,Math.round(tsz*.9))+'px');g.className=(vm=='l'?'l ':'')+(compact?'c':'')+(tsz<96?' xs':'');$('#tz').value=tsz;$('#vg').setAttribute('aria-pressed',vm=='g');$('#vl').setAttribute('aria-pressed',vm=='l');try{localStorage.setItem('mol-tsz',tsz);localStorage.setItem('mol-vm',vm)}catch(e){}}
+function stat(n){const hc=showH?0:LIB.filter(isH).length;$('#stat').textContent=lang=='zh'?`${n} 个项目、${hc} 个已隐藏`:`${n} items, ${hc} hidden`}
 EL.Na={c:'#b79be0',r:.45,v:1,z:'钠',e:'Sodium'};MASS.Na=22.990;
 FM['[Na]Cl']='NaCl';
 const OXY='NC1CSSCC(NC(=O)C(CC(N)=O)NC(=O)C(CCC(N)=O)NC(=O)C(C(C)CC)NC(=O)C(CC2=CC=C(O)C=C2)NC1=O)C(=O)N3CCCC3C(=O)NC(CC(C)C)C(=O)NCC(N)=O';
@@ -424,7 +432,7 @@ function thumbs(){document.querySelectorAll('#grid canvas').forEach(c=>draw(c,LI
 function grid(){const s=q.trim().toLowerCase();
  const L=LIB.map((m,i)=>[m,i]).filter(([m])=>inFlt(m)&&(!s||(m.z+m.e+m.zfs.join()+m.efs.join()+plain(m.f)).toLowerCase().includes(s)));
  $('#grid').innerHTML=L.map(([m,i])=>`<article class="card${i==cur?' on':''}${m.ph?' ph':''}" data-k="${i}" tabindex="0"><button class="eye" data-e="${i}">${isH(m)?T[lang].unhide:T[lang].hide}</button><canvas data-k="${i}"></canvas><div class="t">${nm(m)}: ${m.f}</div><div class="f clamp">${ft(m)}</div></article>`).join('')||`<p class="sub">${T[lang].none}</p>`;
- $('#grid').className=compact?'c':'';$('#cnt').textContent=L.length+' / '+(flt=='h'?L.length:visIdx().length);thumbs()}
+ applyCls();$('#cnt').textContent=L.length+' / '+(flt=='h'?L.length:visIdx().length);stat(L.length);thumbs()}
 function applyLang(){const t=T[lang];document.documentElement.lang=lang;document.title=t.title;
  document.querySelectorAll('[data-i]').forEach(e=>e.textContent=t[e.dataset.i]);$('#q').placeholder=t.q;
  $('#prev').setAttribute('aria-label',t.prev);$('#zi').setAttribute('aria-label',t.zin);$('#zo').setAttribute('aria-label',t.zout);$('#zr').setAttribute('aria-label',t.zrs);$('#zs').setAttribute('aria-label',t.zs);$('#zmv').setAttribute('aria-label',t.zmv);$('#next').setAttribute('aria-label',t.next);$('#th').setAttribute('aria-label',t.th);
@@ -461,6 +469,9 @@ $('#grid').onkeydown=e=>{if(e.key=='Enter'){const c=e.target.closest('[data-k]')
 addEventListener('hashchange',route);
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(thumbs,150)});
 (function loop(){if(view=='viewer'){if(!ptrs.size&&!reduce)ry+=.006;draw(cv,LIB[cur],ry,rx,.44,zm,pan)}requestAnimationFrame(loop)})();
+let zr=0;function zq(){applyCls();cancelAnimationFrame(zr);zr=requestAnimationFrame(thumbs)}
+$('#tz').oninput=e=>{tsz=+e.target.value;zq()};$('#tm').onclick=()=>{tsz-=24;zq()};$('#tp').onclick=()=>{tsz+=24;zq()};$('#vg').onclick=()=>{vm='g';zq()};$('#vl').onclick=()=>{vm='l';zq()};
+$('#grid').addEventListener('wheel',e=>{if(e.ctrlKey||e.metaKey){e.preventDefault();tsz-=Math.sign(e.deltaY)*16;zq()}},{passive:false});
 $('#sh').checked=showH;$('#cp').checked=compact;applyLang();route();
 </script>
 </body>

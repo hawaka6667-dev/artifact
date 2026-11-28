@@ -19,7 +19,7 @@ One folder per artifact, named `<slug>-v<version>`. Each folder holds the page a
 | `visible-cap-globe-v4/` | 可见球冠地球 Visible-Cap Globe: draggable 3D Earth; altitude slider shows the visible cap, horizon distance and surface share (h/(2(R+h))), with presets from a person to the Moon, incl. hot-air and stratospheric balloons, plus a custom altitude input and Great Pyramid preset | 4 | 18.2 KB |
 | `solar-analemma-v1/` | 太阳日行迹模拟 Solar Analemma & Equation of Time: interactive figure-8 analemma simulator combining Keplerian elliptical orbit and axial tilt, with Equation of Time double-wave decomposition and planet/thought-experiment presets | 1 | 45.0 KB |
 | `fixed-clock-sky-v1/` | 每日同一钟点：星座与月球运动模拟器 Fixed-Clock Sky & Lunar Motion: top-down orbital view (fixed-clock vs. inertial frame), ecliptic solstices/equinoxes, and sky chart vs. map orientation (east-left vs. east-right) | 1 | 50.4 KB |
-| `lagrange-points-v1/` | 限制性三体问题与拉格朗日点 Lagrange Points (CR3BP): L1–L5 launch experiments in rotating and inertial frames, Roche contours, mass-ratio slider; wheel/pinch zoom and pan, favorites that replay whole scenes, performance pass (inline Tailwind, cached background and contours, allocation-free RK4) | 1 | 97.7 KB |
+| `lagrange-points-v2/` | 限制性三体问题与拉格朗日点 Lagrange Points (CR3BP): L1–L5 launch experiments in rotating and inertial frames, hydrographic-chart UI with depth-style potential bands, 0.5x–5x speed, wheel/pinch zoom and pan, favorites that replay whole scenes | 2 | 79.2 KB |
 | `retrograde-motion-v1/` | 行星视逆行天体力学模拟器 Apparent Retrograde Motion: ecliptic north pole top-down view and geocentric sky projection for Mars (opposition) and Venus (inferior conjunction), with sightline fan, velocity vectors, and S-loop trail | 1 | 49.6 KB |
 
 ## Rights
